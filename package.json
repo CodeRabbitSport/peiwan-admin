@@ -132,6 +132,10 @@
     "vite-plugin-top-level-await": "^1.6.0",
     "vue-tsc": "^3.0.6"
   },
+  "lint-staged": {
+    "*": "eslint",
+    "*.{css,less,vue}": "stylelint"
+  },
   "license": "MIT",
   "web-types": "./web-types.json",
   "engines": {

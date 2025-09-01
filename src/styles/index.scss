@@ -35,3 +35,11 @@
     border-left-color: var(--el-color-primary);
   }
 }
+
+// 手机模式下隐藏el-pagination__sizes
+@media screen and (max-width: 768px) {
+  .el-pagination__sizes{
+    display: none !important;
+  }
+}
+

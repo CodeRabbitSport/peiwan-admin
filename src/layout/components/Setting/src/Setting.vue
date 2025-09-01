@@ -17,6 +17,7 @@ defineOptions({ name: 'Setting' })
 
 const { t } = useI18n()
 const appStore = useAppStore()
+const { wsCache } = useCache()
 
 const { getPrefixCls } = useDesign()
 const prefixCls = getPrefixCls('setting')
@@ -30,7 +31,7 @@ const setSystemTheme = (color: string) => {
   setCssVar('--el-color-primary', color)
   appStore.setTheme({ elColorPrimary: color })
   const leftMenuBgColor = useCssVar('--left-menu-bg-color', document.documentElement)
-  setMenuTheme(trim(unref(leftMenuBgColor)))
+  setMenuTheme(trim(unref(leftMenuBgColor)!))
 }
 
 // 头部主题相关
@@ -71,11 +72,11 @@ const setMenuTheme = (color: string) => {
     // 左侧菜单选中背景颜色
     leftMenuBgActiveColor: isDarkColor
       ? 'var(--el-color-primary)'
-      : hexToRGB(unref(primaryColor), 0.1),
+      : hexToRGB(unref(primaryColor)!, 0.1),
     // 左侧菜单收起选中背景颜色
     leftMenuCollapseBgActiveColor: isDarkColor
       ? 'var(--el-color-primary)'
-      : hexToRGB(unref(primaryColor), 0.1),
+      : hexToRGB(unref(primaryColor)!, 0.1),
     // 左侧菜单字体颜色
     leftMenuTextColor: isDarkColor ? '#bfcbd9' : '#333',
     // 左侧菜单选中字体颜色
@@ -91,6 +92,10 @@ const setMenuTheme = (color: string) => {
 if (layout.value === 'top' && !appStore.getIsDark) {
   headerTheme.value = '#fff'
   setHeaderTheme('#fff')
+}
+
+if (layout.value === 'classic' && !wsCache.get(CACHE_KEY.THEME)) {
+  setMenuTheme('#fff')
 }
 
 // 监听layout变化，重置一些主题色
@@ -191,7 +196,6 @@ const copyConfig = async () => {
 
 // 清空缓存
 const clear = () => {
-  const { wsCache } = useCache()
   wsCache.delete(CACHE_KEY.LAYOUT)
   wsCache.delete(CACHE_KEY.THEME)
   wsCache.delete(CACHE_KEY.IS_DARK)
@@ -202,15 +206,14 @@ const clear = () => {
 <template>
   <div
     :class="prefixCls"
-    class="fixed right-0 top-[45%] h-40px w-40px cursor-pointer bg-[var(--el-color-primary)] text-center leading-40px"
-    @click="drawer = true"
-  >
+    class="fixed right-0 top-[45%] h-[40px] w-[40px] cursor-pointer bg-[var(--el-color-primary)] text-center leading-[40px]"
+    @click="drawer = true">
     <Icon color="#fff" icon="ep:setting" />
   </div>
 
   <ElDrawer v-model="drawer" :z-index="4000" direction="rtl" size="350px">
     <template #header>
-      <span class="text-16px font-700">{{ t('setting.projectSetting') }}</span>
+      <span class="text-[16px] font-bold">{{ t('setting.projectSetting') }}</span>
     </template>
 
     <div class="text-center">
@@ -224,37 +227,29 @@ const clear = () => {
 
       <!-- 系统主题 -->
       <ElDivider>{{ t('setting.systemTheme') }}</ElDivider>
-      <ColorRadioPicker
-        v-model="systemTheme"
-        :schema="[
-          '#409eff',
-          '#009688',
-          '#536dfe',
-          '#ff5c93',
-          '#ee4f12',
-          '#0096c7',
-          '#9c27b0',
-          '#ff9800'
-        ]"
-        @change="setSystemTheme"
-      />
+      <ColorRadioPicker v-model="systemTheme" :schema="[
+        '#409eff',
+        '#009688',
+        '#536dfe',
+        '#ff5c93',
+        '#ee4f12',
+        '#0096c7',
+        '#9c27b0',
+        '#ff9800'
+      ]" @change="setSystemTheme" />
 
       <!-- 头部主题 -->
       <ElDivider>{{ t('setting.headerTheme') }}</ElDivider>
-      <ColorRadioPicker
-        v-model="headerTheme"
-        :schema="[
-          '#fff',
-          '#151515',
-          '#5172dc',
-          '#e74c3c',
-          '#24292e',
-          '#394664',
-          '#009688',
-          '#383f45'
-        ]"
-        @change="setHeaderTheme"
-      />
+      <ColorRadioPicker v-model="headerTheme" :schema="[
+        '#fff',
+        '#151515',
+        '#5172dc',
+        '#e74c3c',
+        '#24292e',
+        '#394664',
+        '#009688',
+        '#383f45'
+      ]" @change="setHeaderTheme" />
 
       <!-- 菜单主题 -->
       <template v-if="layout !== 'top'">
@@ -271,8 +266,7 @@ const clear = () => {
             '#001628',
             '#344058'
           ]"
-          @change="setMenuTheme"
-        />
+          @change="setMenuTheme" />
       </template>
     </div>
 
@@ -284,7 +278,7 @@ const clear = () => {
     <div>
       <ElButton class="w-full" type="primary" @click="copyConfig">{{ t('setting.copy') }}</ElButton>
     </div>
-    <div class="mt-5px">
+    <div class="mt-[5px]">
       <ElButton class="w-full" type="danger" @click="clear">
         {{ t('setting.clearAndReset') }}
       </ElButton>
@@ -296,7 +290,9 @@ const clear = () => {
 $prefix-cls: #{$namespace}-setting;
 
 .#{$prefix-cls} {
+  z-index: 1200;
   border-radius: 6px 0 0 6px;
-  z-index: 1200;/*修正没有z-index会被表格层覆盖,值不要超过4000*/
+
+  /* 修正没有z-index会被表格层覆盖,值不要超过4000 */
 }
 </style>
