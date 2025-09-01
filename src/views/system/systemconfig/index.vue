@@ -1,0 +1,281 @@
+<template>
+  <ContentWrap>
+    <!-- 搜索工作栏 -->
+    <el-form
+      class="-mb-[15px]x]"
+      :model="queryParams"
+      ref="queryFormRef"
+      :inline="true"
+      label-width="68px">
+      <el-form-item label="配置键名" prop="configKey">
+        <el-input
+          v-model="queryParams.configKey"
+          placeholder="请输入配置键名"
+          clearable
+          @keyup.enter="handleQuery"
+          class="!w-[240px]x]" />
+      </el-form-item>
+      <el-form-item label="配置标题" prop="title">
+        <el-input
+          v-model="queryParams.title"
+          placeholder="请输入配置标题"
+          clearable
+          @keyup.enter="handleQuery"
+          class="!w-[240px]" />
+      </el-form-item>
+      <el-form-item label="配置描述" prop="description">
+        <el-input
+          v-model="queryParams.description"
+          placeholder="请输入配置描述"
+          clearable
+          @keyup.enter="handleQuery"
+          class="!w-[240px]" />
+      </el-form-item>
+      <el-form-item label="创建时间" prop="createTime">
+        <el-date-picker
+          v-model="queryParams.createTime"
+          value-format="YYYY-MM-DD HH:mm:ss"
+          type="daterange"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
+          class="!w-[220px]" />
+      </el-form-item>
+      <el-form-item class="flex flex-wrap gap-2">
+        <el-button @click="handleQuery" class="mb-2 sm:mb-0">
+          <Icon icon="ep:search" class="mr-[5px]" /> 搜索
+        </el-button>
+        <el-button @click="resetQuery" class="mb-2 sm:mb-0">
+          <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
+        </el-button>
+        <el-button
+          type="primary"
+          plain
+          @click="openForm('create')"
+          v-hasPermi="['gamer:system-config:create']"
+          class="mb-2 sm:mb-0">
+          <Icon icon="ep:plus" class="mr-[5px]" /> 新增
+        </el-button>
+        <el-button
+          type="success"
+          plain
+          @click="handleExport"
+          :loading="exportLoading"
+          v-hasPermi="['gamer:system-config:export']"
+          class="mb-2 sm:mb-0">
+          <Icon icon="ep:download" class="mr-[5px]" /> 导出
+        </el-button>
+        <el-button
+          v-if="!isEmpty(checkedIds)"
+          type="danger"
+          plain
+          :disabled="isEmpty(checkedIds)"
+          @click="handleDeleteBatch"
+          v-hasPermi="['gamer:system-config:delete']"
+          class="mb-2 sm:mb-0">
+          <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
+        </el-button>
+      </el-form-item>
+    </el-form>
+  </ContentWrap>
+
+  <!-- 列表 -->
+  <ContentWrap>
+    <el-table
+      row-key="id"
+      v-loading="loading"
+      :data="list"
+      :stripe="true"
+      :show-overflow-tooltip="true"
+      @selection-change="handleRowCheckboxChange">
+      <el-table-column type="selection" width="55" />
+      <el-table-column label="主键ID" align="center" prop="id" />
+      <el-table-column label="配置键名" align="center" prop="configKey" />
+      <el-table-column label="配置值" align="center" prop="configValue" min-width="200px">
+        <template #default="scope">
+          <!-- 图片类型 -->
+          <el-image
+            v-if="isImageUrl(scope.row.configValue)"
+            :src="scope.row.configValue"
+            :preview-src-list="[scope.row.configValue]"
+            fit="cover"
+            style="width: 80px; height: 60px; border-radius: 6px;"
+            preview-teleported />
+          <!-- 富文本类型 -->
+          <div
+            v-else-if="isRichText(scope.row.configValue)"
+            @click="openForm('update', scope.row.id)"
+            v-hasPermi="['gamer:system-config:update']"
+            class="text-blue-500 cursor-pointer">
+            查看详情
+          </div>
+          <!-- 普通文本 -->
+          <span v-else class="text-truncate" :title="scope.row.configValue">
+            {{ scope.row.configValue }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column label="配置标题" align="center" prop="title" />
+      <el-table-column label="配置描述" align="center" prop="description" />
+      <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
+      <el-table-column label="操作" align="center" min-width="120px">
+        <template #default="scope">
+          <el-button
+            link
+            type="primary"
+            @click="openForm('update', scope.row.id)"
+            v-hasPermi="['gamer:system-config:update']">
+            编辑
+          </el-button>
+          <el-button
+            link
+            type="danger"
+            @click="handleDelete(scope.row.id)"
+            v-hasPermi="['gamer:system-config:delete']">
+            删除
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <!-- 分页 -->
+    <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize"
+      @pagination="getList" />
+  </ContentWrap>
+
+  <!-- 表单弹窗：添加/修改 -->
+  <SystemConfigForm ref="formRef" @success="getList" />
+</template>
+
+<script setup lang="ts">
+import { isEmpty } from '@/utils/is'
+import { dateFormatter } from '@/utils/formatTime'
+import download from '@/utils/download'
+import { SystemConfigApi, SystemConfig } from '@/api/gamer/systemconfig'
+import SystemConfigForm from './SystemConfigForm.vue'
+
+/** 系统配置 列表 */
+defineOptions({ name: 'SystemConfig' })
+
+const message = useMessage() // 消息弹窗
+const { t } = useI18n() // 国际化
+
+const loading = ref(true) // 列表的加载中
+const list = ref<SystemConfig[]>([]) // 列表的数据
+const total = ref(0) // 列表的总页数
+const queryParams = reactive({
+  pageNo: 1,
+  pageSize: 10,
+  configKey: undefined,
+  title: undefined,
+  description: undefined,
+  createTime: []
+})
+const queryFormRef = ref() // 搜索的表单
+const exportLoading = ref(false) // 导出的加载中
+
+/** 查询列表 */
+const getList = async () => {
+  loading.value = true
+  try {
+    const data = await SystemConfigApi.getSystemConfigPage(queryParams)
+    list.value = data.list
+    total.value = data.total
+  } finally {
+    loading.value = false
+  }
+}
+
+/** 搜索按钮操作 */
+const handleQuery = () => {
+  queryParams.pageNo = 1
+  getList()
+}
+
+/** 重置按钮操作 */
+const resetQuery = () => {
+  queryFormRef.value.resetFields()
+  handleQuery()
+}
+
+/** 添加/修改操作 */
+const formRef = ref()
+const openForm = (type: string, id?: number) => {
+  formRef.value.open(type, id)
+}
+
+/** 删除按钮操作 */
+const handleDelete = async (id: number) => {
+  try {
+    // 删除的二次确认
+    await message.delConfirm()
+    // 发起删除
+    await SystemConfigApi.deleteSystemConfig(id)
+    message.success(t('common.delSuccess'))
+    // 刷新列表
+    await getList()
+  } catch { }
+}
+
+/** 批量删除系统配置 */
+const handleDeleteBatch = async () => {
+  try {
+    // 删除的二次确认
+    await message.delConfirm()
+    await SystemConfigApi.deleteSystemConfigList(checkedIds.value);
+    checkedIds.value = [];
+    message.success(t('common.delSuccess'))
+    await getList();
+  } catch { }
+}
+
+const checkedIds = ref<number[]>([])
+const handleRowCheckboxChange = (records: SystemConfig[]) => {
+  checkedIds.value = records.map((item) => item.id);
+}
+
+/** 导出按钮操作 */
+const handleExport = async () => {
+  try {
+    // 导出的二次确认
+    await message.exportConfirm()
+    // 发起导出
+    exportLoading.value = true
+    const data = await SystemConfigApi.exportSystemConfig(queryParams)
+    download.excel(data, '系统配置.xls')
+  } catch {
+  } finally {
+    exportLoading.value = false
+  }
+}
+
+// 判断是否为图片URL
+const isImageUrl = (url: string): boolean => {
+  if (!url || typeof url !== 'string') return false;
+  const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.svg'];
+  const lowerUrl = url.toLowerCase();
+  return imageExtensions.some(ext => lowerUrl.endsWith(ext));
+}
+
+// 判断是否为富文本
+const isRichText = (content: string): boolean => {
+  if (!content || typeof content !== 'string') return false;
+  // 检查是否包含HTML标签
+  const htmlTagRegex = /<\/?[a-z][\s\S]*>/i;
+  return htmlTagRegex.test(content);
+}
+/** 初始化 **/
+onMounted(() => {
+  getList()
+})
+</script>
+
+<style lang="scss" scoped>
+.text-truncate {
+  display: inline-block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+</style>
