@@ -19,7 +19,7 @@ export interface LevelApply {
 // 打手/陪玩等级申请 API
 export const LevelApplyApi = {
   // 查询打手/陪玩等级申请分页
-  getLevelApplyPage: async (params?: any) => {
+  getLevelApplyPage: async (params: any) => {
     return await request.get({ url: `/gamer/level-apply/page`, params })
   },
 

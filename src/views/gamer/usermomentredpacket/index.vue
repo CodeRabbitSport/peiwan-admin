@@ -2,48 +2,49 @@
   <ContentWrap>
     <!-- 搜索工作栏 -->
     <el-form
-      class="-mb-[15px]"
+      class="-mb-15px"
       :model="queryParams"
       ref="queryFormRef"
       :inline="true"
       label-width="68px"
     >
-      <el-form-item label="用户ID" prop="userId">
+      <el-form-item label="动态ID" prop="momentId">
         <el-input
-          v-model="queryParams.userId"
-          placeholder="请输入用户ID"
+          v-model="queryParams.momentId"
+          placeholder="请输入动态ID"
           clearable
           @keyup.enter="handleQuery"
-          class="!w-[240px]"
+          class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="商品分类" prop="productCategoryId">
+      <el-form-item label="红包个数" prop="totalCount">
         <el-input
-          v-model="queryParams.productCategoryId"
-          placeholder="请输入所属商品分类ID"
+          v-model="queryParams.totalCount"
+          placeholder="请输入红包个数"
           clearable
           @keyup.enter="handleQuery"
-          class="!w-[240px]"
+          class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="等级类型" prop="levelType">
+      <el-form-item label="红包类型: 1=普通,2=拼手气" prop="packetType">
         <el-select
-          v-model="queryParams.levelType"
-          placeholder="请选择等级类型"
+          v-model="queryParams.packetType"
+          placeholder="请选择红包类型: 1=普通,2=拼手气"
           clearable
-          class="!w-[240px]"
+          class="!w-240px"
         >
-          <el-option label="打手" :value="1" />
-          <el-option label="陪玩" :value="2" />
+          <el-option label="请选择字典生成" value="" />
         </el-select>
       </el-form-item>
-      <el-form-item label="级别" prop="level">
-        <el-input
-          v-model="queryParams.level"
-          placeholder="请输入级别"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-[240px]"
+      <el-form-item label="过期时间" prop="expireTime">
+        <el-date-picker
+          v-model="queryParams.expireTime"
+          value-format="YYYY-MM-DD HH:mm:ss"
+          type="daterange"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
+          class="!w-220px"
         />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
@@ -54,37 +55,37 @@
           start-placeholder="开始日期"
           end-placeholder="结束日期"
           :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-[220px]"
+          class="!w-220px"
         />
       </el-form-item>
       <el-form-item>
-        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-[5px]" /> 搜索</el-button>
-        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-[5px]" /> 重置</el-button>
+        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
+        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
         <el-button
           type="primary"
           plain
           @click="openForm('create')"
-          v-hasPermi="['gamer:level-apply:create']"
+          v-hasPermi="['gamer:user-moment-red-packet:create']"
         >
-          <Icon icon="ep:plus" class="mr-[5px]" /> 新增
+          <Icon icon="ep:plus" class="mr-5px" /> 新增
         </el-button>
         <el-button
           type="success"
           plain
           @click="handleExport"
           :loading="exportLoading"
-          v-hasPermi="['gamer:level-apply:export']"
+          v-hasPermi="['gamer:user-moment-red-packet:export']"
         >
-          <Icon icon="ep:download" class="mr-[5px]" /> 导出
+          <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
         <el-button
             type="danger"
             plain
             :disabled="isEmpty(checkedIds)"
             @click="handleDeleteBatch"
-            v-hasPermi="['gamer:level-apply:delete']"
+            v-hasPermi="['gamer:user-moment-red-packet:delete']"
         >
-          <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
+          <Icon icon="ep:delete" class="mr-5px" /> 批量删除
         </el-button>
       </el-form-item>
     </el-form>
@@ -101,31 +102,19 @@
         @selection-change="handleRowCheckboxChange"
     >
     <el-table-column type="selection" width="55" />
-      <el-table-column label="ID" align="center" prop="id" />
-      <el-table-column label="用户ID" align="center" prop="userId" />
-      <el-table-column label="所属商品" align="center" prop="productCategoryId" />
-      <el-table-column label="等级类型" align="center" prop="levelType">
-        <template #default="scope">
-          <el-tag
-            :type="scope.row.levelType === 1 ? 'success' : scope.row.levelType === 2 ? 'danger' : 'info'">
-            {{ scope.row.levelType === 1 ? '打手' : scope.row.levelType === 2 ? '陪玩' : '未知' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="级别" align="center" prop="level" />
-      <el-table-column label="个人介绍" align="center" prop="personalIntroduction" />
-      <el-table-column label="驳回原因" align="center" prop="rejectReason" />
-      <el-table-column label="联系方式" align="center" prop="contact" />
-      <el-table-column label="图片附件" align="center" prop="imageAttachment" />
-      <el-table-column label="附件" align="center" prop="attachment" />
-      <el-table-column label="审核状态" align="center" prop="auditStatus">
-        <template #default="scope">
-          <el-tag
-            :type="scope.row.auditStatus === 0 ? 'success' : scope.row.auditStatus === 1 ? 'danger' : 'info'">
-            {{ scope.row.auditStatus === 0 ? '待审核' : scope.row.auditStatus === 1 ? '通过' : '拒绝' }}
-          </el-tag>
-        </template>
-      </el-table-column>
+      <el-table-column label="主键ID" align="center" prop="id" />
+      <el-table-column label="动态ID" align="center" prop="momentId" />
+      <el-table-column label="红包总金额" align="center" prop="amount" />
+      <el-table-column label="红包个数" align="center" prop="totalCount" />
+      <el-table-column label="红包类型: 1=普通,2=拼手气" align="center" prop="packetType" />
+      <el-table-column label="祝福语" align="center" prop="message" />
+      <el-table-column
+        label="过期时间"
+        align="center"
+        prop="expireTime"
+        :formatter="dateFormatter"
+        width="180px"
+      />
       <el-table-column
         label="创建时间"
         align="center"
@@ -139,7 +128,7 @@
             link
             type="primary"
             @click="openForm('update', scope.row.id)"
-            v-hasPermi="['gamer:level-apply:update']"
+            v-hasPermi="['gamer:user-moment-red-packet:update']"
           >
             编辑
           </el-button>
@@ -147,7 +136,7 @@
             link
             type="danger"
             @click="handleDelete(scope.row.id)"
-            v-hasPermi="['gamer:level-apply:delete']"
+            v-hasPermi="['gamer:user-moment-red-packet:delete']"
           >
             删除
           </el-button>
@@ -164,32 +153,35 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <LevelApplyForm ref="formRef" @success="getList" />
+  <UserMomentRedPacketForm ref="formRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
 import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
-import { LevelApplyApi, LevelApply } from '@/api/gamer/levelapply'
-import LevelApplyForm from './LevelApplyForm.vue'
+import { UserMomentRedPacketApi, UserMomentRedPacket } from '@/api/gamer/usermomentredpacket'
+import UserMomentRedPacketForm from './UserMomentRedPacketForm.vue'
 
-/** 打手/陪玩等级申请 列表 */
-defineOptions({ name: 'LevelApply' })
+/** 用户动态红包 列表 */
+defineOptions({ name: 'UserMomentRedPacket' })
+
+// 接收来自父层弹窗传入的动态ID（可选）
+const props = defineProps<{ momentId?: number }>()
 
 const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
 
 const loading = ref(true) // 列表的加载中
-const list = ref<LevelApply[]>([]) // 列表的数据
+const list = ref<UserMomentRedPacket[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
-  userId: undefined,
-  productCategoryId: undefined,
-  levelType: undefined,
-  level: undefined,
+  momentId: undefined,
+  totalCount: undefined,
+  packetType: undefined,
+  expireTime: [],
   createTime: []
 })
 const queryFormRef = ref() // 搜索的表单
@@ -199,7 +191,7 @@ const exportLoading = ref(false) // 导出的加载中
 const getList = async () => {
   loading.value = true
   try {
-    const data = await LevelApplyApi.getLevelApplyPage(queryParams)
+    const data = await UserMomentRedPacketApi.getUserMomentRedPacketPage(queryParams)
     list.value = data.list
     total.value = data.total
   } finally {
@@ -219,6 +211,18 @@ const resetQuery = () => {
   handleQuery()
 }
 
+// 当从父组件传入 momentId 时，自动按该动态筛选
+watch(
+  () => props.momentId,
+  (val) => {
+    if (val !== undefined && val !== null) {
+      queryParams.momentId = val as any
+      handleQuery()
+    }
+  },
+  { immediate: true }
+)
+
 /** 添加/修改操作 */
 const formRef = ref()
 const openForm = (type: string, id?: number) => {
@@ -226,24 +230,26 @@ const openForm = (type: string, id?: number) => {
 }
 
 /** 删除按钮操作 */
+const currentRow = ref<Record<string, any>>({})
 const handleDelete = async (id: number) => {
   try {
     // 删除的二次确认
     await message.delConfirm()
     // 发起删除
-    await LevelApplyApi.deleteLevelApply(id)
+    await UserMomentRedPacketApi.deleteUserMomentRedPacket(id)
     message.success(t('common.delSuccess'))
+    currentRow.value = {}
     // 刷新列表
     await getList()
   } catch {}
 }
 
-/** 批量删除打手/陪玩等级申请 */
+/** 批量删除用户动态红包 */
 const handleDeleteBatch = async () => {
   try {
     // 删除的二次确认
     await message.delConfirm()
-    await LevelApplyApi.deleteLevelApplyList(checkedIds.value);
+    await UserMomentRedPacketApi.deleteUserMomentRedPacketList(checkedIds.value);
     checkedIds.value = [];
     message.success(t('common.delSuccess'))
     await getList();
@@ -251,7 +257,7 @@ const handleDeleteBatch = async () => {
 }
 
 const checkedIds = ref<number[]>([])
-const handleRowCheckboxChange = (records: LevelApply[]) => {
+const handleRowCheckboxChange = (records: UserMomentRedPacket[]) => {
   checkedIds.value = records.map((item) => item.id);
 }
 
@@ -262,8 +268,8 @@ const handleExport = async () => {
     await message.exportConfirm()
     // 发起导出
     exportLoading.value = true
-    const data = await LevelApplyApi.exportLevelApply(queryParams)
-    download.excel(data, '打手/陪玩等级申请.xls')
+    const data = await UserMomentRedPacketApi.exportUserMomentRedPacket(queryParams)
+    download.excel(data, '用户动态红包.xls')
   } catch {
   } finally {
     exportLoading.value = false

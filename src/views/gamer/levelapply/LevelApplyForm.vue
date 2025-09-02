@@ -1,12 +1,11 @@
 <template>
-  <Dialog :title="dialogTitle" v-model="dialogVisible" align-center	>
+  <Dialog :title="dialogTitle" v-model="dialogVisible">
     <el-form
       ref="formRef"
       :model="formData"
       :rules="formRules"
       label-width="100px"
       v-loading="formLoading"
-      class="max-h-[70vh] overflow-y-scroll"
     >
       <el-form-item label="用户ID" prop="userId">
         <el-input v-model="formData.userId" placeholder="请输入用户ID" />
@@ -14,9 +13,11 @@
       <el-form-item label="所属商品分类ID" prop="productCategoryId">
         <el-input v-model="formData.productCategoryId" placeholder="请输入所属商品分类ID" />
       </el-form-item>
-          <el-form-item label="等级类型(1打手2陪玩)" prop="levelType">
-            <el-input v-model="formData.levelType" placeholder="请输入等级类型(1打手2陪玩)" class="w-full" />
-          </el-form-item>
+      <el-form-item label="等级类型(1打手2陪玩)" prop="levelType">
+        <el-select v-model="formData.levelType" placeholder="请选择等级类型(1打手2陪玩)">
+          <el-option label="请选择字典生成" value="" />
+        </el-select>
+      </el-form-item>
       <el-form-item label="级别" prop="level">
         <el-input v-model="formData.level" placeholder="请输入级别" />
       </el-form-item>
@@ -35,9 +36,11 @@
       <el-form-item label="附件" prop="attachment">
         <UploadFile v-model="formData.attachment" />
       </el-form-item>
-          <el-form-item label="审核状态(0待审核1通过2拒绝)" prop="auditStatus">
-            <el-input v-model="formData.auditStatus" placeholder="请输入审核状态(0待审核1通过2拒绝)" class="w-full" />
-          </el-form-item>
+      <el-form-item label="审核状态(0待审核1通过2拒绝)" prop="auditStatus">
+        <el-select v-model="formData.auditStatus" placeholder="请选择审核状态(0待审核1通过2拒绝)">
+          <el-option label="请选择字典生成" value="" />
+        </el-select>
+      </el-form-item>
     </el-form>
     <template #footer>
       <el-button @click="submitForm" type="primary" :disabled="formLoading">确 定</el-button>

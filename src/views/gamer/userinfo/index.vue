@@ -89,15 +89,36 @@
       @selection-change="handleRowCheckboxChange">
       <el-table-column type="selection" width="55" />
       <el-table-column label="用户ID" align="center" prop="id" />
-      <el-table-column label="小程序openid" align="center" prop="openid" />
-      <el-table-column label="公众号微信openid" align="center" prop="mpOpenid" />
-      <el-table-column label="微信unionid" align="center" prop="unionid" />
-      <el-table-column label="用户唯一编号" align="center" prop="userCode" />
       <el-table-column label="手机号" align="center" prop="phone" />
       <el-table-column label="用户昵称" align="center" prop="nickname" />
-      <el-table-column label="用户头像" align="center" prop="avatar" />
-      <el-table-column label="真实头像地址" align="center" prop="trueHead" />
-      <el-table-column label="性别 0未知 1男 2女" align="center" prop="sex" />
+      <el-table-column label="用户头像" align="center" prop="avatar">
+        <template #default="scope">
+          <el-image
+            v-if="scope.row.avatar"
+            :src="scope.row.avatar"
+            :preview-src-list="[scope.row.avatar]"
+            fit="cover"
+            style="width: 40px; height: 40px" />
+        </template>
+      </el-table-column>
+      <el-table-column label="真实头像地址" align="center" prop="trueHead">
+        <template #default="scope">
+          <el-image
+            v-if="scope.row.trueHead"
+            :src="scope.row.trueHead"
+            :preview-src-list="[scope.row.trueHead]"
+            fit="cover"
+            style="width: 40px; height: 40px">
+          </el-image>
+        </template>
+      </el-table-column>
+      <el-table-column label="性别" align="center" prop="sex">
+        <template #default="scope">
+          <el-tag :type="scope.row.sex === 1 ? 'success' : scope.row.sex === 2 ? 'danger' : 'info'">
+            {{ scope.row.sex === 1 ? '男' : scope.row.sex === 2 ? '女' : '未知' }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="城市" align="center" prop="city" />
       <el-table-column label="个性签名/简介" align="center" prop="signature" />
       <el-table-column label="余额" align="center" prop="money" />
@@ -105,11 +126,24 @@
       <el-table-column label="财富值" align="center" prop="wealthVal" />
       <el-table-column label="魅力值" align="center" prop="charmVal" />
       <el-table-column label="达人名称" align="center" prop="davName" />
-      <el-table-column label="语音审核状态" align="center" prop="voiceAuditStatus" />
-      <el-table-column label="是否允许查看关注 0否 1是" align="center" prop="isSeeFollow" />
-      <el-table-column label="是否允许查看粉丝 0否 1是" align="center" prop="isSeeFans" />
-      <el-table-column label="操作" align="center" min-width="120px">
+      <el-table-column label="操作" align="center" width="200px">
         <template #default="scope">
+          <el-dropdown trigger="click" @command="(cmd) => onUserMenuCommand(cmd as any, scope.row)">
+            <el-button
+              link
+              type="primary"
+              v-hasPermi="['gamer:user-info:update']">
+              动态管理 <Icon icon="ep:arrow-down" class="ml-[4px]" />
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="usermoment">用户动态管理</el-dropdown-item>
+                <el-dropdown-item command="usermomentbrowse">用户浏览记录</el-dropdown-item>
+                <el-dropdown-item command="usermomentcomment">用户评论记录</el-dropdown-item>
+                <el-dropdown-item command="usermomentlike">用户点赞记录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
           <el-button
             link
             type="primary"
@@ -131,6 +165,16 @@
     <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize"
       @pagination="getList" />
   </ContentWrap>
+  
+  <!-- 用户相关弹窗 -->
+  <el-dialog
+    v-model="userViewDialogVisible"
+    :title="userViewTitle"
+    width="80%"
+    destroy-on-close
+    append-to-body>
+    <component :is="activeComponent" :user-id="selectedUserId" v-if="activeComponent" />
+  </el-dialog>
 
   <!-- 表单弹窗：添加/修改 -->
   <UserInfoForm ref="formRef" @success="getList" />
@@ -141,6 +185,10 @@ import { isEmpty } from '@/utils/is'
 import download from '@/utils/download'
 import { UserInfoApi, UserInfo } from '@/api/gamer/userinfo'
 import UserInfoForm from './UserInfoForm.vue'
+import UserMoment from '../usermoment/index.vue'
+import UserMomentBrowse from '../usermomentbrowse/index.vue'
+import UserMomentComment from '../usermomentcomment/index.vue'
+import UserMomentLike from '../usermomentlike/index.vue'
 
 /** 用户信息 列表 */
 defineOptions({ name: 'UserInfo' })
@@ -205,6 +253,31 @@ const resetQuery = () => {
 const formRef = ref()
 const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
+}
+
+// 用户相关弹窗逻辑
+const userViewDialogVisible = ref(false)
+const selectedUserId = ref<number | undefined>(undefined)
+const userViewTitle = ref('')
+const activeView = ref<'usermoment' | 'usermomentbrowse' | 'usermomentcomment' | 'usermomentlike' | ''>('')
+const viewMap = {
+  usermoment: UserMoment,
+  usermomentbrowse: UserMomentBrowse,
+  usermomentcomment: UserMomentComment,
+  usermomentlike: UserMomentLike
+} as const
+const activeComponent = computed(() => (activeView.value ? viewMap[activeView.value] : null))
+const titleMap: Record<string, string> = {
+  usermoment: '用户动态管理',
+  usermomentbrowse: '用户浏览记录',
+  usermomentcomment: '用户评论记录',
+  usermomentlike: '用户点赞记录'
+}
+const onUserMenuCommand = (cmd: keyof typeof viewMap, row: UserInfo) => {
+  selectedUserId.value = row.id
+  activeView.value = cmd
+  userViewTitle.value = `${titleMap[cmd]} - 用户ID：${row.id}`
+  userViewDialogVisible.value = true
 }
 
 /** 删除按钮操作 */
