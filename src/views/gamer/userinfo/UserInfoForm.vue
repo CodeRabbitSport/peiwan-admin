@@ -31,9 +31,11 @@
       <el-form-item label="真实头像地址" prop="trueHead">
         <el-input v-model="formData.trueHead" placeholder="请输入真实头像地址" />
       </el-form-item>
-      <el-form-item label="性别 0未知 1男 2女" prop="sex">
+      <el-form-item label="性别" prop="sex">
         <el-radio-group v-model="formData.sex">
-          <el-radio value="1">请选择字典生成</el-radio>
+          <el-radio value="1">男</el-radio>
+          <el-radio value="2">女</el-radio>
+          <el-radio value="0">未知</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="城市" prop="city">
@@ -59,17 +61,20 @@
       </el-form-item>
       <el-form-item label="语音审核状态" prop="voiceAuditStatus">
         <el-radio-group v-model="formData.voiceAuditStatus">
-          <el-radio value="1">请选择字典生成</el-radio>
+          <el-radio value="1">审核通过</el-radio>
+          <el-radio value="1">拒绝审核</el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item label="是否允许查看关注 0否 1是" prop="isSeeFollow">
+      <el-form-item label="是否允许查看关注" prop="isSeeFollow">
         <el-radio-group v-model="formData.isSeeFollow">
-          <el-radio value="1">请选择字典生成</el-radio>
+          <el-radio value="1">是</el-radio>
+          <el-radio value="0">否</el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item label="是否允许查看粉丝 0否 1是" prop="isSeeFans">
+      <el-form-item label="是否允许查看粉丝" prop="isSeeFans">
         <el-radio-group v-model="formData.isSeeFans">
-          <el-radio value="1">请选择字典生成</el-radio>
+          <el-radio value="1">是</el-radio>
+          <el-radio value="0">否</el-radio>
         </el-radio-group>
       </el-form-item>
     </el-form>

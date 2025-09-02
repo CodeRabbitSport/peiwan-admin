@@ -2,7 +2,7 @@
   <ContentWrap>
     <!-- 搜索工作栏 -->
     <el-form
-      class="-mb-15px"
+      class="-mb-[15px]"
       :model="queryParams"
       ref="queryFormRef"
       :inline="true"
@@ -14,7 +14,7 @@
           placeholder="请输入动态ID"
           clearable
           @keyup.enter="handleQuery"
-          class="!w-240px"
+          class="!w-[240px]"
         />
       </el-form-item>
       <el-form-item label="投票问题" prop="question">
@@ -23,17 +23,18 @@
           placeholder="请输入投票问题"
           clearable
           @keyup.enter="handleQuery"
-          class="!w-240px"
+          class="!w-[240px]"
         />
       </el-form-item>
       <el-form-item label="是否多选: 0=单选,1=多选" prop="multiple">
         <el-select
           v-model="queryParams.multiple"
-          placeholder="请选择是否多选: 0=单选,1=多选"
+          placeholder="请选择是否多选"
           clearable
-          class="!w-240px"
+          class="!w-[240px]"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option label="单选" value="0" />
+          <el-option label="多选" value="1" />
         </el-select>
       </el-form-item>
       <el-form-item label="截止时间" prop="deadline">
@@ -44,7 +45,7 @@
           start-placeholder="开始日期"
           end-placeholder="结束日期"
           :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
+          class="!w-[220px]"
         />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
@@ -55,19 +56,19 @@
           start-placeholder="开始日期"
           end-placeholder="结束日期"
           :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
+          class="!w-[220px]"
         />
       </el-form-item>
       <el-form-item>
-        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
-        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
+        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-[5px]" /> 搜索</el-button>
+        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-[5px]" /> 重置</el-button>
         <el-button
           type="primary"
           plain
           @click="openForm('create')"
           v-hasPermi="['gamer:user-moment-vote:create']"
         >
-          <Icon icon="ep:plus" class="mr-5px" /> 新增
+          <Icon icon="ep:plus" class="mr-[5px]" /> 新增
         </el-button>
         <el-button
           type="success"
@@ -76,7 +77,7 @@
           :loading="exportLoading"
           v-hasPermi="['gamer:user-moment-vote:export']"
         >
-          <Icon icon="ep:download" class="mr-5px" /> 导出
+          <Icon icon="ep:download" class="mr-[5px]" /> 导出
         </el-button>
         <el-button
             type="danger"
@@ -85,7 +86,7 @@
             @click="handleDeleteBatch"
             v-hasPermi="['gamer:user-moment-vote:delete']"
         >
-          <Icon icon="ep:delete" class="mr-5px" /> 批量删除
+          <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
         </el-button>
       </el-form-item>
     </el-form>
@@ -105,7 +106,14 @@
       <el-table-column label="主键ID" align="center" prop="id" />
       <el-table-column label="动态ID" align="center" prop="momentId" />
       <el-table-column label="投票问题" align="center" prop="question" />
-      <el-table-column label="是否多选: 0=单选,1=多选" align="center" prop="multiple" />
+      <el-table-column label="是否多选" align="center" prop="multiple">
+        <template #default="scope">
+          <el-tag
+            :type="scope.row.multiple == 0 ? 'success' : scope.row.multiple == 1 ? 'danger' : 'info'">
+            {{ scope.row.multiple == 0 ? '单选' : scope.row.multiple == 1 ? '多选' : '未知' }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column
         label="截止时间"
         align="center"

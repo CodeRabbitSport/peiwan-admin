@@ -10,9 +10,12 @@
       <el-form-item label="发布用户ID" prop="userId">
         <el-input v-model="formData.userId" placeholder="请输入发布用户ID" />
       </el-form-item>
-      <el-form-item label="动态类型: 1=文字/图片,2=语音,3=投票,4=红包" prop="momentType">
+      <el-form-item label="动态类型" prop="momentType">
         <el-radio-group v-model="formData.momentType">
-          <el-radio value="1">请选择字典生成</el-radio>
+          <el-radio value="1">文字/图片</el-radio>
+          <el-radio value="2">语音</el-radio>
+          <el-radio value="3">投票</el-radio>
+          <el-radio value="4">红包</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="话题(多个使用#分割)" prop="topic">
@@ -55,9 +58,11 @@
       <el-form-item label="分享数" prop="shareCount">
         <el-input v-model="formData.shareCount" placeholder="请输入分享数" />
       </el-form-item>
-      <el-form-item label="状态: 0=待审核,1=审核通过,2=审核不通过" prop="status">
-        <el-select v-model="formData.status" placeholder="请选择状态: 0=待审核,1=审核通过,2=审核不通过">
-          <el-option label="请选择字典生成" value="" />
+      <el-form-item label="状态" prop="status">
+        <el-select v-model="formData.status" placeholder="请选择状态">
+          <el-option label="待审核" value="0" />
+          <el-option label="审核通过" value="1" />
+          <el-option label="审核不通过" value="2" />
         </el-select>
       </el-form-item>
       <el-form-item label="审核时间" prop="auditTime">

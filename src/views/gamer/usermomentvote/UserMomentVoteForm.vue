@@ -13,9 +13,10 @@
       <el-form-item label="投票问题" prop="question">
         <el-input v-model="formData.question" placeholder="请输入投票问题" />
       </el-form-item>
-      <el-form-item label="是否多选: 0=单选,1=多选" prop="multiple">
-        <el-select v-model="formData.multiple" placeholder="请选择是否多选: 0=单选,1=多选">
-          <el-option label="请选择字典生成" value="" />
+      <el-form-item label="是否多选" prop="multiple">
+        <el-select v-model="formData.multiple" placeholder="请选择是否多选">
+          <el-option label="单选" value="0" />
+          <el-option label="多选" value="1" />
         </el-select>
       </el-form-item>
       <el-form-item label="截止时间" prop="deadline">

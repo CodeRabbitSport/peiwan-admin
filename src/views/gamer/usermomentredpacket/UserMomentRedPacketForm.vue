@@ -18,7 +18,8 @@
       </el-form-item>
       <el-form-item label="红包类型: 1=普通,2=拼手气" prop="packetType">
         <el-radio-group v-model="formData.packetType">
-          <el-radio value="1">请选择字典生成</el-radio>
+          <el-radio value="1">普通</el-radio>
+          <el-radio value="2">拼手气</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="祝福语" prop="message">

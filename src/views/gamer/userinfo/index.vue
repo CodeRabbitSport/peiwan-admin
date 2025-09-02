@@ -47,7 +47,8 @@
           placeholder="请选择语音审核状态"
           clearable
           class="!w-[240px]">
-          <el-option label="请选择字典生成" value="" />
+          <el-option label="审核通过" value="1" />
+          <el-option label="审核失败" value="0" />
         </el-select>
       </el-form-item>
 

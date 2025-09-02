@@ -13,9 +13,10 @@
       <el-form-item label="所属商品分类ID" prop="productCategoryId">
         <el-input v-model="formData.productCategoryId" placeholder="请输入所属商品分类ID" />
       </el-form-item>
-      <el-form-item label="等级类型(1打手2陪玩)" prop="levelType">
-        <el-select v-model="formData.levelType" placeholder="请选择等级类型(1打手2陪玩)">
-          <el-option label="请选择字典生成" value="" />
+      <el-form-item label="等级类型" prop="levelType">
+        <el-select v-model="formData.levelType" placeholder="请选择等级类型">
+          <el-option label="打手" value="1" />
+          <el-option label="陪玩" value="2" />
         </el-select>
       </el-form-item>
       <el-form-item label="级别" prop="level">
@@ -36,9 +37,11 @@
       <el-form-item label="附件" prop="attachment">
         <UploadFile v-model="formData.attachment" />
       </el-form-item>
-      <el-form-item label="审核状态(0待审核1通过2拒绝)" prop="auditStatus">
-        <el-select v-model="formData.auditStatus" placeholder="请选择审核状态(0待审核1通过2拒绝)">
-          <el-option label="请选择字典生成" value="" />
+      <el-form-item label="审核状态" prop="auditStatus">
+        <el-select v-model="formData.auditStatus" placeholder="请选择审核状态">
+          <el-option label="待审核" value="0" />
+          <el-option label="通过" value="1" />
+          <el-option label="拒绝" value="2" />
         </el-select>
       </el-form-item>
     </el-form>
@@ -71,7 +74,7 @@ const formData = ref({
   rejectReason: undefined,
   contact: undefined,
   imageAttachment: undefined,
-  attachment: undefined,
+  attachment: '',
   auditStatus: undefined
 })
 const formRules = reactive({
@@ -136,7 +139,7 @@ const resetForm = () => {
     rejectReason: undefined,
     contact: undefined,
     imageAttachment: undefined,
-    attachment: undefined,
+    attachment: '',
     auditStatus: undefined
   }
   formRef.value?.resetFields()
