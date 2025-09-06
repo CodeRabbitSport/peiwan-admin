@@ -73,7 +73,50 @@
         </el-radio-group>
       </el-form-item>
       <el-form-item label="接单大区" prop="orderReceivingRegion">
-        <el-input type="textarea" v-model="formData.orderReceivingRegion" placeholder="请输入接单大区(多个使用@分割)" />
+        <div class="dynamic-form w-full">
+          <div
+            v-for="(item, index) in orderReceivingRegionFields"
+            :key="index"
+            class="mb-2">
+            <div class="flex gap-x-2">
+              <div :span="2">
+                大区名称
+              </div>
+              <div :span="3">
+                <el-input
+                  v-model="item.region"
+                  placeholder="请输入大区名称"
+                  @input="updateOrderReceivingRegionData" />
+              </div>
+              <div :span="2" class="mx-2">
+                涨幅价格
+              </div>
+              <div :span="2">
+                <el-input-number
+                  v-model="item.price"
+                  :min="0"
+                  :step="1"
+                  @change="updateOrderReceivingRegionData" />
+              </div>
+              <div :span="1">
+                <el-button
+                  type="danger"
+                  :icon="ElIconDelete"
+                  size="small"
+                  @click="removeOrderReceivingRegionField(index)"
+                  :disabled="orderReceivingRegionFields.length <= 1" />
+              </div>
+            </div>
+          </div>
+          <el-button
+            type="primary"
+            :icon="ElIconPlus"
+            size="small"
+            @click="addOrderReceivingRegionField"
+            class="mt-2 !w-[400px]">
+            添加大区
+          </el-button>
+        </div>
       </el-form-item>
       <el-form-item label="擅长位置" prop="skilledPositionStatus">
         <el-radio-group v-model="formData.skilledPositionStatus">
@@ -126,7 +169,7 @@ const formData = ref({
   categoryDemo: undefined,
   gameCard: '',
   orderReceivingStatus: undefined,
-  orderReceivingRegion: undefined,
+  orderReceivingRegion: '',
   skilledPositionStatus: undefined,
   skilledPosition: undefined,
   accompanyTypeStatus: undefined,
@@ -137,6 +180,8 @@ const formData = ref({
 
 // 游戏名片动态表单字段
 const gameCardFields = ref([{ type: 'text', label: '', value: '' }])
+// 接单大区动态表单字段
+const orderReceivingRegionFields = ref([{ region: '', price: 0 }])
 const formRules = reactive({
   categoryType: [{ required: true, message: '类型(1陪玩2护航)不能为空', trigger: 'blur' }]
 })
@@ -155,6 +200,8 @@ const open = async (type: string, id?: number) => {
       formData.value = await ProductCategoryApi.getProductCategory(id)
       // 初始化游戏名片字段
       initGameCardFields()
+      // 初始化接单大区字段
+      initOrderReceivingRegionFields()
     } finally {
       formLoading.value = false
     }
@@ -170,6 +217,28 @@ const submitForm = async () => {
   // 提交请求
   formLoading.value = true
   try {
+    // 提交前确保数据与表单项同步（尤其兼容旧格式/未触发输入变更的情况）
+    updateGameCardData()
+    updateOrderReceivingRegionData()
+    // 重复校验：接单大区名称不得重复（只在启用时校验）
+    if (formData.value.orderReceivingStatus === true) {
+      const regions = orderReceivingRegionFields.value
+        .map((it) => (it.region || '').trim())
+        .filter((n) => n !== '')
+      const seen = new Set<string>()
+      let dupName: string | null = null
+      for (const n of regions) {
+        if (seen.has(n)) {
+          dupName = n
+          break
+        }
+        seen.add(n)
+      }
+      if (dupName) {
+        message.error(`接单大区存在重复的大区名称：${dupName}`)
+        return
+      }
+    }
     const data = formData.value as unknown as ProductCategory
     if (formType.value === 'create') {
       await ProductCategoryApi.createProductCategory(data)
@@ -223,6 +292,56 @@ const initGameCardFields = () => {
   }
 }
 
+// 添加接单大区字段
+const addOrderReceivingRegionField = () => {
+  orderReceivingRegionFields.value.push({ region: '', price: 0 })
+  updateOrderReceivingRegionData()
+}
+
+// 移除接单大区字段（与游戏名片一致：至少保留 1 行）
+const removeOrderReceivingRegionField = (index: number) => {
+  if (orderReceivingRegionFields.value.length > 1) {
+    orderReceivingRegionFields.value.splice(index, 1)
+    updateOrderReceivingRegionData()
+  }
+}
+
+// （按需求）不再提供清空全部按钮，仅支持逐项删除
+
+// 更新接单大区数据
+const updateOrderReceivingRegionData = () => {
+  const filtered = orderReceivingRegionFields.value
+    .map((it) => ({ region: (it.region || '').trim(), price: Number(it.price ?? 0) }))
+    .filter((it) => it.region !== '' || it.price > 0)
+  formData.value.orderReceivingRegion = filtered.length > 0 ? JSON.stringify(filtered) : ''
+}
+
+// 初始化接单大区字段
+const initOrderReceivingRegionFields = () => {
+  const value = formData.value.orderReceivingRegion as unknown as string
+  if (value) {
+    try {
+      const parsed = JSON.parse(value)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        orderReceivingRegionFields.value = parsed.map((it: any) => ({
+          region: it?.region ?? '',
+          price: Number(it?.price ?? 0)
+        }))
+        return
+      }
+    } catch (e) {
+      // ignore json parse error and try legacy format
+    }
+    // 兼容旧格式：使用 @ 分割的大区名称串
+    const names = String(value).split('@').filter(Boolean)
+    orderReceivingRegionFields.value = names.length
+      ? names.map((n: string) => ({ region: n, price: 0 }))
+      : [{ region: '', price: 0 }]
+  } else {
+    orderReceivingRegionFields.value = [{ region: '', price: 0 }]
+  }
+}
+
 /** 重置表单 */
 const resetForm = () => {
   formData.value = {
@@ -233,7 +352,7 @@ const resetForm = () => {
     categoryDemo: undefined,
     gameCard: '',
     orderReceivingStatus: undefined,
-    orderReceivingRegion: undefined,
+    orderReceivingRegion: '',
     skilledPositionStatus: undefined,
     skilledPosition: undefined,
     accompanyTypeStatus: undefined,
@@ -242,7 +361,11 @@ const resetForm = () => {
     gameType: undefined
   }
   gameCardFields.value = [{ type: 'text', label: '', value: '' }]
+  orderReceivingRegionFields.value = [{ region: '', price: 0 }]
   formRef.value?.resetFields()
+  // 同步序列化默认值，避免未操作时为 undefined
+  updateGameCardData()
+  updateOrderReceivingRegionData()
 }
 </script>
 

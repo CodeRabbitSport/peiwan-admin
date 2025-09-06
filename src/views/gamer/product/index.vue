@@ -82,9 +82,13 @@
       <el-table-column label="描述" align="center" prop="productDesc" />
       <el-table-column label="库存" align="center" prop="productStock" />
       <el-table-column label="价格" align="center" prop="productPrice" />
-      <el-table-column label="等级" align="center" prop="productLevel">
+      <el-table-column label="等级" align="center" prop="productLevel" min-width="160">
         <template #default="scope">
-          <dict-tag :type="DICT_TYPE.PLAYERGRADELEVEL" :value="scope.row.productLevel" />
+          <div class="flex flex-wrap gap-1 justify-center">
+            <el-tag v-for="(name, idx) in parseLevelNames(scope.row.productLevel)" :key="idx" size="small">
+              {{ name }}
+            </el-tag>
+          </div>
         </template>
       </el-table-column>
       <el-table-column label="详情图" align="center" prop="productDetailCover">
@@ -123,8 +127,8 @@
       <el-table-column label="商品类型" align="center" prop="typeName" />
       <el-table-column label="上下架" align="center" prop="saleStatus">
         <template #default="scope">
-          <el-tag v-if="scope.row.saleStatus" type="primary">上架</el-tag>
-          <el-tag v-else type="danger">下架</el-tag>
+
+          <el-switch :model-value="scope.row.saleStatus" @change="changeGood(scope.row)"></el-switch>
         </template>
       </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
@@ -157,13 +161,13 @@
 </template>
 
 <script setup lang="ts">
-import { DICT_TYPE } from '@/utils/dict'
 import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { ProductApi, Product } from '@/api/gamer/product'
 import { ProductCategory, ProductCategoryApi } from '@/api/gamer/productcategory'
 import { ProductType, ProductTypeApi } from '@/api/gamer/producttype'
+import { LevelConfigApi, LevelConfig } from '@/api/gamer/levelconfig'
 import ProductForm from './ProductForm.vue'
 
 /** 商品 列表 */
@@ -189,6 +193,37 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+
+// 等级选项与映射（来自 LevelConfig 接口）
+const levelOptions = ref<LevelConfig[]>([])
+const levelNameMap = ref<Record<number, string>>({})
+const loadLevelOptions = async () => {
+  try {
+    const data = await LevelConfigApi.getLevelConfigPage()
+    levelOptions.value = data.list || []
+    const map: Record<number, string> = {}
+    levelOptions.value.forEach((l) => {
+      if (l && typeof l.levelNumber === 'number') {
+        map[l.levelNumber] = l.levelName || String(l.levelNumber)
+      }
+    })
+    levelNameMap.value = map
+  } catch (e) {
+    console.error('获取等级列表失败:', e)
+  }
+}
+
+// 将 productLevel（可能为字符串逗号分隔）解析为等级名称数组
+const parseLevelNames = (val: string | number[] | undefined) => {
+  if (!val) return [] as string[]
+  const ids = Array.isArray(val)
+    ? (val as number[])
+    : String(val)
+        .split(',')
+        .map((v) => Number(v))
+        .filter((n) => !Number.isNaN(n))
+  return ids.map((id) => levelNameMap.value[id] || `#${id}`)
+}
 
 /** 查询列表 */
 const getList = async () => {
@@ -285,10 +320,27 @@ const getTypeOptions = async () => {
   }
 }
 
+
+async function changeGood(row) {
+  try {
+    loading.value = true
+    await ProductApi.updateProduct({
+      ...row,
+      saleStatus: !row.saleStatus
+    })
+    resetQuery()
+  } catch {
+    message.error('修改失败')
+  } finally {
+    loading.value = false
+  }
+
+}
 /** 初始化 **/
 onMounted(() => {
   getList()
   getCategoryOptions()
   getTypeOptions()
+  loadLevelOptions()
 })
 </script>

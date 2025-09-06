@@ -77,17 +77,17 @@
               multiple
               class="!w-full">
               <el-option
-                v-for="dict in getIntDictOptions(DICT_TYPE.PLAYERGRADELEVEL)"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value" />
+                v-for="lvl in levelOptions"
+                :key="lvl.levelNumber"
+                :label="lvl.levelName ?? ('等级 ' + lvl.id)"
+                :value="lvl.levelNumber!" />
             </el-select>
           </el-form-item>
         </el-col>
         <el-col :xs="24" :sm="12">
-          <el-form-item label="绑定奖品组" prop="productPrizeId">
+          <el-form-item label="绑定奖品组" prop="productPrizeGroupId">
             <el-select
-              v-model="formData.productPrizeId"
+              v-model="formData.productPrizeGroupId"
               placeholder="请选择奖品组"
               clearable
               class="!w-full">
@@ -197,7 +197,7 @@ import { ProductApi, Product } from '@/api/gamer/product'
 import { ProductCategoryApi, ProductCategory } from '@/api/gamer/productcategory'
 import { ProductTypeApi, ProductType } from '@/api/gamer/producttype'
 import { PrizeGroupApi, PrizeGroup } from '@/api/gamer/prizegroup'
-import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
+import { LevelConfigApi, LevelConfig } from '@/api/gamer/levelconfig'
 
 // 定义级联选择器的选项类型
 interface CascaderOption {
@@ -219,6 +219,7 @@ const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const categoryOptions = ref<ProductCategory[]>([]) // 分类选项
 const cascaderOptions = ref<CascaderOption[]>([]) // 级联选择器选项
 const prizeGroupOptions = ref<PrizeGroup[]>([]) // 奖品组选项
+const levelOptions = ref<LevelConfig[]>([]) // 等级选项（来自 LevelConfig 接口）
 const cascaderProps = {
   value: 'value',
   label: 'label',
@@ -235,7 +236,7 @@ const formData = ref({
   productDetailCover: undefined,
   productMainCover: undefined,
   productContent: undefined,
-  productPrizeId: undefined,
+  productPrizeGroupId: undefined,
   categoryId: undefined as number | undefined,
   typeId: undefined as number | undefined,
   categoryTypeValue: [] as number[], // 级联选择器的值
@@ -266,6 +267,7 @@ const open = async (type: string, id?: number) => {
   await buildCascaderOptions()
   // 加载奖品组选项
   await loadPrizeGroupOptions()
+  // 加载等级选项
 
   // 修改时，设置数据
   if (id) {
@@ -279,6 +281,17 @@ const open = async (type: string, id?: number) => {
       if (!formData.value.productContent) {
         formData.value.productContent = undefined
       }
+      // 编辑时将等级字符串解析为数组，便于多选
+      if (formData.value.productLevel && typeof formData.value.productLevel === 'string') {
+        const arr = (formData.value.productLevel as unknown as string)
+          .split(',')
+          .map((v) => Number(v))
+          .filter((v) => !Number.isNaN(v))
+        // @ts-ignore
+        formData.value.productLevel = arr as any
+      }
+      await loadLevelOptions()
+
     } finally {
       formLoading.value = false
     }
@@ -367,6 +380,18 @@ const loadPrizeGroupOptions = async () => {
   }
 }
 
+// 加载等级选项（来自 LevelConfig 列表接口）
+const loadLevelOptions = async () => {
+  try {
+    const data = await LevelConfigApi.getLevelConfigPage({
+      categoryType: formData.value.categoryId
+    })
+    levelOptions.value = data.list || []
+  } catch (error) {
+    console.error('加载等级选项失败:', error)
+  }
+}
+
 // 处理级联选择器变化
 const handleCascaderChange = (value: number[]) => {
   if (value && value.length === 2) {
@@ -390,7 +415,7 @@ const resetForm = () => {
     productDetailCover: undefined,
     productMainCover: undefined,
     productContent: undefined,
-    productPrizeId: undefined,
+    productPrizeGroupId: undefined,
     categoryId: undefined,
     typeId: undefined,
     categoryTypeValue: [] as number[], // 级联选择器的值

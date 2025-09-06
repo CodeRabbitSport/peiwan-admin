@@ -74,7 +74,7 @@
               :autosize="{ minRows: 2, maxRows: 4 }"
               :style="{ width: '100%' }"
               placeholder="请上传 apiclient_cert.p12 证书"
-              readonly
+
               type="textarea"
               :rows="2"
             />
@@ -88,7 +88,7 @@
               action=""
             >
               <el-button type="primary">
-                <Icon class="mr-5px" icon="ep:upload" />
+                <Icon class="mr-[5px]" icon="ep:upload" />
                 点击上传
               </el-button>
             </el-upload>
@@ -112,7 +112,7 @@
               :autosize="{ minRows: 2, maxRows: 4 }"
               :style="{ width: '100%' }"
               placeholder="请上传 apiclient_key.pem 证书"
-              readonly
+
               type="textarea"
               :rows="2"
             />
@@ -127,7 +127,7 @@
               action=""
             >
               <el-button type="primary">
-                <Icon class="mr-5px" icon="ep:upload" />
+                <Icon class="mr-[5px]" icon="ep:upload" />
                 点击上传
               </el-button>
             </el-upload>
@@ -153,7 +153,7 @@
               :autosize="{ minRows: 2, maxRows: 4 }"
               :style="{ width: '100%' }"
               placeholder="请上传 public_key.pem 证书"
-              readonly
+
               type="textarea"
               :rows="2"
             />
@@ -168,7 +168,7 @@
               action=""
             >
               <el-button type="primary">
-                <Icon class="mr-5px" icon="ep:upload" />
+                <Icon class="mr-[5px]" icon="ep:upload" />
                 点击上传
               </el-button>
             </el-upload>

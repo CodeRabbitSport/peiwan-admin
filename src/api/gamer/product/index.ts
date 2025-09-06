@@ -12,7 +12,7 @@ export interface Product {
   productDetailCover: string; // 详情图
   productMainCover: string; // 主页图
   productContent: string; // 商品内容(富文本)
-  productPrizeId: number; // 绑定奖品组
+  productPrizeGroupId: number; // 绑定奖品组
   categoryId: number; // 分类ID
   typeId: number; // 商品类型
   scoreThreshold: number; // 接单分数门槛

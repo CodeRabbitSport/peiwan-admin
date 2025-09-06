@@ -90,7 +90,7 @@
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
         </el-button>
-        <el-button
+        <!-- <el-button
           type="primary"
           plain
           @click="openForm('create')"
@@ -104,7 +104,7 @@
           :loading="exportLoading"
           v-hasPermi="['gamer:user-moment:export']">
           <Icon icon="ep:download" class="mr-[5px]" /> 导出
-        </el-button>
+        </el-button> -->
         <el-button
           type="danger"
           plain
@@ -139,13 +139,16 @@
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" />
       <el-table-column label="用户ID" align="center" prop="userId" />
-      <el-table-column label="动态类型" align="center" prop="momentType">
+      <el-table-column label="类型" align="center" prop="momentType" width="80px">
         <template #default="scope">
-          <el-tag
-            :type="scope.row.momentType === 1 ? 'success' : scope.row.momentType === 2 ? 'danger' : scope.row.momentType === 3 ? 'info' : 'warning'">
-            {{ scope.row.momentType === 1 ? '内容' : scope.row.momentType === 2 ? '语音' : scope.row.momentType === 3 ? '投票'
-              : '红包' }}
-          </el-tag>
+          <div class="flex gap-y-1 flex-col ">
+            <el-tag
+              v-for="v in scope?.row?.momentType?.split(',')"
+              :type="v == 1 ? 'success' : v == 2 ? 'danger' : v == 3 ? 'info' : 'warning'">
+              {{ v == 1 ? '内容' : v == 2 ? '语音' : v == 3 ? '投票'
+                : '红包' }}
+            </el-tag>
+          </div>
         </template>
       </el-table-column>
       <el-table-column label="话题" align="center" prop="topic" />
@@ -165,58 +168,67 @@
       <el-table-column label="状态" align="center" prop="status">
         <template #default="scope">
           <el-tag :type="scope.row.status === 0 ? 'info' : scope.row.status === 1 ? 'success' : 'danger'">
-            {{ scope.row.status === 0 ? '待审核' : scope.row.status === 1 ? '审核通过' : '审核不通过' }}
+            {{ scope.row.status === 0 ? '待审核' : scope.row.status === 1 ? '通过' : '不通过' }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="审核时间" align="center" prop="auditTime" :formatter="dateFormatter" width="180px" />
+      <!-- <el-table-column label="审核时间" align="center" prop="auditTime" :formatter="dateFormatter" width="180px" /> -->
       <el-table-column label="拒绝原因" align="center" prop="auditReason" />
 
       <el-table-column label="最后刷新时间" align="center" prop="lastRefreshTime" :formatter="dateFormatter" width="180px" />
-      <el-table-column label="操作" align="center" width="200px">
-
+      <el-table-column label="操作" align="center" class-name="col-actions" min-width="220px"
+        :show-overflow-tooltip="false">
         <template #default="scope">
-          <el-dropdown trigger="hover" @command="(cmd) => onDetailCommand(cmd, scope.row)">
-            <el-button link type="primary">
-              内容明细
-              <Icon icon="ep:arrow-down" class="ml-[4px]" />
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item
-                  command="content"
-                  v-if="scope.row.momentType === 1"
-                  v-hasPermi="['gamer:user-moment-content:update']">
-                  内容明细
-                </el-dropdown-item>
-                <el-dropdown-item
-                  command="voice"
-                  v-else-if="scope.row.momentType === 2"
-                  v-hasPermi="['gamer:user-moment-voice:update']">
-                  语音明细
-                </el-dropdown-item>
-                <el-dropdown-item
-                  command="vote"
-                  v-else-if="scope.row.momentType === 3"
-                  v-hasPermi="['gamer:user-moment-vote:update']">
-                  投票明细
-                </el-dropdown-item>
-                <el-dropdown-item
-                  command="redpacket"
-                  v-else-if="scope.row.momentType === 4"
-                  v-hasPermi="['gamer:user-moment-red-packet:update']">
-                  红包明细
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <el-button link type="primary" @click="openForm('update', scope.row.id)"
-            v-hasPermi="['gamer:user-moment:update']">
-            编辑
-          </el-button>
-          <el-button link type="danger" @click="handleDelete(scope.row.id)" v-hasPermi="['gamer:user-moment:delete']">
-            删除
-          </el-button>
+          <el-space wrap size="small" class="action-space">
+            <!-- 待审核：通过 / 不通过 合并为按钮组，更紧凑 -->
+            <el-button-group v-if="scope.row.status === 0">
+              <el-button size="small" v-hasPermi="['gamer:user-moment:audit']" text type="primary"
+                @click="onPassCommand(scope.row)">通过</el-button>
+              <el-button size="small" v-hasPermi="['gamer:user-moment:audit']" text type="danger"
+                @click="onRejectCommand(scope.row)">不通过</el-button>
+            </el-button-group>
+
+            <!-- 内容明细下拉 -->
+            <el-dropdown trigger="hover" @command="(cmd) => onDetailCommand(cmd, scope.row)">
+              <el-button size="small" text class="!text-[#67C23A]">
+                内容明细
+                <Icon icon="ep:arrow-down" class="ml-[4px]" />
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item
+                    command="content"
+                    v-if="scope.row.momentType === 1"
+                    v-hasPermi="['gamer:user-moment-content:update']">
+                    内容明细
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    command="voice"
+                    v-else-if="scope.row.momentType === 2"
+                    v-hasPermi="['gamer:user-moment-voice:update']">
+                    语音明细
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    command="vote"
+                    v-else-if="scope.row.momentType === 3"
+                    v-hasPermi="['gamer:user-moment-vote:update']">
+                    投票明细
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    command="redpacket"
+                    v-else-if="scope.row.momentType === 4"
+                    v-hasPermi="['gamer:user-moment-red-packet:update']">
+                    红包明细
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+
+            <el-button link size="small" type="primary" @click="openForm('update', scope.row.id)"
+              v-hasPermi="['gamer:user-moment:update']">编辑</el-button>
+            <el-button link size="small" type="danger" @click="handleDelete(scope.row.id)"
+              v-hasPermi="['gamer:user-moment:delete']">删除</el-button>
+          </el-space>
         </template>
       </el-table-column>
     </el-table>
@@ -346,6 +358,32 @@ const onDetailCommand = (_cmd: any, row: UserMoment) => {
   openMomentSubView(row)
 }
 
+// 审核通过操作
+const onPassCommand = async (row: UserMoment) => {
+  try {
+    await message.confirm('确认通过该动态吗？')
+    await UserMomentApi.approveUserMoment({ id: row.id, status: 1 })
+    message.success('审核通过成功')
+    await getList()
+  } catch { }
+}
+
+// 审核不通过操作
+const onRejectCommand = async (row: UserMoment) => {
+  try {
+    const data = await message.prompt('请输入拒绝原因', t('common.reminder'))
+    if (!data || (data as any).action !== 'confirm') return
+    const reason = (data as any).value ? String((data as any).value).trim() : ''
+    if (!reason) {
+      message.warning('请输入拒绝原因')
+      return
+    }
+    await UserMomentApi.approveUserMoment({ id:row.id, auditReason: reason, status: 2 })
+    message.success('已驳回该动态')
+    await getList()
+  } catch { }
+}
+
 /** 删除按钮操作 */
 const handleDelete = async (id: number) => {
   try {
@@ -396,3 +434,20 @@ onMounted(() => {
   getList()
 })
 </script>
+
+<style scoped>
+/* 仅对“操作”列允许自动换行与可见溢出，避免被省略 */
+:deep(.el-table .col-actions .cell) {
+  white-space: normal;
+  overflow: visible;
+}
+
+/* 操作区：多行换行 + 居中 + 紧凑间距 */
+.action-space {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  /* 行间距4，列间距8 */
+  justify-content: center;
+}
+</style>
