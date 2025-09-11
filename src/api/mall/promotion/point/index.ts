@@ -16,11 +16,11 @@ export interface PointActivityVO {
   // ========== 商品字段 ==========
   spuName: string // 商品名称
   picUrl: string // 商品主图
-  marketPrice: number // 商品市场价，单位：分
+  marketPrice: number // 商品市场价
 
   //======================= 显示所需兑换积分最少的 sku 信息 =======================
   point: number // 兑换积分
-  price: number // 兑换金额，单位：分
+  price: number // 兑换金额
 }
 
 // 秒杀活动所需属性
@@ -31,7 +31,7 @@ export interface PointProductVO {
   skuId: number // 商品 SKU 编号
   count: number // 可兑换数量
   point: number // 兑换积分
-  price: number // 兑换金额，单位：分
+  price: number // 兑换金额
   stock: number // 积分商城商品库存
   activityStatus?: number // 积分商城商品状态
 }
@@ -49,7 +49,7 @@ export interface SpuExtension0 extends Spu {
   pointStock: number // 积分商城活动库存
   pointTotalStock: number // 积分商城活动总库存
   point: number // 兑换积分
-  pointPrice: number // 兑换金额，单位：分
+  pointPrice: number // 兑换金额
 }
 
 // 积分商城活动 API

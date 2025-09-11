@@ -11,12 +11,12 @@
         <el-input v-model="formData.categoryName" placeholder="请输入类别名称" />
       </el-form-item>
 
-      <el-form-item label="游戏类型" prop="gameType">
+      <!-- <el-form-item label="游戏类型" prop="gameType">
         <el-radio-group v-model="formData.gameType">
           <el-radio :value="1">端游</el-radio>
           <el-radio :value="2">手游</el-radio>
         </el-radio-group>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="类型" prop="categoryType">
         <el-radio-group v-model="formData.categoryType">
           <el-radio :value="true">陪玩</el-radio>

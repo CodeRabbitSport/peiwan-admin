@@ -44,7 +44,7 @@ export interface TradeOrderCountRespVO {
 export interface TradeOrderSummaryRespVO {
   /** 支付订单商品数 */
   orderPayCount?: number
-  /** 总支付金额，单位：分 */
+  /** 总支付金额 */
   orderPayPrice?: number
 }
 

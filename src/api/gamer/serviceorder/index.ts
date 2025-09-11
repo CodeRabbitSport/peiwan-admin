@@ -4,21 +4,21 @@ import type { Dayjs } from 'dayjs';
 /** 用户订单信息 */
 export interface ServiceOrder {
           id: number; // 订单ID，主键
-          orderNo?: string; // 订单号，唯一标识
+          orderNo?: string; // 订单号
           userId?: number; // 下单用户ID
           acceptorId: number; // 接单人用户ID
           acceptTime: string | Dayjs; // 接单时间
           productId?: number; // 商品ID
           productName?: string; // 商品名称
           productPicUrl: string; // 商品图片URL
-          productPrice?: number; // 商品价格，单位：分
+          productPrice?: number; // 商品价格
           orderStatus?: number; // 订单状态：0-待支付 1-已支付待接单 2-进行中 3-已完成 4-已取消 5-退款中 6-已退款
-          totalAmount?: number; // 订单总金额，单位：分
-          discountAmount?: number; // 优惠金额，单位：分
-          couponAmount?: number; // 优惠券优惠金额，单位：分
-          actualAmount?: number; // 实际支付金额，单位：分
-          platformFee?: number; // 平台手续费，单位：分
-          acceptorAmount?: number; // 接单人获得金额，单位：分
+          totalAmount?: number; // 订单总金额
+          discountAmount?: number; // 优惠金额
+          couponAmount?: number; // 优惠券优惠金额
+          actualAmount?: number; // 实际支付金额
+          platformFee?: number; // 平台手续费
+          acceptorAmount?: number; // 接单人获得金额
           userCouponId: number; // 使用的用户优惠券ID
           couponId: number; // 优惠券ID
           deadlineTime: string | Dayjs; // 订单截止时间(预留字段)
@@ -38,7 +38,7 @@ export interface ServiceOrder {
           refundAuditReason: string; // 退款审核原因(拒绝时填写)
           refundAuditTime: string | Dayjs; // 退款审核时间
           refundAuditUserId: number; // 退款审核人ID
-          refundAmount: number; // 退款金额，单位：分
+          refundAmount: number; // 退款金额
           refundTime: string | Dayjs; // 退款时间
           payRefundId: number; // 退款订单ID
   }

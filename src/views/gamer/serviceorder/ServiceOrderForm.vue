@@ -7,8 +7,8 @@
       label-width="100px"
       v-loading="formLoading"
     >
-      <el-form-item label="订单号，唯一标识" prop="orderNo">
-        <el-input v-model="formData.orderNo" placeholder="请输入订单号，唯一标识" />
+      <el-form-item label="订单号" prop="orderNo">
+        <el-input v-model="formData.orderNo" placeholder="请输入订单号" />
       </el-form-item>
       <el-form-item label="下单用户ID" prop="userId">
         <el-input v-model="formData.userId" placeholder="请输入下单用户ID" />
@@ -33,31 +33,31 @@
       <el-form-item label="商品图片URL" prop="productPicUrl">
         <UploadImg v-model="formData.productPicUrl" />
       </el-form-item>
-      <el-form-item label="商品价格，单位：分" prop="productPrice">
-        <el-input v-model="formData.productPrice" placeholder="请输入商品价格，单位：分" />
+      <el-form-item label="商品价格" prop="productPrice">
+        <el-input v-model="formData.productPrice" placeholder="请输入商品价格" />
       </el-form-item>
       <el-form-item label="订单状态：0-待支付 1-已支付待接单 2-进行中 3-已完成 4-已取消 5-退款中 6-已退款" prop="orderStatus">
         <el-radio-group v-model="formData.orderStatus">
           <el-radio value="1">请选择字典生成</el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item label="订单总金额，单位：分" prop="totalAmount">
-        <el-input v-model="formData.totalAmount" placeholder="请输入订单总金额，单位：分" />
+      <el-form-item label="订单总金额" prop="totalAmount">
+        <el-input v-model="formData.totalAmount" placeholder="请输入订单总金额" />
       </el-form-item>
-      <el-form-item label="优惠金额，单位：分" prop="discountAmount">
-        <el-input v-model="formData.discountAmount" placeholder="请输入优惠金额，单位：分" />
+      <el-form-item label="优惠金额" prop="discountAmount">
+        <el-input v-model="formData.discountAmount" placeholder="请输入优惠金额" />
       </el-form-item>
-      <el-form-item label="优惠券优惠金额，单位：分" prop="couponAmount">
-        <el-input v-model="formData.couponAmount" placeholder="请输入优惠券优惠金额，单位：分" />
+      <el-form-item label="优惠券优惠金额" prop="couponAmount">
+        <el-input v-model="formData.couponAmount" placeholder="请输入优惠券优惠金额" />
       </el-form-item>
-      <el-form-item label="实际支付金额，单位：分" prop="actualAmount">
-        <el-input v-model="formData.actualAmount" placeholder="请输入实际支付金额，单位：分" />
+      <el-form-item label="实际支付金额" prop="actualAmount">
+        <el-input v-model="formData.actualAmount" placeholder="请输入实际支付金额" />
       </el-form-item>
-      <el-form-item label="平台手续费，单位：分" prop="platformFee">
-        <el-input v-model="formData.platformFee" placeholder="请输入平台手续费，单位：分" />
+      <el-form-item label="平台手续费" prop="platformFee">
+        <el-input v-model="formData.platformFee" placeholder="请输入平台手续费" />
       </el-form-item>
-      <el-form-item label="接单人获得金额，单位：分" prop="acceptorAmount">
-        <el-input v-model="formData.acceptorAmount" placeholder="请输入接单人获得金额，单位：分" />
+      <el-form-item label="接单人获得金额" prop="acceptorAmount">
+        <el-input v-model="formData.acceptorAmount" placeholder="请输入接单人获得金额" />
       </el-form-item>
       <el-form-item label="使用的用户优惠券ID" prop="userCouponId">
         <el-input v-model="formData.userCouponId" placeholder="请输入使用的用户优惠券ID" />
@@ -160,8 +160,8 @@
       <el-form-item label="退款审核人ID" prop="refundAuditUserId">
         <el-input v-model="formData.refundAuditUserId" placeholder="请输入退款审核人ID" />
       </el-form-item>
-      <el-form-item label="退款金额，单位：分" prop="refundAmount">
-        <el-input v-model="formData.refundAmount" placeholder="请输入退款金额，单位：分" />
+      <el-form-item label="退款金额" prop="refundAmount">
+        <el-input v-model="formData.refundAmount" placeholder="请输入退款金额" />
       </el-form-item>
       <el-form-item label="退款时间" prop="refundTime">
         <el-date-picker
@@ -235,18 +235,18 @@ const formData = ref({
   payRefundId: undefined
 })
 const formRules = reactive({
-  orderNo: [{ required: true, message: '订单号，唯一标识不能为空', trigger: 'blur' }],
+  orderNo: [{ required: true, message: '订单号不能为空', trigger: 'blur' }],
   userId: [{ required: true, message: '下单用户ID不能为空', trigger: 'blur' }],
   productId: [{ required: true, message: '商品ID不能为空', trigger: 'blur' }],
   productName: [{ required: true, message: '商品名称不能为空', trigger: 'blur' }],
-  productPrice: [{ required: true, message: '商品价格，单位：分不能为空', trigger: 'blur' }],
+  productPrice: [{ required: true, message: '商品价格不能为空', trigger: 'blur' }],
   orderStatus: [{ required: true, message: '订单状态：0-待支付 1-已支付待接单 2-进行中 3-已完成 4-已取消 5-退款中 6-已退款不能为空', trigger: 'blur' }],
-  totalAmount: [{ required: true, message: '订单总金额，单位：分不能为空', trigger: 'blur' }],
-  discountAmount: [{ required: true, message: '优惠金额，单位：分不能为空', trigger: 'blur' }],
-  couponAmount: [{ required: true, message: '优惠券优惠金额，单位：分不能为空', trigger: 'blur' }],
-  actualAmount: [{ required: true, message: '实际支付金额，单位：分不能为空', trigger: 'blur' }],
-  platformFee: [{ required: true, message: '平台手续费，单位：分不能为空', trigger: 'blur' }],
-  acceptorAmount: [{ required: true, message: '接单人获得金额，单位：分不能为空', trigger: 'blur' }],
+  totalAmount: [{ required: true, message: '订单总金额不能为空', trigger: 'blur' }],
+  discountAmount: [{ required: true, message: '优惠金额不能为空', trigger: 'blur' }],
+  couponAmount: [{ required: true, message: '优惠券优惠金额不能为空', trigger: 'blur' }],
+  actualAmount: [{ required: true, message: '实际支付金额不能为空', trigger: 'blur' }],
+  platformFee: [{ required: true, message: '平台手续费不能为空', trigger: 'blur' }],
+  acceptorAmount: [{ required: true, message: '接单人获得金额不能为空', trigger: 'blur' }],
   payStatus: [{ required: true, message: '支付状态：0-未支付 1-已支付 2-已退款不能为空', trigger: 'blur' }]
 })
 const formRef = ref() // 表单 Ref

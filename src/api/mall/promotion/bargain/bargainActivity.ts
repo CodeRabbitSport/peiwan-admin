@@ -15,8 +15,8 @@ export interface BargainActivityVO {
   bargainFirstPrice: number // 砍价起始价格，单位分
   bargainMinPrice: number // 砍价底价
   stock: number // 活动库存
-  randomMinPrice?: number // 用户每次砍价的最小金额，单位：分
-  randomMaxPrice?: number // 用户每次砍价的最大金额，单位：分
+  randomMinPrice?: number // 用户每次砍价的最小金额
+  randomMaxPrice?: number // 用户每次砍价的最大金额
 }
 
 // 砍价活动所需属性。选择的商品和属性的时候使用方便使用活动的通用封装
