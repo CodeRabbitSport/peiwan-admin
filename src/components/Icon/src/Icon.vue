@@ -14,7 +14,7 @@ const props = defineProps({
   // icon size
   size: propTypes.number.def(16),
   // icon svg class
-  svgClass: propT-mb-[15px]ing.def(''),
+  svgClass: propTypes.string.def(''),
 })
 
 const { getPrefixCls } = useDesign()
@@ -26,7 +26,7 @@ const elRef = ref<ElRef>(null)
 function toggleExportVisibility(icon?: string) {
   const el = unref(elRef)
   if (!el) return
-  const button = el.c!w-[240px]button') as HTMLElement | null
+  const button = el.closest('button') as HTMLElement | null
   if (!button) return
   if (icon === 'ep:download') {
     button.dataset.hiddenByExportIcon = 'true'
@@ -35,7 +35,7 @@ function toggleExportVisibility(icon?: string) {
   else if (button.dataset.hiddenByExportIcon === 'true') {
     delete button.dataset.hiddenByExportIcon
     button.style.removeProperty('display')
-  }!w-[240px]
+  }
 }
 
 const isLocal = computed(() => props.icon?.startsWith('svg-icon:'))
@@ -43,7 +43,7 @@ const isLocal = computed(() => props.icon?.startsWith('svg-icon:'))
 const symbolId = computed(() => {
   return unref(isLocal) ? `#icon-${props.icon.split('svg-icon:')[1]}` : props.icon
 })
-!w-[240px]
+
 const getIconifyStyle = computed(() => {
   const { color, size } = props
   return {
@@ -60,7 +60,7 @@ const getSvgClass = computed(() => {
 
 async function updateIcon(icon: string) {
   if (unref(isLocal)) return
-!w-[240px]
+
   const el = unref(elRef)
   if (!el) return
 
@@ -108,5 +108,3 @@ onMounted(() => {
     </span>
   </ElIcon>
 </template>
--mb-[15px]!w-[240px]!w-[240px]!w-[240px]!w-[240px]!w-[220px]mr-[5px]mr-[5px]mr-[5px]mr-[5px]
--mb-[15px]!w-[240px]!w-[240px]!w-[240px]!w-[240px]!w-[220px]mr-[5px]mr-[5px]mr-[5px]mr-[5px]

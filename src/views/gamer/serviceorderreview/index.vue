@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { ServiceOrderReview } from '@/api/gamer/serviceorderreview'
 import { ServiceOrderReviewApi } from '@/api/gamer/serviceorderreview'
-import download from '@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
 
@@ -26,7 +25,7 @@ const queryParams = reactive({
   createTime: [],
 })
 const queryFormRef = ref() // 搜索的表单
-const exportLoading = ref(false) // 导出的加载中
+// const exportLoading = ref(false) // 导出的加载中
 
 /** 查询列表 */
 async function getList() {
@@ -67,12 +66,12 @@ async function handleDelete(id: number) {
     // 发起删除
     await ServiceOrderReviewApi.deleteServiceOrderReview(id)
     message.success(t('common.delSuccess'))
-    currentRow.value = {}
     // 刷新列表
     await getList()
   }
   catch {}
 }
+const checkedIds = ref<number[]>([])
 
 /** 批量删除订单评价 */
 async function handleDeleteBatch() {
@@ -87,25 +86,24 @@ async function handleDeleteBatch() {
   catch {}
 }
 
-const checkedIds = ref<number[]>([])
 function handleRowCheckboxChange(records: ServiceOrderReview[]) {
   checkedIds.value = records.map(item => item.id)
 }
 
 /** 导出按钮操作（已隐藏按钮，保留逻辑以备后用） */
-async function handleExport() {
-  try {
-    await message.exportConfirm()
-    exportLoading.value = true
-    const data = await ServiceOrderReviewApi.exportServiceOrderReview(queryParams)
-    download.excel(data, '订单评价.xls')
-  }
-  catch {
-  }
-  finally {
-    exportLoading.value = false
-  }
-}
+// async function handleExport() {
+//   try {
+//     await message.exportConfirm()
+//     exportLoading.value = true
+//     const data = await ServiceOrderReviewApi.exportServiceOrderReview(queryParams)
+//     download.excel(data, '订单评价.xls')
+//   }
+//   catch {
+//   }
+//   finally {
+//     exportLoading.value = false
+//   }
+// }
 
 /** 初始化 */
 onMounted(() => {
@@ -118,7 +116,7 @@ onMounted(() => {
     <!-- 搜索工作栏 -->
     <el-form
       ref="queryFormRef"
-      class="-mb-15px"
+      class="-mb-[15px]"
       :model="queryParams"
       :inline="true"
       label-width="68px"
@@ -128,7 +126,7 @@ onMounted(() => {
           v-model="queryParams.orderId"
           placeholder="请输入订单ID"
           clearable
-          class="!w-240px"
+          class="!w-[240px]"
           @keyup.enter="handleQuery"
         />
       </el-form-item>
@@ -137,7 +135,7 @@ onMounted(() => {
           v-model="queryParams.userId"
           placeholder="请输入评价人ID"
           clearable
-          class="!w-240px"
+          class="!w-[240px]"
           @keyup.enter="handleQuery"
         />
       </el-form-item>
@@ -146,7 +144,7 @@ onMounted(() => {
           v-model="queryParams.acceptorId"
           placeholder="请输入接单人ID"
           clearable
-          class="!w-240px"
+          class="!w-[240px]"
           @keyup.enter="handleQuery"
         />
       </el-form-item>
@@ -155,7 +153,7 @@ onMounted(() => {
           v-model="queryParams.star"
           placeholder="请选择星级评分 1-5"
           clearable
-          class="!w-240px"
+          class="!w-[240px]"
         >
           <el-option label="请选择字典生成" value="" />
         </el-select>
@@ -168,15 +166,15 @@ onMounted(() => {
           start-placeholder="开始日期"
           end-placeholder="结束日期"
           :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
+          class="!w-[220px]"
         />
       </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery">
-          <Icon icon="ep:search" class="mr-5px" /> 搜索
+          <Icon icon="ep:search" class="mr-[5px]" /> 搜索
         </el-button>
         <el-button @click="resetQuery">
-          <Icon icon="ep:refresh" class="mr-5px" /> 重置
+          <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
         </el-button>
         <el-button
           v-hasPermi="['gamer:service-order-review:create']"
@@ -184,7 +182,7 @@ onMounted(() => {
           plain
           @click="openForm('create')"
         >
-          <Icon icon="ep:plus" class="mr-5px" /> 新增
+          <Icon icon="ep:plus" class="mr-[5px]" /> 新增
         </el-button>
         <el-button
           v-hasPermi="['gamer:service-order-review:delete']"
@@ -193,7 +191,7 @@ onMounted(() => {
           :disabled="isEmpty(checkedIds)"
           @click="handleDeleteBatch"
         >
-          <Icon icon="ep:delete" class="mr-5px" /> 批量删除
+          <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
         </el-button>
       </el-form-item>
     </el-form>
