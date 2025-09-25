@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { UserWithdrawAccount } from '@/api/gamer/userwithdrawaccount'
 import { UserWithdrawAccountApi } from '@/api/gamer/userwithdrawaccount'
-import download from '@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
 
@@ -28,7 +27,6 @@ const queryParams = reactive({
   createTime: [],
 })
 const queryFormRef = ref() // 搜索的表单
-const exportLoading = ref(false) // 导出的加载中
 
 /** 查询列表 */
 async function getList() {
@@ -57,9 +55,6 @@ function resetQuery() {
 
 /** 添加/修改操作 */
 const formRef = ref()
-function openForm(type: string, id?: number) {
-  formRef.value.open(type, id)
-}
 
 /** 删除按钮操作 */
 async function handleDelete(id: number) {
@@ -69,12 +64,12 @@ async function handleDelete(id: number) {
     // 发起删除
     await UserWithdrawAccountApi.deleteUserWithdrawAccount(id)
     message.success(t('common.delSuccess'))
-    currentRow.value = {}
     // 刷新列表
     await getList()
   }
   catch {}
 }
+const checkedIds = ref<number[]>([])
 
 /** 批量删除用户提现账户 */
 async function handleDeleteBatch() {
@@ -89,24 +84,8 @@ async function handleDeleteBatch() {
   catch {}
 }
 
-const checkedIds = ref<number[]>([])
 function handleRowCheckboxChange(records: UserWithdrawAccount[]) {
   checkedIds.value = records.map(item => item.id)
-}
-
-/** 导出按钮操作（已隐藏按钮，保留逻辑以备后用） */
-async function handleExport() {
-  try {
-    await message.exportConfirm()
-    exportLoading.value = true
-    const data = await UserWithdrawAccountApi.exportUserWithdrawAccount(queryParams)
-    download.excel(data, '用户提现账户.xls')
-  }
-  catch {
-  }
-  finally {
-    exportLoading.value = false
-  }
 }
 
 /** 初始化 */
@@ -156,42 +135,13 @@ onMounted(() => {
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="真实姓名" prop="realName">
-        <el-input
-          v-model="queryParams.realName"
-          placeholder="请输入真实姓名"
-          clearable
-          class="!w-[240px]"
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="账号(银行卡号/支付宝账号)" prop="accountNo">
+      <el-form-item label="账号" prop="accountNo">
         <el-input
           v-model="queryParams.accountNo"
-          placeholder="请输入账号(银行卡号/支付宝账号)"
+          placeholder="请输入账号"
           clearable
           class="!w-[240px]"
           @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="银行名称(仅银行卡)" prop="bankName">
-        <el-input
-          v-model="queryParams.bankName"
-          placeholder="请输入银行名称(仅银行卡)"
-          clearable
-          class="!w-[240px]"
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="创建时间" prop="createTime">
-        <el-date-picker
-          v-model="queryParams.createTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-[220px]"
         />
       </el-form-item>
       <el-form-item>
@@ -201,14 +151,14 @@ onMounted(() => {
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
         </el-button>
-        <el-button
+        <!-- <el-button
           v-hasPermi="['gamer:user-withdraw-account:create']"
           type="primary"
           plain
           @click="openForm('create')"
         >
           <Icon icon="ep:plus" class="mr-[5px]" /> 新增
-        </el-button>
+        </el-button> -->
         <el-button
           v-hasPermi="['gamer:user-withdraw-account:delete']"
           type="danger"
@@ -267,14 +217,14 @@ onMounted(() => {
       />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
-          <el-button
+          <!-- <el-button
             v-hasPermi="['gamer:user-withdraw-account:update']"
             link
             type="primary"
             @click="openForm('update', scope.row.id)"
           >
             编辑
-          </el-button>
+          </el-button> -->
           <el-button
             v-hasPermi="['gamer:user-withdraw-account:delete']"
             link

@@ -130,34 +130,6 @@ onMounted(() => {
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="评价人ID" prop="userId">
-        <el-input
-          v-model="queryParams.userId"
-          placeholder="请输入评价人ID"
-          clearable
-          class="!w-[240px]"
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="接单人ID" prop="acceptorId">
-        <el-input
-          v-model="queryParams.acceptorId"
-          placeholder="请输入接单人ID"
-          clearable
-          class="!w-[240px]"
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="星级评分 1-5" prop="star">
-        <el-select
-          v-model="queryParams.star"
-          placeholder="请选择星级评分 1-5"
-          clearable
-          class="!w-[240px]"
-        >
-          <el-option label="请选择字典生成" value="" />
-        </el-select>
-      </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
@@ -176,14 +148,14 @@ onMounted(() => {
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
         </el-button>
-        <el-button
+        <!-- <el-button
           v-hasPermi="['gamer:service-order-review:create']"
           type="primary"
           plain
           @click="openForm('create')"
         >
           <Icon icon="ep:plus" class="mr-[5px]" /> 新增
-        </el-button>
+        </el-button> -->
         <el-button
           v-hasPermi="['gamer:service-order-review:delete']"
           type="danger"
@@ -212,7 +184,13 @@ onMounted(() => {
       <el-table-column label="订单ID" align="center" prop="orderId" />
       <el-table-column label="评价人ID" align="center" prop="userId" />
       <el-table-column label="接单人ID" align="center" prop="acceptorId" />
-      <el-table-column label="星级评分 1-5" align="center" prop="star" />
+      <el-table-column label="星级评分" align="center" prop="star">
+        <template #default="scope">
+          <el-tag type="primary">
+            {{ scope.row.star }}星
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="标签" align="center" prop="commentTag" />
       <el-table-column label="评价内容" align="center" prop="commentContent" />
       <el-table-column
