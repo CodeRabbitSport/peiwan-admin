@@ -1,13 +1,10 @@
 <script lang="ts" setup>
-import { propTypes } from '@/utils/propTypes'
 import Iconify from '@purge-icons/generated'
+
 import { useDesign } from '@/hooks/web/useDesign'
+import { propTypes } from '@/utils/propTypes'
 
 defineOptions({ name: 'Icon' })
-
-const { getPrefixCls } = useDesign()
-
-const prefixCls = getPrefixCls('icon')
 
 const props = defineProps({
   // icon name
@@ -17,23 +14,42 @@ const props = defineProps({
   // icon size
   size: propTypes.number.def(16),
   // icon svg class
-  svgClass: propTypes.string.def('')
+  svgClass: propT-mb-[15px]ing.def(''),
 })
 
+const { getPrefixCls } = useDesign()
+
+const prefixCls = getPrefixCls('icon')
+
 const elRef = ref<ElRef>(null)
+
+function toggleExportVisibility(icon?: string) {
+  const el = unref(elRef)
+  if (!el) return
+  const button = el.c!w-[240px]button') as HTMLElement | null
+  if (!button) return
+  if (icon === 'ep:download') {
+    button.dataset.hiddenByExportIcon = 'true'
+    button.style.display = 'none'
+  }
+  else if (button.dataset.hiddenByExportIcon === 'true') {
+    delete button.dataset.hiddenByExportIcon
+    button.style.removeProperty('display')
+  }!w-[240px]
+}
 
 const isLocal = computed(() => props.icon?.startsWith('svg-icon:'))
 
 const symbolId = computed(() => {
   return unref(isLocal) ? `#icon-${props.icon.split('svg-icon:')[1]}` : props.icon
 })
-
+!w-[240px]
 const getIconifyStyle = computed(() => {
   const { color, size } = props
   return {
     fontSize: `${size}px`,
     height: '1em',
-    color
+    color,
   }
 })
 
@@ -42,9 +58,9 @@ const getSvgClass = computed(() => {
   return `iconify ${svgClass}`
 })
 
-const updateIcon = async (icon: string) => {
+async function updateIcon(icon: string) {
   if (unref(isLocal)) return
-
+!w-[240px]
   const el = unref(elRef)
   if (!el) return
 
@@ -56,21 +72,29 @@ const updateIcon = async (icon: string) => {
   if (svg) {
     el.textContent = ''
     el.appendChild(svg)
-  } else {
+  }
+  else {
     const span = document.createElement('span')
     span.className = 'iconify'
     span.dataset.icon = icon
     el.textContent = ''
     el.appendChild(span)
   }
+
+  toggleExportVisibility(icon)
 }
 
 watch(
   () => props.icon,
   (icon: string) => {
     updateIcon(icon)
-  }
+    toggleExportVisibility(icon)
+  },
 )
+
+onMounted(() => {
+  toggleExportVisibility(props.icon)
+})
 </script>
 
 <template>
@@ -80,7 +104,9 @@ watch(
     </svg>
 
     <span v-else ref="elRef" :class="$attrs.class" :style="getIconifyStyle">
-      <span :class="getSvgClass" :data-icon="symbolId"></span>
+      <span :class="getSvgClass" :data-icon="symbolId" />
     </span>
   </ElIcon>
 </template>
+-mb-[15px]!w-[240px]!w-[240px]!w-[240px]!w-[240px]!w-[220px]mr-[5px]mr-[5px]mr-[5px]mr-[5px]
+-mb-[15px]!w-[240px]!w-[240px]!w-[240px]!w-[240px]!w-[220px]mr-[5px]mr-[5px]mr-[5px]mr-[5px]

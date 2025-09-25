@@ -32,15 +32,6 @@
           <Icon icon="ep:plus" class="mr-[5px]" /> 新增
         </el-button>
         <el-button
-          type="success"
-          plain
-          @click="handleExport"
-          :loading="exportLoading"
-          v-hasPermi="['gamer:product-category:export']"
-          class="mb-2 sm:mb-0">
-          <Icon icon="ep:download" class="mr-[5px]" /> 导出
-        </el-button>
-        <el-button
           v-if="!isEmpty(checkedIds)"
           type="danger"
           plain
@@ -215,12 +206,10 @@ const handleRowCheckboxChange = (records: ProductCategory[]) => {
   checkedIds.value = records.map((item) => item.id);
 }
 
-/** 导出按钮操作 */
+/** 导出按钮操作（已隐藏按钮，保留逻辑以备后用） */
 const handleExport = async () => {
   try {
-    // 导出的二次确认
     await message.exportConfirm()
-    // 发起导出
     exportLoading.value = true
     const data = await ProductCategoryApi.exportProductCategory(queryParams)
     download.excel(data, '產品分類.xls')

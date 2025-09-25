@@ -94,12 +94,10 @@ function handleRowCheckboxChange(records: UserWithdrawAccount[]) {
   checkedIds.value = records.map(item => item.id)
 }
 
-/** 导出按钮操作 */
+/** 导出按钮操作（已隐藏按钮，保留逻辑以备后用） */
 async function handleExport() {
   try {
-    // 导出的二次确认
     await message.exportConfirm()
-    // 发起导出
     exportLoading.value = true
     const data = await UserWithdrawAccountApi.exportUserWithdrawAccount(queryParams)
     download.excel(data, '用户提现账户.xls')
@@ -210,15 +208,6 @@ onMounted(() => {
           @click="openForm('create')"
         >
           <Icon icon="ep:plus" class="mr-[5px]" /> 新增
-        </el-button>
-        <el-button
-          v-hasPermi="['gamer:user-withdraw-account:export']"
-          type="success"
-          plain
-          :loading="exportLoading"
-          @click="handleExport"
-        >
-          <Icon icon="ep:download" class="mr-[5px]" /> 导出
         </el-button>
         <el-button
           v-hasPermi="['gamer:user-withdraw-account:delete']"

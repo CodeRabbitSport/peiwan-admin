@@ -14,7 +14,7 @@ const { t } = useI18n() // 国际化
 
 const loading = ref(true) // 列表的加载中
 const list = ref<WithdrawOrder[]>([]) // 列表的数据
-const total = ref(0) // 列表的总页数
+const total = ref-mb-[15px]表的总页数
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
@@ -26,7 +26,7 @@ const queryParams = reactive({
   accountNo: undefined,
   bankName: undefined,
   openid: undefined,
-  withdrawType: undefined,
+  withdrawType: undef!w-[240px]
   status: undefined,
   payTransferId: undefined,
   transferChannelCode: undefined,
@@ -35,7 +35,7 @@ const queryParams = reactive({
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 
-/** 查询列表 */
+/** 查询列表 */!w-[240px]
 async function getList() {
   loading.value = true
   try {
@@ -43,7 +43,7 @@ async function getList() {
     list.value = data.list
     total.value = data.total
   }
-  finally {
+  finally {!w-[240px]
     loading.value = false
   }
 }
@@ -60,7 +60,7 @@ function resetQuery() {
   handleQuery()
 }
 
-/** 添加/修改操作 */
+/** 添加/修改操作 */!w-[240px]
 const formRef = ref()
 function openForm(type: string, id?: number) {
   formRef.value.open(type, id)
@@ -85,12 +85,10 @@ function handleRowCheckboxChange(records: WithdrawOrder[]) {
   checkedIds.value = records.map(item => item.id)
 }
 
-/** 导出按钮操作 */
+/** 导出按钮操作（已隐藏按钮，保留逻辑以备后用） */
 async function handleExport() {
   try {
-    // 导出的二次确认
     await message.exportConfirm()
-    // 发起导出
     exportLoading.value = true
     const data = await WithdrawOrderApi.exportWithdrawOrder(queryParams)
     download.excel(data, '提现订单.xls')
@@ -190,15 +188,6 @@ onMounted(() => {
         </el-button>
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
-        </el-button>
-        <el-button
-          v-hasPermi="['gamer:withdraw-order:export']"
-          type="success"
-          plain
-          :loading="exportLoading"
-          @click="handleExport"
-        >
-          <Icon icon="ep:download" class="mr-[5px]" /> 导出
         </el-button>
       </el-form-item>
     </el-form>

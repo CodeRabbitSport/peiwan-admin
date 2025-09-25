@@ -83,15 +83,6 @@
               <Icon icon="ep:upload" /> 导入
             </el-button>
             <el-button
-              type="success"
-              plain
-              @click="handleExport"
-              :loading="exportLoading"
-              v-hasPermi="['system:user:export']"
-            >
-              <Icon icon="ep:download" />导出
-            </el-button>
-            <el-button
               type="danger"
               plain
               :disabled="checkedIds.length === 0"

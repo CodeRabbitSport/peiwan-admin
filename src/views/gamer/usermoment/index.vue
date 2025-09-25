@@ -273,14 +273,6 @@ onMounted(() => {
           @click="openForm('create')"
           v-hasPermi="['gamer:user-moment:create']">
           <Icon icon="ep:plus" class="mr-[5px]" /> 新增
-        </el-button>
-        <el-button
-          type="success"
-          plain
-          @click="handleExport"
-          :loading="exportLoading"
-          v-hasPermi="['gamer:user-moment:export']">
-          <Icon icon="ep:download" class="mr-[5px]" /> 导出
         </el-button> -->
         <el-button
           v-hasPermi="['gamer:user-moment:delete']"
