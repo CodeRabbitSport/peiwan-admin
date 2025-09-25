@@ -8,6 +8,7 @@ import UserMomentBrowse from '../usermomentbrowse/index.vue'
 import UserMomentComment from '../usermomentcomment/index.vue'
 import UserMomentLike from '../usermomentlike/index.vue'
 import UserInfoForm from './UserInfoForm.vue'
+import UserIncomeExpenseDetail from '../userincomeexpensedetail/index.vue'
 
 /** 用户信息 列表 */
 defineOptions({ name: 'UserInfo' })
@@ -79,12 +80,13 @@ function openForm(type: string, id?: number) {
 const userViewDialogVisible = ref(false)
 const selectedUserId = ref<number | undefined>(undefined)
 const userViewTitle = ref('')
-const activeView = ref<'usermoment' | 'usermomentbrowse' | 'usermomentcomment' | 'usermomentlike' | ''>('')
+const activeView = ref<'usermoment' | 'usermomentbrowse' | 'usermomentcomment' | 'usermomentlike' | 'userincome' | ''>('')
 const viewMap = {
   usermoment: UserMoment,
   usermomentbrowse: UserMomentBrowse,
   usermomentcomment: UserMomentComment,
   usermomentlike: UserMomentLike,
+  userincome: UserIncomeExpenseDetail,
 } as const
 const activeComponent = computed(() => (activeView.value ? viewMap[activeView.value] : null))
 const titleMap: Record<string, string> = {
@@ -92,6 +94,7 @@ const titleMap: Record<string, string> = {
   usermomentbrowse: '用户浏览记录',
   usermomentcomment: '用户评论记录',
   usermomentlike: '用户点赞记录',
+  userincome: '用户收入支出记录',
 }
 function onUserMenuCommand(cmd: keyof typeof viewMap, row: UserInfo) {
   selectedUserId.value = row.id
@@ -281,6 +284,11 @@ onMounted(() => {
       <el-table-column label="达人名称" align="center" prop="davName" />
       <el-table-column label="操作" align="center" width="200px">
         <template #default="scope">
+          <!-- 查看用户提现账号 -->
+          <el-button link type="primary" @click="onUserMenuCommand('userincome', scope.row)">
+            收入支出
+          </el-button>
+          <!-- 用户相关操作 -->
           <el-dropdown trigger="click" @command="(cmd) => onUserMenuCommand(cmd as any, scope.row)">
             <el-button
               v-hasPermi="['gamer:user-info:update']"
