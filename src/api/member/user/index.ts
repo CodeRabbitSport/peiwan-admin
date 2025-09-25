@@ -23,26 +23,26 @@ export interface UserVO {
 }
 
 // 查询会员用户列表
-export const getUserPage = async (params) => {
+export async function getUserPage(params) {
   return await request.get({ url: `/member/user/page`, params })
 }
 
 // 查询会员用户详情
-export const getUser = async (id: number) => {
-  return await request.get({ url: `/member/user/get?id=` + id })
+export async function getUser(id: number) {
+  return await request.get({ url: `/member/user/get?id=${id}` })
 }
 
 // 修改会员用户
-export const updateUser = async (data: UserVO) => {
+export async function updateUser(data: UserVO) {
   return await request.put({ url: `/member/user/update`, data })
 }
 
 // 修改会员用户等级
-export const updateUserLevel = async (data: any) => {
+export async function updateUserLevel(data: any) {
   return await request.put({ url: `/member/user/update-level`, data })
 }
 
 // 修改会员用户积分
-export const updateUserPoint = async (data: any) => {
+export async function updateUserPoint(data: any) {
   return await request.put({ url: `/member/user/update-point`, data })
 }

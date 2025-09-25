@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/gamer/userinfo'
 import { UserInfoApi } from '@/api/gamer/userinfo'
+import { fenToYuan } from '@/utils'
 import download from '@/utils/download'
+import UserBalanceUpdateForm from '@/views/member/user/components/UserBalanceUpdateForm.vue'
 
+import UserIncomeExpenseDetail from '../userincomeexpensedetail/index.vue'
 import UserMoment from '../usermoment/index.vue'
 import UserMomentBrowse from '../usermomentbrowse/index.vue'
 import UserMomentComment from '../usermomentcomment/index.vue'
 import UserMomentLike from '../usermomentlike/index.vue'
 import UserInfoForm from './UserInfoForm.vue'
-import UserIncomeExpenseDetail from '../userincomeexpensedetail/index.vue'
 
 /** 用户信息 列表 */
 defineOptions({ name: 'UserInfo' })
@@ -43,6 +45,7 @@ const queryParams = reactive({
   isSeeFans: undefined,
 })
 const queryFormRef = ref() // 搜索的表单
+const UpdateBalanceFormRef = ref() // 修改用户余额表单
 const exportLoading = ref(false) // 导出的加载中
 
 /** 查询列表 */
@@ -74,6 +77,18 @@ function resetQuery() {
 const formRef = ref()
 function openForm(type: string, id?: number) {
   formRef.value.open(type, id)
+}
+
+async function handleToggleUserStatus(row: any) {
+  try {
+    await UserInfoApi.toggleUserStatus({ userId: row.id })
+    getList()
+    message.success('状态已更新')
+  }
+  catch {
+    // 失败不回写，保持原状态
+    message.error('更新失败')
+  }
 }
 
 // 用户相关弹窗逻辑
@@ -244,20 +259,21 @@ onMounted(() => {
     >
       <el-table-column type="selection" width="55" />
       <el-table-column label="用户ID" align="center" prop="id" />
-      <el-table-column label="手机号" align="center" prop="phone" />
-      <el-table-column label="用户昵称" align="center" prop="nickname" />
+      <el-table-column label="手机号" align="center" prop="mobile" width="120" />
+      <el-table-column label="用户昵称" align="center" prop="nickname" width="120" />
       <el-table-column label="用户头像" align="center" prop="avatar">
         <template #default="scope">
           <el-image
             v-if="scope.row.avatar"
             :src="scope.row.avatar"
             :preview-src-list="[scope.row.avatar]"
+            preview-teleported
             fit="cover"
             style="width: 40px; height: 40px"
           />
         </template>
       </el-table-column>
-      <el-table-column label="真实头像地址" align="center" prop="trueHead">
+      <!-- <el-table-column label="头像" align="center" prop="trueHead">
         <template #default="scope">
           <el-image
             v-if="scope.row.trueHead"
@@ -267,7 +283,7 @@ onMounted(() => {
             style="width: 40px; height: 40px"
           />
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="性别" align="center" prop="sex">
         <template #default="scope">
           <el-tag :type="scope.row.sex === 1 ? 'success' : scope.row.sex === 2 ? 'danger' : 'info'">
@@ -275,53 +291,69 @@ onMounted(() => {
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="城市" align="center" prop="city" />
-      <el-table-column label="个性签名/简介" align="center" prop="signature" />
-      <el-table-column label="余额" align="center" prop="money" />
-      <el-table-column label="礼物余额" align="center" prop="giftMoney" />
-      <el-table-column label="财富值" align="center" prop="wealthVal" />
-      <el-table-column label="魅力值" align="center" prop="charmVal" />
-      <el-table-column label="达人名称" align="center" prop="davName" />
-      <el-table-column label="操作" align="center" width="200px">
+      <!-- <el-table-column label="城市" align="center" prop="city" /> -->
+      <el-table-column label="简介" align="center" prop="signature" />
+      <!-- 用户等级列 -->
+      <el-table-column label="用户等级" align="center" min-width="180px">
         <template #default="scope">
-          <!-- 查看用户提现账号 -->
-          <el-button link type="primary" @click="onUserMenuCommand('userincome', scope.row)">
-            收入支出
-          </el-button>
-          <!-- 用户相关操作 -->
-          <el-dropdown trigger="click" @command="(cmd) => onUserMenuCommand(cmd as any, scope.row)">
-            <el-button
-              v-hasPermi="['gamer:user-info:update']"
-              link
-              type="primary"
-            >
-              动态管理 <Icon icon="ep:arrow-down" class="ml-[4px]" />
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="usermoment">
-                  用户动态管理
-                </el-dropdown-item>
-                <el-dropdown-item command="usermomentbrowse">
-                  用户浏览记录
-                </el-dropdown-item>
-                <el-dropdown-item command="usermomentcomment">
-                  用户评论记录
-                </el-dropdown-item>
-                <el-dropdown-item command="usermomentlike">
-                  用户点赞记录
-                </el-dropdown-item>
-              </el-dropdown-menu>
+          <div class="flex flex-col items-center justify-center gap-1">
+            <template v-if="scope.row.levelApply">
+              <el-tag v-if="scope.row.levelApply.levelName" type="success">
+                {{ scope.row.levelApply.levelName }}
+              </el-tag>
+              <div>保证金：{{ fenToYuan(scope.row.depositBalance) ?? 0 }}</div>
+              <div>打手评分：{{ scope.row.contributePoint ?? 0 }}</div>
+              <div>打手上班状态：{{ scope.row.authStatus ? '已上班' : '已下班' }}</div>
+              <div v-if="scope.row.levelApply.contact">
+                联系手机号：{{ scope.row.levelApply.contact }}
+              </div>
             </template>
-          </el-dropdown>
-          <el-button
+            <template v-else>
+              <el-tag>普通用户</el-tag>
+            </template>
+          </div>
+        </template>
+      </el-table-column>
+
+      <!-- 资产信息列 -->
+      <el-table-column label="资产信息" align="center" min-width="180px">
+        <template #default="scope">
+          <div class="flex flex-col items-start gap-1">
+            <div>余额：{{ fenToYuan(scope.row.wallet?.balance) ?? 0 }}</div>
+            <div>冻结余额：{{ fenToYuan(scope.row.wallet?.freezePrice) ?? 0 }}</div>
+            <!-- <div>财富值：{{ scope.row.wealthVal ?? 0 }}</div>
+            <div>魅力值：{{ scope.row.charmVal ?? 0 }}</div> -->
+          </div>
+        </template>
+      </el-table-column>
+
+      <!-- 封禁状态 -->
+      <el-table-column label="封禁状态" align="center" width="140">
+        <template #default="scope">
+          <el-switch
+            v-hasPermi="['gamer:user-info:update']"
+            :model-value="scope.row.status"
+            :active-value="true"
+            inline-prompt
+            :inactive-value="false"
+            style="--el-switch-off-color: #13ce66; --el-switch-on-color: #ff4949"
+            active-text="封禁"
+            inactive-text="正常"
+            @change="() => handleToggleUserStatus(scope.row)"
+          />
+        </template>
+      </el-table-column>
+      <!-- <el-table-column label="达人名称" align="center" prop="davName" /> -->
+      <el-table-column label="操作" align="center" width="260px">
+        <template #default="scope">
+          <!-- <el-button
             v-hasPermi="['gamer:user-info:update']"
             link
             type="primary"
             @click="openForm('update', scope.row.id)"
           >
             编辑
-          </el-button>
+          </el-button> -->
           <el-button
             v-hasPermi="['gamer:user-info:delete']"
             link
@@ -330,6 +362,44 @@ onMounted(() => {
           >
             删除
           </el-button>
+
+          <el-popover placement="bottom-start" trigger="click" :width="240" popper-class="!p-0">
+            <template #reference>
+              <el-button link type="info">
+                更多
+              </el-button>
+            </template>
+            <el-menu class="border-none" mode="vertical">
+              <el-menu-item
+                v-hasPermi="['pay:wallet:update-balance']"
+                index="balance"
+                @click="UpdateBalanceFormRef.open(scope.row.id)"
+              >
+                修改余额
+              </el-menu-item>
+
+              <el-menu-item index="income" @click="onUserMenuCommand('userincome', scope.row)">
+                收入支出
+              </el-menu-item>
+              <el-sub-menu index="moment">
+                <template #title>
+                  动态管理
+                </template>
+                <el-menu-item v-hasPermi="['gamer:user-info:update']" index="moment-m" @click="onUserMenuCommand('usermoment', scope.row)">
+                  用户动态管理
+                </el-menu-item>
+                <el-menu-item v-hasPermi="['gamer:user-info:update']" index="moment-b" @click="onUserMenuCommand('usermomentbrowse', scope.row)">
+                  用户浏览记录
+                </el-menu-item>
+                <el-menu-item v-hasPermi="['gamer:user-info:update']" index="moment-c" @click="onUserMenuCommand('usermomentcomment', scope.row)">
+                  用户评论记录
+                </el-menu-item>
+                <el-menu-item v-hasPermi="['gamer:user-info:update']" index="moment-l" @click="onUserMenuCommand('usermomentlike', scope.row)">
+                  用户点赞记录
+                </el-menu-item>
+              </el-sub-menu>
+            </el-menu>
+          </el-popover>
         </template>
       </el-table-column>
     </el-table>
@@ -353,4 +423,7 @@ onMounted(() => {
 
   <!-- 表单弹窗：添加/修改 -->
   <UserInfoForm ref="formRef" @success="getList" />
+
+  <!-- 修改用户余额弹窗 -->
+  <UserBalanceUpdateForm ref="UpdateBalanceFormRef" @success="getList" />
 </template>
