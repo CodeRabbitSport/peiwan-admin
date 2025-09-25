@@ -131,32 +131,32 @@ function onDetailCommand(_cmd: any, row: UserMoment) {
 }
 
 // 审核通过操作
-async function onPassCommand(row: UserMoment) {
-  try {
-    await message.confirm('确认通过该动态吗？')
-    await UserMomentApi.approveUserMoment({ id: row.id, status: 1 })
-    message.success('审核通过成功')
-    await getList()
-  }
-  catch { }
-}
+// async function onPassCommand(row: UserMoment) {
+//   try {
+//     await message.confirm('确认通过该动态吗？')
+//     await UserMomentApi.approveUserMoment({ id: row.id, status: 1 })
+//     message.success('审核通过成功')
+//     await getList()
+//   }
+//   catch { }
+// }
 
-// 审核不通过操作
-async function onRejectCommand(row: UserMoment) {
-  try {
-    const data = await message.prompt('请输入拒绝原因', t('common.reminder'))
-    if (!data || (data as any).action !== 'confirm') return
-    const reason = (data as any).value ? String((data as any).value).trim() : ''
-    if (!reason) {
-      message.warning('请输入拒绝原因')
-      return
-    }
-    await UserMomentApi.approveUserMoment({ id: row.id, auditReason: reason, status: 2 })
-    message.success('已驳回该动态')
-    await getList()
-  }
-  catch { }
-}
+// // 审核不通过操作
+// async function onRejectCommand(row: UserMoment) {
+//   try {
+//     const data = await message.prompt('请输入拒绝原因', t('common.reminder'))
+//     if (!data || (data as any).action !== 'confirm') return
+//     const reason = (data as any).value ? String((data as any).value).trim() : ''
+//     if (!reason) {
+//       message.warning('请输入拒绝原因')
+//       return
+//     }
+//     await UserMomentApi.approveUserMoment({ id: row.id, auditReason: reason, status: 2 })
+//     message.success('已驳回该动态')
+//     await getList()
+//   }
+//   catch { }
+// }
 
 /** 删除按钮操作 */
 async function handleDelete(id: number) {

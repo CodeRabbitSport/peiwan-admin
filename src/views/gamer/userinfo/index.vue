@@ -2,7 +2,6 @@
 import type { UserInfo } from '@/api/gamer/userinfo'
 import { UserInfoApi } from '@/api/gamer/userinfo'
 import { fenToYuan } from '@/utils'
-import download from '@/utils/download'
 import UserBalanceUpdateForm from '@/views/member/user/components/UserBalanceUpdateForm.vue'
 
 import UserIncomeExpenseDetail from '../userincomeexpensedetail/index.vue'
@@ -46,7 +45,6 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const UpdateBalanceFormRef = ref() // 修改用户余额表单
-const exportLoading = ref(false) // 导出的加载中
 
 /** 查询列表 */
 async function getList() {
@@ -138,19 +136,19 @@ function handleRowCheckboxChange(records: UserInfo[]) {
 }
 
 /** 导出按钮操作（已隐藏按钮，保留逻辑以备后用） */
-async function handleExport() {
-  try {
-    await message.exportConfirm()
-    exportLoading.value = true
-    const data = await UserInfoApi.exportUserInfo(queryParams)
-    download.excel(data, '用户信息.xls')
-  }
-  catch {
-  }
-  finally {
-    exportLoading.value = false
-  }
-}
+// async function handleExport() {
+//   try {
+//     await message.exportConfirm()
+//     exportLoading.value = true
+//     const data = await UserInfoApi.exportUserInfo(queryParams)
+//     download.excel(data, '用户信息.xls')
+//   }
+//   catch {
+//   }
+//   finally {
+//     exportLoading.value = false
+//   }
+// }
 
 /** 初始化 */
 onMounted(() => {

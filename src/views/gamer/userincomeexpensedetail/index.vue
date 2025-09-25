@@ -2,7 +2,6 @@
 import type { UserIncomeExpenseDetail } from '@/api/gamer/userincomeexpensedetail'
 import { UserIncomeExpenseDetailApi } from '@/api/gamer/userincomeexpensedetail'
 import { fenToYuan } from '@/utils'
-import downlo-mb-[15px]x]'@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
 
@@ -14,7 +13,7 @@ defineOptions({ name: 'UserIncomeExpenseDetail' })
 // 接收来自父层弹窗传入的用户ID（可选）
 const props = defineProps<{ userId?: number }>()
 
-const message = u!w-[240px]x]e() // 消息弹窗
+const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
 
 const loading = ref(true) // 列表的加载中
@@ -23,7 +22,7 @@ const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
-  userId: undefin!w-[240px]x]
+  userId: undefined,
   type: undefined,
   category: undefined,
   businessTitle: undefined,
@@ -32,15 +31,15 @@ const queryParams = reactive({
   orderNo: undefined,
   createTime: [],
 })
-const queryFormRe!w-[240px]x]) // 搜索的表单
-const exportLoading = ref(false) // 导出的加载中
+const queryFormRef = ref() // 搜索的表单
+// const exportLoading = ref(false) // 导出的加载中
 
 /** 查询列表 */
 async function getList() {
   loading.value = true
   try {
     const data = await UserIncomeExpenseDetailApi.getUserIncomeExpenseDetailPage(queryParams)
-    list.value = !w-[240px]x]t
+    list.value = data.list
     total.value = data.total
   }
   finally {
@@ -53,19 +52,19 @@ function handleQuery() {
   queryParams.pageNo = 1
   getList()
 }
-!w-[220px]!w-[220px]
+
 /** 重置按钮操作 */
 function resetQuery() {
   queryFormRef.value.resetFields()
-  // 若为从用户弹窗打开，重置后仍保留并按该用户筛选mr-[5px]mr-[5px]
-  if (props.userId !== undefined && props.userId !== null) {mr-[5px]mr-[5px]
+  // 若为从用户弹窗打开，重置后仍保留并按该用户筛选
+  if (props.userId !== undefined && props.userId !== null) {
     queryParams.userId = props.userId as any
   }
   handleQuery()
 }
 
 /** 添加/修改操作 */
-const formRef = ref()mr-[5px]mr-[5px]
+const formRef = ref()
 function openForm(type: string, id?: number) {
   formRef.value.open(type, id)
 }
@@ -74,7 +73,7 @@ function openForm(type: string, id?: number) {
 watch(
   () => props.userId,
   (val) => {
-    if (val !== undefined && val !== nulmr-[5px]x]
+    if (val !== undefined && val !== null) {
       queryParams.userId = val as any
       handleQuery()
     }
@@ -116,19 +115,19 @@ function handleRowCheckboxChange(records: UserIncomeExpenseDetail[]) {
 }
 
 /** 导出按钮操作（已隐藏按钮，保留逻辑以备后用） */
-async function handleExport() {
-  try {
-    await message.exportConfirm()
-    exportLoading.value = true
-    const data = await UserIncomeExpenseDetailApi.exportUserIncomeExpenseDetail(queryParams)
-    download.excel(data, '收入支出明细.xls')
-  }
-  catch {
-  }
-  finally {
-    exportLoading.value = false
-  }
-}
+// async function handleExport() {
+//   try {
+//     await message.exportConfirm()
+//     exportLoading.value = true
+//     const data = await UserIncomeExpenseDetailApi.exportUserIncomeExpenseDetail(queryParams)
+//     download.excel(data, '收入支出明细.xls')
+//   }
+//   catch {
+//   }
+//   finally {
+//     exportLoading.value = false
+//   }
+// }
 
 /** 初始化 */
 onMounted(() => {

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { WithdrawOrder } from '@/api/gamer/withdraworder'
 import { WithdrawOrderApi } from '@/api/gamer/withdraworder'
-import download from '@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
 
 import WithdrawOrderForm from './WithdrawOrderForm.vue'
@@ -14,7 +13,7 @@ const { t } = useI18n() // 国际化
 
 const loading = ref(true) // 列表的加载中
 const list = ref<WithdrawOrder[]>([]) // 列表的数据
-const total = ref-mb-[15px]表的总页数
+const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
@@ -26,16 +25,16 @@ const queryParams = reactive({
   accountNo: undefined,
   bankName: undefined,
   openid: undefined,
-  withdrawType: undef!w-[240px]
+  withdrawType: undefined,
   status: undefined,
   payTransferId: undefined,
   transferChannelCode: undefined,
   createTime: [],
 })
 const queryFormRef = ref() // 搜索的表单
-const exportLoading = ref(false) // 导出的加载中
+// const exportLoading = ref(false) // 导出的加载中
 
-/** 查询列表 */!w-[240px]
+/** 查询列表 */
 async function getList() {
   loading.value = true
   try {
@@ -43,7 +42,7 @@ async function getList() {
     list.value = data.list
     total.value = data.total
   }
-  finally {!w-[240px]
+  finally {
     loading.value = false
   }
 }
@@ -60,7 +59,7 @@ function resetQuery() {
   handleQuery()
 }
 
-/** 添加/修改操作 */!w-[240px]
+/** 添加/修改操作 */
 const formRef = ref()
 function openForm(type: string, id?: number) {
   formRef.value.open(type, id)
@@ -86,19 +85,19 @@ function handleRowCheckboxChange(records: WithdrawOrder[]) {
 }
 
 /** 导出按钮操作（已隐藏按钮，保留逻辑以备后用） */
-async function handleExport() {
-  try {
-    await message.exportConfirm()
-    exportLoading.value = true
-    const data = await WithdrawOrderApi.exportWithdrawOrder(queryParams)
-    download.excel(data, '提现订单.xls')
-  }
-  catch {
-  }
-  finally {
-    exportLoading.value = false
-  }
-}
+// async function handleExport() {
+//   try {
+//     await message.exportConfirm()
+//     exportLoading.value = true
+//     const data = await WithdrawOrderApi.exportWithdrawOrder(queryParams)
+//     download.excel(data, '提现订单.xls')
+//   }
+//   catch {
+//   }
+//   finally {
+//     exportLoading.value = false
+//   }
+// }
 
 /** 初始化 */
 onMounted(() => {
