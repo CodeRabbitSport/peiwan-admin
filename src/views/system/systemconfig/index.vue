@@ -1,271 +1,470 @@
 <template>
   <ContentWrap>
-    <!-- 搜索工作栏 -->
-    <el-form
-      class="-mb-[15px]x]"
-      :model="queryParams"
-      ref="queryFormRef"
-      :inline="true"
-      label-width="68px">
-      <el-form-item label="配置键名" prop="configKey">
-        <el-input
-          v-model="queryParams.configKey"
-          placeholder="请输入配置键名"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-[240px]x]" />
-      </el-form-item>
-      <el-form-item label="配置标题" prop="title">
-        <el-input
-          v-model="queryParams.title"
-          placeholder="请输入配置标题"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-[240px]" />
-      </el-form-item>
-      <el-form-item label="配置描述" prop="description">
-        <el-input
-          v-model="queryParams.description"
-          placeholder="请输入配置描述"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-[240px]" />
-      </el-form-item>
-      <el-form-item label="创建时间" prop="createTime">
-        <el-date-picker
-          v-model="queryParams.createTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-[220px]" />
-      </el-form-item>
-      <el-form-item class="flex flex-wrap gap-2">
-        <el-button @click="handleQuery" class="mb-2 sm:mb-0">
-          <Icon icon="ep:search" class="mr-[5px]" /> 搜索
-        </el-button>
-        <el-button @click="resetQuery" class="mb-2 sm:mb-0">
-          <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
-        </el-button>
-        <el-button
-          type="primary"
-          plain
-          @click="openForm('create')"
-          v-hasPermi="['gamer:system-config:create']"
-          class="mb-2 sm:mb-0">
-          <Icon icon="ep:plus" class="mr-[5px]" /> 新增
-        </el-button>
-        <el-button
-          type="success"
-          plain
-          @click="handleExport"
-          :loading="exportLoading"
-          v-hasPermi="['gamer:system-config:export']"
-          class="mb-2 sm:mb-0">
-          <Icon icon="ep:download" class="mr-[5px]" /> 导出
-        </el-button>
-        <el-button
-          v-if="!isEmpty(checkedIds)"
-          type="danger"
-          plain
-          :disabled="isEmpty(checkedIds)"
-          @click="handleDeleteBatch"
-          v-hasPermi="['gamer:system-config:delete']"
-          class="mb-2 sm:mb-0">
-          <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
-        </el-button>
-      </el-form-item>
+    <el-form :model="formData" label-width="180px" v-loading="loadingAll">
+      <el-collapse v-model="activeGroups">
+        <!-- 服务配置 -->
+        <el-collapse-item name="service" title="服务配置">
+          <el-row :gutter="16">
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="接单保证金">
+                <el-input-number
+                  v-model="formData.pickOrderDeposit"
+                  :min="0"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.PICK_ORDER_DEPOSIT, 'number', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="每日接单次数">
+                <el-input-number
+                  v-model="formData.dailyPickOrderCount"
+                  :min="0"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.DAILY_PICK_ORDER_COUNT, 'number', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="接单延迟时间(秒)">
+                <el-input-number
+                  v-model="formData.pickOrderDelayTime"
+                  :min="0"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.PICK_ORDER_DELAY_TIME, 'number', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="提现手续费率(%)">
+                <el-input-number
+                  v-model="formData.withdrawFeeRate"
+                  :min="0"
+                  :max="100"
+                  @change="(val: any) => handleSave(KEYS.FEE_RATE, 'number', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="订单服务费解冻时间(秒)">
+                <el-input-number
+                  v-model="formData.orderCommissionReleaseTime"
+                  :min="0"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.ORDER_COMMISSION_RELEASE_TIME, 'number', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="打赏金额抽成比例(%)">
+                <el-input-number
+                  v-model="formData.commissionRateOnTips"
+                  :min="0"
+                  :max="100"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.COMMISSION_RATE_ON_TIPS, 'number', val)" />
+              </el-form-item>
+            </el-col>
+            
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="是否可以退款接单订单">
+                <el-switch
+                  v-model="formData.canRefundOrder"
+                  @change="(val: any) => handleSave(KEYS.CAN_REFUND, 'boolean', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="是否可以查看申请退款用户手机号" label-width="250px">
+                <el-switch
+                  v-model="formData.canCheckApplyRefundUserMobile"
+                  @change="(val: any) => handleSave(KEYS.CAN_CHECK_APPLY_REFUND_USER_MOBILE, 'boolean', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="是否可以查看未退款用户手机号"  label-width="250px">
+                <el-switch
+                  v-model="formData.canCheckNotRefundUserMobile"
+                  @change="(val: any) => handleSave(KEYS.CAN_CHECK_NOT_REFUND_USER_MOBILE, 'boolean', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="查看未退款用户手机号天数">
+                <el-input-number
+                  v-model="formData.canCheckNotRefundUserMobileTime"
+                  :min="-1"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.CAN_CHECK_NOT_REFUND_USER_MOBILE_TIME, 'number', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="保证金退还安全期限(天)">
+                <el-input-number
+                  v-model="formData.depositReturnSafeDays"
+                  :min="0"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.DEPOSIT_RETURN_SAFE_DAYS, 'number', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="限制指定接单商品编号列表">
+                <el-input
+                  :model-value="selectedProductNamesDisplay"
+                  placeholder="点击选择商品"
+                  readonly
+                  @click="openProductSelector">
+                  <template #suffix>
+                    <el-button link type="danger" @click.stop="clearSelectedProducts">清空</el-button>
+                  </template>
+                </el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="限制每日接单缴费金额">
+                <el-input-number v-model="formData.limitPickOrderFee" :min="0" :step="1"
+                  @change="(val: any) => handleSave(KEYS.LIMIT_PICK_ORDER_FEE, 'number', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="限制同一时间段接单单数">
+                <el-input-number v-model="formData.limitSameTimePickOrderCount" :min="0" :step="1"
+                  @change="(val: any) => handleSave(KEYS.LIMIT_SAME_TIME_PICK_ORDER_COUNT, 'number', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="是否可以设置用户公告">
+                <el-switch
+                  v-model="formData.canSetUserNotice"
+                  @change="(val: any) => handleSave(KEYS.CAN_SET_USER_NOTICE, 'boolean', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="接单验证类型">
+                <el-switch
+                  v-model="formData.pickOrderVerify"
+                  @change="(val: any) => handleSave(KEYS.PICK_ORDER_VERIFY, 'boolean', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="限制升级人数名额">
+                <el-input-number v-model="formData.limitUpgradePeopleCount" :min="0" :step="1"
+                  @change="(val: any) => handleSave(KEYS.LIMIT_UPGRADE_PEOPLE_COUNT, 'number', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="允许充值保证金">
+                <el-switch v-model="formData.allowRechargeDeposit"
+                  @change="(val: any) => handleSave(KEYS.ALLOW_RECHARGE_DEPOSIT, 'boolean', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="是否可以取消接单订单">
+                <el-switch
+                  v-model="formData.canCancelOrder"
+                  @change="(val: any) => handleSave(KEYS.CAN_CANCEL_ORDER, 'boolean', val)" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-collapse-item>
+
+        <!-- 积分配置 -->
+        <el-collapse-item name="point" title="积分配置">
+          <el-row :gutter="16">
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="好评加分">
+                <el-input-number v-model="formData.favorableCommentPointAdd" :min="0" :step="1"
+                  @change="(val: any) => handleSave(KEYS.FAVORABLE_COMMENT_POINT_ADD, 'number', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="续单加分">
+                <el-input-number v-model="formData.continuePointAdd" :min="0" :step="1"
+                  @change="(val: any) => handleSave(KEYS.CONTINUE_POINT_ADD, 'number', val)" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="差评减分(可为负)">
+                <el-input-number v-model="formData.complaintPointSub" :step="1" :min="-1000000"
+                  @change="(val: any) => handleSave(KEYS.COMPLAINT_POINT_SUB, 'number', val)" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-collapse-item>
+
+        <!-- 话题配置 -->
+        <el-collapse-item name="topic" title="话题配置">
+          <el-form-item label="热门话题列表">
+            <HotTopicListEditor v-model="formData.hotTopicList"
+              @change="(val: any) => handleSave(KEYS.HOT_TOPIC_LIST, 'json', val)" />
+          </el-form-item>
+        </el-collapse-item>
+      </el-collapse>
     </el-form>
   </ContentWrap>
 
-  <!-- 列表 -->
-  <ContentWrap>
-    <el-table
-      row-key="id"
-      v-loading="loading"
-      :data="list"
-      :stripe="true"
-      :show-overflow-tooltip="true"
-      @selection-change="handleRowCheckboxChange">
-      <el-table-column type="selection" width="55" />
-      <el-table-column label="主键ID" align="center" prop="id" />
-      <el-table-column label="配置键名" align="center" prop="configKey" />
-      <el-table-column label="配置值" align="center" prop="configValue" min-width="200px">
-        <template #default="scope">
-          <!-- 图片类型 -->
-          <el-image
-            v-if="isImageUrl(scope.row.configValue)"
-            :src="scope.row.configValue"
-            :preview-src-list="[scope.row.configValue]"
-            fit="cover"
-            style="width: 80px; height: 60px; border-radius: 6px;"
-            preview-teleported />
-          <!-- 富文本类型 -->
-          <div
-            v-else-if="isRichText(scope.row.configValue)"
-            @click="openForm('update', scope.row.id)"
-            v-hasPermi="['gamer:system-config:update']"
-            class="text-blue-500 cursor-pointer">
-            查看详情
-          </div>
-          <!-- 普通文本 -->
-          <span v-else class="text-truncate" :title="scope.row.configValue">
-            {{ scope.row.configValue }}
-          </span>
-        </template>
-      </el-table-column>
-      <el-table-column label="配置标题" align="center" prop="title" />
-      <el-table-column label="配置描述" align="center" prop="description" />
-      <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
-      <el-table-column label="操作" align="center" min-width="120px">
-        <template #default="scope">
-          <el-button
-            link
-            type="primary"
-            @click="openForm('update', scope.row.id)"
-            v-hasPermi="['gamer:system-config:update']">
-            编辑
-          </el-button>
-          <el-button
-            link
-            type="danger"
-            @click="handleDelete(scope.row.id)"
-            v-hasPermi="['gamer:system-config:delete']">
-            删除
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <!-- 分页 -->
-    <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize"
-      @pagination="getList" />
-  </ContentWrap>
-
-  <!-- 表单弹窗：添加/修改 -->
-  <SystemConfigForm ref="formRef" @success="getList" />
+  <ProductSelectorDialog v-model="selectedProductIds" v-model:visible="productSelectorVisible"
+    @confirm="confirmProductSelection" />
 </template>
 
 <script setup lang="ts">
-import { isEmpty } from '@/utils/is'
-import { dateFormatter } from '@/utils/formatTime'
-import download from '@/utils/download'
-import { SystemConfigApi, SystemConfig } from '@/api/gamer/systemconfig'
-import SystemConfigForm from './SystemConfigForm.vue'
+import { SystemConfigApi } from '@/api/gamer/systemconfig'
+import HotTopicListEditor from './components/HotTopicListEditor.vue'
+import ProductSelectorDialog from './components/ProductSelectorDialog.vue'
 
-/** 系统配置 列表 */
 defineOptions({ name: 'SystemConfig' })
 
-const message = useMessage() // 消息弹窗
-const { t } = useI18n() // 国际化
+const message = useMessage()
 
-const loading = ref(true) // 列表的加载中
-const list = ref<SystemConfig[]>([]) // 列表的数据
-const total = ref(0) // 列表的总页数
-const queryParams = reactive({
-  pageNo: 1,
-  pageSize: 10,
-  configKey: undefined,
-  title: undefined,
-  description: undefined,
-  createTime: []
+// 配置键常量
+const KEYS = {
+  // 话题配置
+  HOT_TOPIC_LIST: 'topicConfigHotTopicList',
+  // 服务订单配置
+  ORDER_VIRTUAL_COUNT: 'serviceOrderConfigVirtualCount',
+  // 服务配置
+  PICK_ORDER_DEPOSIT: 'serviceConfigPickOrderDeposit',
+  DAILY_PICK_ORDER_COUNT: 'serviceConfigDailyPickOrderCount',
+  PICK_ORDER_DELAY_TIME: 'serviceConfigPickOrderDelayTime',
+  FEE_RATE: 'serviceConfigWithdrawFeeRate',
+  ORDER_COMMISSION_RELEASE_TIME: 'serviceConfigOrderCommissionReleaseTime',
+  COMMISSION_RATE_ON_TIPS: 'serviceConfigCommissionRateOnTips',
+  CAN_CANCEL_ORDER: 'serviceConfigCanCancelOrder',
+  CAN_REFUND: 'serviceConfigCanRefundOrder',
+  CAN_CHECK_APPLY_REFUND_USER_MOBILE: 'serviceConfigCanCheckApplyRefundUserMobile',
+  CAN_CHECK_NOT_REFUND_USER_MOBILE: 'serviceConfigCanCheckNotRefundUserMobile',
+  CAN_CHECK_NOT_REFUND_USER_MOBILE_TIME: 'serviceConfigCanCheckNotRefundUserMobileTime',
+  CAN_SET_USER_NOTICE: 'serviceConfigCanSetUserNotice',
+  DEPOSIT_RETURN_SAFE_DAYS: 'serviceConfigDepositReturnSafeDays',
+  RESTRICT_PRODUCT_IDS: 'serviceConfigRestrictProductIds',
+  LIMIT_PICK_ORDER_FEE: 'serviceConfigLimitPickOrderFee',
+  LIMIT_SAME_TIME_PICK_ORDER_COUNT: 'serviceConfigLimitSameTimePickOrderCount',
+  PICK_ORDER_VERIFY: 'serviceConfigPickOrderVerify',
+  LIMIT_UPGRADE_PEOPLE_COUNT: 'serviceConfigLimitUpgradePeopleCount',
+  ALLOW_RECHARGE_DEPOSIT: 'serviceConfigAllowRechargeDeposit',
+  // 积分配置
+  FAVORABLE_COMMENT_POINT_ADD: 'pointConfigFavorableCommentPointAdd',
+  CONTINUE_POINT_ADD: 'pointConfigContinuePointAdd',
+  COMPLAINT_POINT_SUB: 'pointConfigComplaintPointSub'
+} as const
+
+type KeyName = typeof KEYS[keyof typeof KEYS]
+
+// 表单数据
+type HotTopicItem = { sort: number; name: string; color: string }
+const formData = reactive<any>({
+  hotTopicList: [],
+  orderVirtualCount: 0,
+  pickOrderDeposit: 0,
+  dailyPickOrderCount: 0,
+  pickOrderDelayTime: 0,
+  withdrawFeeRate: 0,
+  orderCommissionReleaseTime: 0,
+  commissionRateOnTips: 0,
+  canCancelOrder: false,
+  canRefundOrder: false,
+  canCheckApplyRefundUserMobile: false,
+  canCheckNotRefundUserMobile: false,
+  canCheckNotRefundUserMobileTime: 0,
+  canSetUserNotice: false,
+  depositReturnSafeDays: 0,
+  restrictProductIds: '',
+  limitPickOrderFee: 0,
+  limitSameTimePickOrderCount: 0,
+  pickOrderVerify: false,
+  limitUpgradePeopleCount: 0,
+  allowRechargeDeposit: false,
+  favorableCommentPointAdd: 0,
+  continuePointAdd: 0,
+  complaintPointSub: 0
 })
-const queryFormRef = ref() // 搜索的表单
-const exportLoading = ref(false) // 导出的加载中
 
-/** 查询列表 */
-const getList = async () => {
-  loading.value = true
+// 当前已有配置映射（key -> id）
+const existingIdMap = ref<Record<string, number>>({})
+
+const loadingAll = ref(false)
+const activeGroups = ref<string[]>(['topic', 'order', 'service', 'point'])
+
+// 工具：字符串转布尔
+const toBool = (v: string | null | undefined) => {
+  if (v == null) return false
+  const s = String(v).trim().toLowerCase()
+  return s === 'true' || s === '1' || s === 'yes' || s === 'on'
+}
+
+// 工具：安全 JSON 解析
+const safeJsonParse = <T>(s: string | null | undefined, def: T): T => {
+  if (!s) return def
+  try { return JSON.parse(s) as T } catch { return def }
+}
+
+const configList = ref<any[]>([])
+
+// 加载全部配置（分页拉取一页足够）
+const loadAll = async () => {
+  loadingAll.value = true
   try {
-    const data = await SystemConfigApi.getSystemConfigPage(queryParams)
-    list.value = data.list
-    total.value = data.total
+    const data = await SystemConfigApi.getSystemConfigPage()
+    configList.value = data || []
+    const idMap: Record<string, number> = {}
+    configList.value.forEach((item: any) => {
+      idMap[item.configKey] = item.id
+      switch (item.configKey) {
+        case KEYS.HOT_TOPIC_LIST:
+          formData.hotTopicList = safeJsonParse<HotTopicItem[]>(item.configValue, [])
+          break
+        case KEYS.ORDER_VIRTUAL_COUNT:
+          formData.orderVirtualCount = Number(item.configValue || 0)
+          break
+        case KEYS.PICK_ORDER_DEPOSIT:
+          formData.pickOrderDeposit = Number(item.configValue || 0)
+          break
+        case KEYS.DAILY_PICK_ORDER_COUNT:
+          formData.dailyPickOrderCount = Number(item.configValue || 0)
+          break
+        case KEYS.PICK_ORDER_DELAY_TIME:
+          formData.pickOrderDelayTime = Number(item.configValue || 0)
+          break
+        case KEYS.FEE_RATE:
+          formData.withdrawFeeRate = Number(item.configValue || 0)
+          break
+        case KEYS.ORDER_COMMISSION_RELEASE_TIME:
+          formData.orderCommissionReleaseTime = Number(item.configValue || 0)
+          break
+        case KEYS.COMMISSION_RATE_ON_TIPS:
+          formData.commissionRateOnTips = Number(item.configValue || 0)
+          break
+        case KEYS.CAN_CANCEL_ORDER:
+          formData.canCancelOrder = toBool(item.configValue)
+          break
+        case KEYS.CAN_REFUND:
+          formData.canRefundOrder = toBool(item.configValue)
+          break
+        case KEYS.CAN_CHECK_APPLY_REFUND_USER_MOBILE:
+          formData.canCheckApplyRefundUserMobile = toBool(item.configValue)
+          break
+        case KEYS.CAN_CHECK_NOT_REFUND_USER_MOBILE:
+          formData.canCheckNotRefundUserMobile = toBool(item.configValue)
+          break
+        case KEYS.CAN_CHECK_NOT_REFUND_USER_MOBILE_TIME:
+          formData.canCheckNotRefundUserMobileTime = Number(item.configValue || 0)
+          break
+        case KEYS.CAN_SET_USER_NOTICE:
+          formData.canSetUserNotice = toBool(item.configValue)
+          break
+        case KEYS.DEPOSIT_RETURN_SAFE_DAYS:
+          formData.depositReturnSafeDays = Number(item.configValue || 0)
+          break
+        case KEYS.RESTRICT_PRODUCT_IDS:
+          formData.restrictProductIds = String(item.configValue || '')
+          // 初始化选中 Map
+          initSelectedProductsFromIds(formData.restrictProductIds)
+          break
+        case KEYS.LIMIT_PICK_ORDER_FEE:
+          formData.limitPickOrderFee = Number(item.configValue || 0)
+          break
+        case KEYS.LIMIT_SAME_TIME_PICK_ORDER_COUNT:
+          formData.limitSameTimePickOrderCount = Number(item.configValue || 0)
+          break
+        case KEYS.PICK_ORDER_VERIFY:
+          formData.pickOrderVerify = toBool(item.configValue)
+          break
+        case KEYS.LIMIT_UPGRADE_PEOPLE_COUNT:
+          formData.limitUpgradePeopleCount = Number(item.configValue || 0)
+          break
+        case KEYS.ALLOW_RECHARGE_DEPOSIT:
+          formData.allowRechargeDeposit = toBool(item.configValue)
+          break
+        case KEYS.FAVORABLE_COMMENT_POINT_ADD:
+          formData.favorableCommentPointAdd = Number(item.configValue || 0)
+          break
+        case KEYS.CONTINUE_POINT_ADD:
+          formData.continuePointAdd = Number(item.configValue || 0)
+          break
+        case KEYS.COMPLAINT_POINT_SUB:
+          formData.complaintPointSub = Number(item.configValue || 0)
+          break
+      }
+    })
+    existingIdMap.value = idMap
   } finally {
-    loading.value = false
+    loadingAll.value = false
   }
 }
 
-/** 搜索按钮操作 */
-const handleQuery = () => {
-  queryParams.pageNo = 1
-  getList()
-}
-
-/** 重置按钮操作 */
-const resetQuery = () => {
-  queryFormRef.value.resetFields()
-  handleQuery()
-}
-
-/** 添加/修改操作 */
-const formRef = ref()
-const openForm = (type: string, id?: number) => {
-  formRef.value.open(type, id)
-}
-
-/** 删除按钮操作 */
-const handleDelete = async (id: number) => {
+// 保存逻辑：根据类型转换成字符串并调用 createOrUpdate
+const savingKeys = ref<Set<string>>(new Set())
+const handleSave = async (key: KeyName, type: 'json' | 'number' | 'boolean' | 'productIds', value: any) => {
+  savingKeys.value.add(key)
   try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await SystemConfigApi.deleteSystemConfig(id)
-    message.success(t('common.delSuccess'))
-    // 刷新列表
-    await getList()
-  } catch { }
-}
+    let configValue = ''
+    switch (type) {
+      case 'json':
+        configValue = JSON.stringify(value ?? [])
+        break
+      case 'number':
+        configValue = value === undefined || value === null || value === '' ? '' : String(value)
+        break
+      case 'boolean':
+        configValue = value ? 'true' : 'false'
+        break
+      case 'productIds':
+        configValue = Array.isArray(value) ? value.join(',') : String(value || '')
+        // 同步回显
+        formData.restrictProductIds = configValue
+        break
+    }
 
-/** 批量删除系统配置 */
-const handleDeleteBatch = async () => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    await SystemConfigApi.deleteSystemConfigList(checkedIds.value);
-    checkedIds.value = [];
-    message.success(t('common.delSuccess'))
-    await getList();
-  } catch { }
-}
+    const id = configList.value.find((item: any) => item.configKey === key)?.id
 
-const checkedIds = ref<number[]>([])
-const handleRowCheckboxChange = (records: SystemConfig[]) => {
-  checkedIds.value = records.map((item) => item.id);
-}
-
-/** 导出按钮操作 */
-const handleExport = async () => {
-  try {
-    // 导出的二次确认
-    await message.exportConfirm()
-    // 发起导出
-    exportLoading.value = true
-    const data = await SystemConfigApi.exportSystemConfig(queryParams)
-    download.excel(data, '系统配置.xls')
-  } catch {
+    const params: any = {
+      title: key,
+      configKey: key,
+      configValue
+    }
+    if (id) {
+      params.id = id
+    }
+    await SystemConfigApi.updateSystem(params)
+    message.success('已保存')
+    // 如果是首次创建（无 id），保存后刷新映射
+    if (!existingIdMap.value[key]) {
+      await loadAll()
+    }
   } finally {
-    exportLoading.value = false
+    savingKeys.value.delete(key)
   }
 }
 
-// 判断是否为图片URL
-const isImageUrl = (url: string): boolean => {
-  if (!url || typeof url !== 'string') return false;
-  const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.svg'];
-  const lowerUrl = url.toLowerCase();
-  return imageExtensions.some(ext => lowerUrl.endsWith(ext));
+// ---------------- 商品选择逻辑 ----------------
+const productSelectorVisible = ref(false)
+const selectedProductIds = ref<number[]>([])
+const selectedProductNamesDisplay = computed(() => {
+  const ids = selectedProductIds.value
+  if (ids.length === 0) {
+    const fromForm = (formData.restrictProductIds || '').split(',').filter(Boolean)
+    return fromForm.length ? `已选择 ${fromForm.length} 个` : ''
+  }
+  return `已选择 ${ids.length} 个`
+})
+
+const initSelectedProductsFromIds = (idsStr: string) => {
+  selectedProductIds.value = (idsStr || '')
+    .split(',')
+    .map((s) => Number(s))
+    .filter((n) => !Number.isNaN(n))
+
 }
 
-// 判断是否为富文本
-const isRichText = (content: string): boolean => {
-  if (!content || typeof content !== 'string') return false;
-  // 检查是否包含HTML标签
-  const htmlTagRegex = /<\/?[a-z][\s\S]*>/i;
-  return htmlTagRegex.test(content);
+const openProductSelector = () => {
+  productSelectorVisible.value = true
 }
-/** 初始化 **/
+
+const confirmProductSelection = (ids: number[]) => {
+  selectedProductIds.value = ids
+  handleSave(KEYS.RESTRICT_PRODUCT_IDS, 'productIds', ids)
+}
+
+const clearSelectedProducts = () => {
+  selectedProductIds.value = []
+  handleSave(KEYS.RESTRICT_PRODUCT_IDS, 'productIds', [])
+}
+
 onMounted(() => {
-  getList()
+  loadAll()
 })
 </script>
 

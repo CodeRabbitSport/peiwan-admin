@@ -66,11 +66,11 @@
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" />
       <el-table-column label="分类名称" align="center" prop="categoryName" />
-      <el-table-column label="类型" align="center" prop="categoryType">
+      <!-- <el-table-column label="类型" align="center" prop="categoryType">
         <template #default="scope">
-          {{ scope.row.categoryType == 1 ? "陪玩" : "护航" }}
+          {{ scope.row.categoryType == 1 ? "陪玩" : "打手" }}
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="图标" align="center" prop="categoryIcon">
         <template #default="scope">
           <el-image

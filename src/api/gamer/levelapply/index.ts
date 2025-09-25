@@ -28,6 +28,11 @@ export const LevelApplyApi = {
     return await request.get({ url: `/gamer/level-apply/get?id=` + id })
   },
 
+  // 审核打手/陪玩等级申请
+  auditLevelApply: async (data: any) => {
+    return await request.post({ url: `/gamer/level-apply/audit`, data })
+  },
+
   // 新增打手/陪玩等级申请
   createLevelApply: async (data: LevelApply) => {
     return await request.post({ url: `/gamer/level-apply/create`, data })

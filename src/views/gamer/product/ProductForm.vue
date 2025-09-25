@@ -33,12 +33,10 @@
       <el-form-item label="商品分类类型" prop="categoryTypeValue">
         <el-cascader
           v-model="formData.categoryTypeValue"
-          :options="cascaderOptions"
           :props="cascaderProps"
           placeholder="请选择商品分类和类型"
           clearable
           filterable
-          @change="handleCascaderChange"
           class="!w-full" />
       </el-form-item>
 
@@ -221,10 +219,28 @@ const cascaderOptions = ref<CascaderOption[]>([]) // 级联选择器选项
 const prizeGroupOptions = ref<PrizeGroup[]>([]) // 奖品组选项
 const levelOptions = ref<LevelConfig[]>([]) // 等级选项（来自 LevelConfig 接口）
 const cascaderProps = {
-  value: 'value',
-  label: 'label',
-  children: 'children',
-  expandTrigger: 'hover' as const
+  lazy: true,
+  lazyLoad: (node, resolve) => {
+    const { level } = node
+    if (level === 0) {
+      ProductCategoryApi.getProductCategoryPage().then((res) => {
+        const data = res.list.map((item) => ({
+          value: item.id,
+          label: item.categoryName,
+        }))
+        resolve(data)
+      })
+    } else if (level === 1) {
+      ProductTypeApi.getProductTypePage({ categoryId: node.value }).then((res) => {
+        const data = res.list.map((item) => ({
+          value: item.id,
+          label: item.typeName,
+          leaf: true
+        }))
+        resolve(data)
+      })
+    }
+  }
 }
 const formData = ref({
   id: undefined,
@@ -259,15 +275,14 @@ const formRef = ref() // 表单 Ref
 
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
-  dialogVisible.value = true
   dialogTitle.value = t('action.' + type)
   formType.value = type
   resetForm()
-  // 构建级联选择器选项
-  await buildCascaderOptions()
   // 加载奖品组选项
   await loadPrizeGroupOptions()
   // 加载等级选项
+  dialogVisible.value = true
+
 
   // 修改时，设置数据
   if (id) {
@@ -334,41 +349,6 @@ const submitForm = async () => {
   }
 }
 
-// 构建级联选择器数据
-const buildCascaderOptions = async () => {
-  try {
-    // 加载所有分类
-    const categoryData = await ProductCategoryApi.getProductCategoryPage()
-    const categories = categoryData.list
-
-    // 为每个分类构建级联结构
-    const cascaderData = await Promise.all(categories.map(async (category) => {
-      try {
-        const typeData = await ProductTypeApi.getProductTypePage({ categoryId: category.id })
-        return {
-          value: category.id,
-          label: category.categoryName,
-          children: typeData.list.map((type: ProductType) => ({
-            value: type.id,
-            label: type.typeName
-          }))
-        }
-      } catch (error) {
-        console.error(`加载分类 ${category.id} 的类型失败:`, error)
-        return {
-          value: category.id,
-          label: category.categoryName,
-          children: []
-        }
-      }
-    }))
-
-    cascaderOptions.value = cascaderData
-    categoryOptions.value = categories
-  } catch (error) {
-    console.error('构建级联选项失败:', error)
-  }
-}
 
 // 加载奖品组数据
 const loadPrizeGroupOptions = async () => {
@@ -394,6 +374,7 @@ const loadLevelOptions = async () => {
 
 // 处理级联选择器变化
 const handleCascaderChange = (value: number[]) => {
+  console.log('%c🤪 ~ file: /Users/soya/Desktop/p-admin/src/views/gamer/product/ProductForm.vue:396 [] -> value : ', 'color: #f4d61f', value);
   if (value && value.length === 2) {
     formData.value.categoryId = value[0]
     formData.value.typeId = value[1]

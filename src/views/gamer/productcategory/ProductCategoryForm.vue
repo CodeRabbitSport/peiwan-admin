@@ -17,12 +17,12 @@
           <el-radio :value="2">手游</el-radio>
         </el-radio-group>
       </el-form-item> -->
-      <el-form-item label="类型" prop="categoryType">
+      <!-- <el-form-item label="类型" prop="categoryType">
         <el-radio-group v-model="formData.categoryType">
-          <el-radio :value="true">陪玩</el-radio>
-          <el-radio :value="2">护航</el-radio>
+          <el-radio :value="2">打手</el-radio>
+          <el-radio :value="1">陪玩</el-radio>
         </el-radio-group>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="类别图标" prop="categoryIcon">
         <UploadImg v-model="formData.categoryIcon" />
       </el-form-item>
@@ -183,7 +183,7 @@ const gameCardFields = ref([{ type: 'text', label: '', value: '' }])
 // 接单大区动态表单字段
 const orderReceivingRegionFields = ref([{ region: '', price: 0 }])
 const formRules = reactive({
-  categoryType: [{ required: true, message: '类型(1陪玩2护航)不能为空', trigger: 'blur' }]
+  // categoryType: [{ required: true, message: '类型不能为空', trigger: 'blur' }]
 })
 const formRef = ref() // 表单 Ref
 

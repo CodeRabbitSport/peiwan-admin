@@ -1,11 +1,11 @@
 <template>
-  <Dialog :title="dialogTitle"  v-model="dialogVisible" align-center>
+  <Dialog :title="dialogTitle"  v-model="dialogVisible" align-center wi>
     <div class="h-[75vh] overflow-auto">
       <el-form
         ref="formRef"
         :model="formData"
         :rules="formRules"
-        label-width="150px"
+        label-width="220px"
         v-loading="formLoading">
         <el-form-item label="分类类型" prop="categoryType">
           <el-radio-group v-model="formData.categoryType">
@@ -93,7 +93,16 @@
           </el-input>
         </el-form-item>
         <el-form-item label="限制指定接单商品编号列表" prop="restrictedProductIds">
-          <el-input v-model="formData.restrictedProductIds" placeholder="逗号分隔，留空表示不限制" />
+          <el-input
+            :model-value="selectedProductNamesDisplay"
+            placeholder="点击选择商品"
+            readonly
+            @click="openProductSelector"
+          >
+            <template #suffix>
+              <el-button link type="danger" @click.stop="clearSelectedProducts">清空</el-button>
+            </template>
+          </el-input>
         </el-form-item>
         <el-form-item label="限制每日接单缴费金额" prop="dailyOrderFeeLimit">
           <el-input v-model="formData.dailyOrderFeeLimit" placeholder="请输入每日缴费金额上限">
@@ -128,9 +137,60 @@
       <el-button @click="dialogVisible = false">取 消</el-button>
     </template>
   </Dialog>
+  <!-- 商品选择弹窗 -->
+  <el-dialog v-model="productSelectorVisible" title="选择商品" width="900px" align-center>
+    <div class="mb-3 flex items-center gap-2">
+      <el-input
+        v-model="productQuery.productTitle"
+        placeholder="请输入商品名称"
+        class="!w-[260px]"
+        clearable
+        @keyup.enter="productHandleQuery"
+      />
+      <el-button type="primary" @click="productHandleQuery">
+        <Icon icon="ep:search" class="mr-[5px]" /> 搜索
+      </el-button>
+      <el-button @click="productResetQuery">
+        <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
+      </el-button>
+    </div>
+    <el-table
+      ref="productTableRef"
+      row-key="id"
+      v-loading="productLoading"
+      :data="productList"
+      :stripe="true"
+      :show-overflow-tooltip="true"
+      @selection-change="handleProductSelectionChange"
+    >
+      <el-table-column type="selection" width="55" reserve-selection />
+      <el-table-column label="ID" prop="id" width="90" align="center" />
+      <el-table-column label="商品标题" prop="productTitle" min-width="220" />
+      <el-table-column label="价格" prop="productPrice" width="120" align="center" />
+      <el-table-column label="分类" prop="categoryName" min-width="160" />
+      <el-table-column label="上下架" prop="saleStatus" width="100" align="center">
+        <template #default="scope">
+          <el-tag :type="scope.row.saleStatus ? 'success' : 'info'">{{ scope.row.saleStatus ? '上架' : '下架' }}</el-tag>
+        </template>
+      </el-table-column>
+    </el-table>
+    <div class="mt-3">
+      <Pagination
+        :total="productTotal"
+        v-model:page="productQuery.pageNo"
+        v-model:limit="productQuery.pageSize"
+        @pagination="getProductList"
+      />
+    </div>
+    <template #footer>
+      <el-button @click="confirmProductSelection" type="primary">确 定</el-button>
+      <el-button @click="productSelectorVisible = false">取 消</el-button>
+    </template>
+  </el-dialog>
 </template>
 <script setup lang="ts">
 import { LevelConfigApi, LevelConfig } from '@/api/gamer/levelconfig'
+import { ProductApi, Product } from '@/api/gamer/product'
 
 /** 打手等级配置 表单 */
 defineOptions({ name: 'LevelConfigForm' })
@@ -277,4 +337,85 @@ const resetForm = () => {
   }
   formRef.value?.resetFields()
 }
+
+// ---------------- 商品选择逻辑 ----------------
+const productSelectorVisible = ref(false)
+const productLoading = ref(false)
+const productList = ref<Product[]>([])
+const productTotal = ref(0)
+const productTableRef = ref()
+const productQuery = reactive({
+  pageNo: 1,
+  pageSize: 10,
+  productTitle: ''
+})
+
+// 已选商品（跨页保留）
+const selectedProductMap = ref<Map<number, Product>>(new Map())
+const selectedProductIds = computed(() => Array.from(selectedProductMap.value.keys()))
+const selectedProductNamesDisplay = computed(() =>
+selectedProductMap.value.size > 0 ? Array.from(selectedProductMap.value.values())
+    .map((p) => p.productTitle || `#${p.id}`)
+    .join(', ') : ''
+)
+
+const openProductSelector = async () => {
+  productSelectorVisible.value = true
+  await getProductList()
+}
+
+const productHandleQuery = () => {
+  productQuery.pageNo = 1
+  getProductList()
+}
+const productResetQuery = () => {
+  productQuery.productTitle = ''
+  productHandleQuery()
+}
+
+const getProductList = async () => {
+  productLoading.value = true
+  try {
+    const data = await ProductApi.getProductPage(productQuery)
+    productList.value = data.list || []
+    productTotal.value = data.total || 0
+  } finally {
+    productLoading.value = false
+    // 恢复本页已选中的行
+    nextTick(() => {
+      try {
+        productList.value.forEach((row) => {
+          const selected = selectedProductMap.value.has(row.id)
+          productTableRef.value?.toggleRowSelection(row, selected)
+        })
+      } catch {}
+    })
+  }
+}
+
+const handleProductSelectionChange = (rows: Product[]) => {
+  const currentPageIds = new Set(productList.value.map((r) => r.id))
+  // 清除本页中已取消选中的项
+  for (const id of Array.from(selectedProductMap.value.keys())) {
+    if (currentPageIds.has(id) && !rows.some((r) => r.id === id)) {
+      selectedProductMap.value.delete(id)
+    }
+  }
+  // 添加当前页新选中的项
+  rows.forEach((r) => {
+    selectedProductMap.value.set(r.id, r)
+  })
+}
+
+const confirmProductSelection = () => {
+  const ids = selectedProductIds.value
+  formData.value.restrictedProductIds = ids.length ? ids.join(',') : ''
+  productSelectorVisible.value = false
+}
+
+const clearSelectedProducts = () => {
+  selectedProductMap.value.clear()
+  formData.value.restrictedProductIds = ''
+}
+
 </script>

@@ -107,8 +107,8 @@
       <el-table-column label="等级类型" align="center" prop="levelType">
         <template #default="scope">
           <el-tag
-            :type="scope.row.levelType === 1 ? 'success' : scope.row.levelType === 2 ? 'danger' : 'info'">
-            {{ scope.row.levelType === 1 ? '打手' : scope.row.levelType === 2 ? '陪玩' : '未知' }}
+            :type="scope.row.levelType === 2 ? 'success' : scope.row.levelType === 1 ? 'danger' : 'info'">
+            {{ scope.row.levelType === 2 ? '打手' : scope.row.levelType === 1 ? '陪玩' : '未知' }}
           </el-tag>
         </template>
       </el-table-column>
@@ -135,6 +135,20 @@
       />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
+          <el-dropdown
+            trigger="click"
+            @command="(cmd) => handleAudit(cmd, scope.row)"
+          >
+            <el-button link type="primary">
+              审核
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="pass">审核通过</el-dropdown-item>
+                <el-dropdown-item command="reject">审核拒绝</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
           <el-button
             link
             type="primary"
@@ -223,6 +237,26 @@ const resetQuery = () => {
 const formRef = ref()
 const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
+}
+
+/** 审核操作 */
+const handleAudit = async (command: string, row: LevelApply) => {
+  try {
+    if (command === 'pass') {
+      await LevelApplyApi.auditLevelApply({ id: row.id, auditStatus: 1 })
+      message.success('审核通过')
+    } else if (command === 'reject') {
+      const { value } = await message.prompt('请输入拒绝原因', '审核拒绝')
+      const reason = (value || '').trim()
+      if (!reason) {
+        message.warning('请填写拒绝原因')
+        return
+      }
+      await LevelApplyApi.auditLevelApply({ id: row.id, auditStatus: 2, rejectReason: reason })
+      message.success('已拒绝')
+    }
+    await getList()
+  } catch {}
 }
 
 /** 删除按钮操作 */

@@ -3,11 +3,12 @@ import { ElMessageBox } from 'element-plus'
 
 import avatarImg from '@/assets/imgs/avatar.gif'
 import { useDesign } from '@/hooks/web/useDesign'
+import { useLockStore } from '@/store/modules/lock'
 import { useTagsViewStore } from '@/store/modules/tagsView'
 import { useUserStore } from '@/store/modules/user'
+
 import LockDialog from './components/LockDialog.vue'
 import LockPage from './components/LockPage.vue'
-import { useLockStore } from '@/store/modules/lock'
 
 defineOptions({ name: 'UserInfo' })
 
@@ -30,26 +31,27 @@ const userName = computed(() => userStore.user.nickname ?? 'Admin')
 const lockStore = useLockStore()
 const getIsLock = computed(() => lockStore.getLockInfo?.isLock ?? false)
 const dialogVisible = ref<boolean>(false)
-const lockScreen = () => {
+function lockScreen() {
   dialogVisible.value = true
 }
 
-const loginOut = async () => {
+async function loginOut() {
   try {
     await ElMessageBox.confirm(t('common.loginOutMessage'), t('common.reminder'), {
       confirmButtonText: t('common.ok'),
       cancelButtonText: t('common.cancel'),
-      type: 'warning'
+      type: 'warning',
     })
     await userStore.loginOut()
     tagsViewStore.delAllViews()
     replace('/login?redirect=/index')
-  } catch {}
+  }
+  catch {}
 }
-const toProfile = async () => {
+async function toProfile() {
   push('/user/profile')
 }
-const toDocument = () => {
+function toDocument() {
   window.open('https://doc.iocoder.cn/')
 }
 </script>
@@ -58,7 +60,7 @@ const toDocument = () => {
   <ElDropdown class="custom-hover" :class="prefixCls" trigger="click">
     <div class="flex items-center">
       <ElAvatar :src="avatar" alt="" class="w-[calc(var(--logo-height)-25px)] rounded-[50%]" />
-      <span class="pl-[5px] text-14px text-[var(--top-header-text-color)] <lg:hidden">
+      <span class="pl-[5px] text-[14px] text-[var(--top-header-text-color)] <lg:hidden">
         {{ userName }}
       </span>
     </div>
@@ -66,15 +68,21 @@ const toDocument = () => {
       <ElDropdownMenu>
         <ElDropdownItem>
           <Icon icon="ep:tools" />
-          <div @click="toProfile">{{ t('common.profile') }}</div>
+          <div @click="toProfile">
+            {{ t('common.profile') }}
+          </div>
         </ElDropdownItem>
         <ElDropdownItem>
           <Icon icon="ep:menu" />
-          <div @click="toDocument">{{ t('common.document') }}</div>
+          <div @click="toDocument">
+            {{ t('common.document') }}
+          </div>
         </ElDropdownItem>
         <ElDropdownItem divided>
           <Icon icon="ep:lock" />
-          <div @click="lockScreen">{{ t('lock.lockScreen') }}</div>
+          <div @click="lockScreen">
+            {{ t('lock.lockScreen') }}
+          </div>
         </ElDropdownItem>
         <ElDropdownItem divided @click="loginOut">
           <Icon icon="ep:switch-button" />

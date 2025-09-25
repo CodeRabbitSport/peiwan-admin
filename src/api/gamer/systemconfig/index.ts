@@ -1,25 +1,31 @@
 import request from '@/config/axios'
-import type { Dayjs } from 'dayjs';
 
 /** 系统配置信息 */
 export interface SystemConfig {
-          id: number; // 主键ID
-          configKey?: string; // 配置键名
-          configValue: string; // 配置值(支持长文本)
-          title?: string; // 配置标题
-          description: string; // 配置描述
-  }
+  id: number // 主键ID
+  configKey?: string // 配置键名
+  configValue: string // 配置值(支持长文本)
+  configGroupKey?: string // 配置分组键名
+  configGroupName?: string // 配置分组名称
+  title?: string // 配置标题
+  description: string // 配置描述
+}
 
 // 系统配置 API
 export const SystemConfigApi = {
   // 查询系统配置分页
-  getSystemConfigPage: async (params: any) => {
-    return await request.get({ url: `/gamer/system-config/page`, params })
+  getSystemConfigPage: async (params?: any) => {
+    return await request.get({ url: `/gamer/system-config/list`, params })
   },
 
   // 查询系统配置详情
   getSystemConfig: async (id: number) => {
-    return await request.get({ url: `/gamer/system-config/get?id=` + id })
+    return await request.get({ url: `/gamer/system-config/get?id=${id}` })
+  },
+
+  // 更新系统配置
+  updateSystem: async (data: SystemConfig) => {
+    return await request.post({ url: `/gamer/system-config/createOrUpdate`, data })
   },
 
   // 新增系统配置
@@ -34,7 +40,7 @@ export const SystemConfigApi = {
 
   // 删除系统配置
   deleteSystemConfig: async (id: number) => {
-    return await request.delete({ url: `/gamer/system-config/delete?id=` + id })
+    return await request.delete({ url: `/gamer/system-config/delete?id=${id}` })
   },
 
   /** 批量删除系统配置 */
@@ -45,5 +51,5 @@ export const SystemConfigApi = {
   // 导出系统配置 Excel
   exportSystemConfig: async (params) => {
     return await request.download({ url: `/gamer/system-config/export-excel`, params })
-  }
+  },
 }
