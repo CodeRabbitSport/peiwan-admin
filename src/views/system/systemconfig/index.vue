@@ -1,207 +1,6 @@
-<template>
-  <ContentWrap>
-    <el-form :model="formData" label-width="180px" v-loading="loadingAll">
-      <el-collapse v-model="activeGroups">
-        <!-- 服务配置 -->
-        <el-collapse-item name="service" title="服务配置">
-          <el-row :gutter="16">
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="接单保证金">
-                <el-input-number
-                  v-model="formData.pickOrderDeposit"
-                  :min="0"
-                  :step="1"
-                  @change="(val: any) => handleSave(KEYS.PICK_ORDER_DEPOSIT, 'number', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="每日接单次数">
-                <el-input-number
-                  v-model="formData.dailyPickOrderCount"
-                  :min="0"
-                  :step="1"
-                  @change="(val: any) => handleSave(KEYS.DAILY_PICK_ORDER_COUNT, 'number', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="接单延迟时间(秒)">
-                <el-input-number
-                  v-model="formData.pickOrderDelayTime"
-                  :min="0"
-                  :step="1"
-                  @change="(val: any) => handleSave(KEYS.PICK_ORDER_DELAY_TIME, 'number', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="提现手续费率(%)">
-                <el-input-number
-                  v-model="formData.withdrawFeeRate"
-                  :min="0"
-                  :max="100"
-                  @change="(val: any) => handleSave(KEYS.FEE_RATE, 'number', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="订单服务费解冻时间(秒)">
-                <el-input-number
-                  v-model="formData.orderCommissionReleaseTime"
-                  :min="0"
-                  :step="1"
-                  @change="(val: any) => handleSave(KEYS.ORDER_COMMISSION_RELEASE_TIME, 'number', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="打赏金额抽成比例(%)">
-                <el-input-number
-                  v-model="formData.commissionRateOnTips"
-                  :min="0"
-                  :max="100"
-                  :step="1"
-                  @change="(val: any) => handleSave(KEYS.COMMISSION_RATE_ON_TIPS, 'number', val)" />
-              </el-form-item>
-            </el-col>
-            
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="是否可以退款接单订单">
-                <el-switch
-                  v-model="formData.canRefundOrder"
-                  @change="(val: any) => handleSave(KEYS.CAN_REFUND, 'boolean', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="是否可以查看申请退款用户手机号" label-width="250px">
-                <el-switch
-                  v-model="formData.canCheckApplyRefundUserMobile"
-                  @change="(val: any) => handleSave(KEYS.CAN_CHECK_APPLY_REFUND_USER_MOBILE, 'boolean', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="是否可以查看未退款用户手机号"  label-width="250px">
-                <el-switch
-                  v-model="formData.canCheckNotRefundUserMobile"
-                  @change="(val: any) => handleSave(KEYS.CAN_CHECK_NOT_REFUND_USER_MOBILE, 'boolean', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="查看未退款用户手机号天数">
-                <el-input-number
-                  v-model="formData.canCheckNotRefundUserMobileTime"
-                  :min="-1"
-                  :step="1"
-                  @change="(val: any) => handleSave(KEYS.CAN_CHECK_NOT_REFUND_USER_MOBILE_TIME, 'number', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="保证金退还安全期限(天)">
-                <el-input-number
-                  v-model="formData.depositReturnSafeDays"
-                  :min="0"
-                  :step="1"
-                  @change="(val: any) => handleSave(KEYS.DEPOSIT_RETURN_SAFE_DAYS, 'number', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="限制指定接单商品编号列表">
-                <el-input
-                  :model-value="selectedProductNamesDisplay"
-                  placeholder="点击选择商品"
-                  readonly
-                  @click="openProductSelector">
-                  <template #suffix>
-                    <el-button link type="danger" @click.stop="clearSelectedProducts">清空</el-button>
-                  </template>
-                </el-input>
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="限制每日接单缴费金额">
-                <el-input-number v-model="formData.limitPickOrderFee" :min="0" :step="1"
-                  @change="(val: any) => handleSave(KEYS.LIMIT_PICK_ORDER_FEE, 'number', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="限制同一时间段接单单数">
-                <el-input-number v-model="formData.limitSameTimePickOrderCount" :min="0" :step="1"
-                  @change="(val: any) => handleSave(KEYS.LIMIT_SAME_TIME_PICK_ORDER_COUNT, 'number', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="是否可以设置用户公告">
-                <el-switch
-                  v-model="formData.canSetUserNotice"
-                  @change="(val: any) => handleSave(KEYS.CAN_SET_USER_NOTICE, 'boolean', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="接单验证类型">
-                <el-switch
-                  v-model="formData.pickOrderVerify"
-                  @change="(val: any) => handleSave(KEYS.PICK_ORDER_VERIFY, 'boolean', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="限制升级人数名额">
-                <el-input-number v-model="formData.limitUpgradePeopleCount" :min="0" :step="1"
-                  @change="(val: any) => handleSave(KEYS.LIMIT_UPGRADE_PEOPLE_COUNT, 'number', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="允许充值保证金">
-                <el-switch v-model="formData.allowRechargeDeposit"
-                  @change="(val: any) => handleSave(KEYS.ALLOW_RECHARGE_DEPOSIT, 'boolean', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="是否可以取消接单订单">
-                <el-switch
-                  v-model="formData.canCancelOrder"
-                  @change="(val: any) => handleSave(KEYS.CAN_CANCEL_ORDER, 'boolean', val)" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </el-collapse-item>
-
-        <!-- 积分配置 -->
-        <el-collapse-item name="point" title="积分配置">
-          <el-row :gutter="16">
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="好评加分">
-                <el-input-number v-model="formData.favorableCommentPointAdd" :min="0" :step="1"
-                  @change="(val: any) => handleSave(KEYS.FAVORABLE_COMMENT_POINT_ADD, 'number', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="续单加分">
-                <el-input-number v-model="formData.continuePointAdd" :min="0" :step="1"
-                  @change="(val: any) => handleSave(KEYS.CONTINUE_POINT_ADD, 'number', val)" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="差评减分(可为负)">
-                <el-input-number v-model="formData.complaintPointSub" :step="1" :min="-1000000"
-                  @change="(val: any) => handleSave(KEYS.COMPLAINT_POINT_SUB, 'number', val)" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </el-collapse-item>
-
-        <!-- 话题配置 -->
-        <el-collapse-item name="topic" title="话题配置">
-          <el-form-item label="热门话题列表">
-            <HotTopicListEditor v-model="formData.hotTopicList"
-              @change="(val: any) => handleSave(KEYS.HOT_TOPIC_LIST, 'json', val)" />
-          </el-form-item>
-        </el-collapse-item>
-      </el-collapse>
-    </el-form>
-  </ContentWrap>
-
-  <ProductSelectorDialog v-model="selectedProductIds" v-model:visible="productSelectorVisible"
-    @confirm="confirmProductSelection" />
-</template>
-
 <script setup lang="ts">
 import { SystemConfigApi } from '@/api/gamer/systemconfig'
+
 import HotTopicListEditor from './components/HotTopicListEditor.vue'
 import ProductSelectorDialog from './components/ProductSelectorDialog.vue'
 
@@ -238,13 +37,17 @@ const KEYS = {
   // 积分配置
   FAVORABLE_COMMENT_POINT_ADD: 'pointConfigFavorableCommentPointAdd',
   CONTINUE_POINT_ADD: 'pointConfigContinuePointAdd',
-  COMPLAINT_POINT_SUB: 'pointConfigComplaintPointSub'
+  COMPLAINT_POINT_SUB: 'pointConfigComplaintPointSub',
+  // 礼物/商品商店配置
+  GIFT_COMMISSION_RATE: 'itemShopConfigGiftCommissionRate',
+  TOP_CARD_PRICE: 'itemShopConfigTopCardPrice',
+  REFRESH_CARD_PRICE: 'itemShopConfigRefreshCardPrice',
 } as const
 
 type KeyName = typeof KEYS[keyof typeof KEYS]
 
 // 表单数据
-type HotTopicItem = { sort: number; name: string; color: string }
+interface HotTopicItem { sort: number, name: string, color: string }
 const formData = reactive<any>({
   hotTopicList: [],
   orderVirtualCount: 0,
@@ -269,32 +72,41 @@ const formData = reactive<any>({
   allowRechargeDeposit: false,
   favorableCommentPointAdd: 0,
   continuePointAdd: 0,
-  complaintPointSub: 0
+  complaintPointSub: 0,
+  // 礼物/商品商店配置
+  giftCommissionRate: 0,
+  topCardPrice: 0,
+  refreshCardPrice: 0,
 })
 
 // 当前已有配置映射（key -> id）
 const existingIdMap = ref<Record<string, number>>({})
 
 const loadingAll = ref(false)
-const activeGroups = ref<string[]>(['topic', 'order', 'service', 'point'])
+const activeGroups = ref<string[]>(['topic', 'order', 'service', 'point', 'itemShop'])
 
 // 工具：字符串转布尔
-const toBool = (v: string | null | undefined) => {
+function toBool(v: string | null | undefined) {
   if (v == null) return false
   const s = String(v).trim().toLowerCase()
   return s === 'true' || s === '1' || s === 'yes' || s === 'on'
 }
 
 // 工具：安全 JSON 解析
-const safeJsonParse = <T>(s: string | null | undefined, def: T): T => {
+function safeJsonParse<T>(s: string | null | undefined, def: T): T {
   if (!s) return def
-  try { return JSON.parse(s) as T } catch { return def }
+  try {
+    return JSON.parse(s) as T
+  }
+  catch {
+    return def
+  }
 }
 
 const configList = ref<any[]>([])
 
 // 加载全部配置（分页拉取一页足够）
-const loadAll = async () => {
+async function loadAll() {
   loadingAll.value = true
   try {
     const data = await SystemConfigApi.getSystemConfigPage()
@@ -377,17 +189,27 @@ const loadAll = async () => {
         case KEYS.COMPLAINT_POINT_SUB:
           formData.complaintPointSub = Number(item.configValue || 0)
           break
+        case KEYS.GIFT_COMMISSION_RATE:
+          formData.giftCommissionRate = Number(item.configValue || 0)
+          break
+        case KEYS.TOP_CARD_PRICE:
+          formData.topCardPrice = Number(item.configValue || 0)
+          break
+        case KEYS.REFRESH_CARD_PRICE:
+          formData.refreshCardPrice = Number(item.configValue || 0)
+          break
       }
     })
     existingIdMap.value = idMap
-  } finally {
+  }
+  finally {
     loadingAll.value = false
   }
 }
 
 // 保存逻辑：根据类型转换成字符串并调用 createOrUpdate
 const savingKeys = ref<Set<string>>(new Set())
-const handleSave = async (key: KeyName, type: 'json' | 'number' | 'boolean' | 'productIds', value: any) => {
+async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'productIds', value: any) {
   savingKeys.value.add(key)
   try {
     let configValue = ''
@@ -413,7 +235,7 @@ const handleSave = async (key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
     const params: any = {
       title: key,
       configKey: key,
-      configValue
+      configValue,
     }
     if (id) {
       params.id = id
@@ -424,7 +246,8 @@ const handleSave = async (key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
     if (!existingIdMap.value[key]) {
       await loadAll()
     }
-  } finally {
+  }
+  finally {
     savingKeys.value.delete(key)
   }
 }
@@ -441,24 +264,23 @@ const selectedProductNamesDisplay = computed(() => {
   return `已选择 ${ids.length} 个`
 })
 
-const initSelectedProductsFromIds = (idsStr: string) => {
+function initSelectedProductsFromIds(idsStr: string) {
   selectedProductIds.value = (idsStr || '')
     .split(',')
-    .map((s) => Number(s))
-    .filter((n) => !Number.isNaN(n))
-
+    .map(s => Number(s))
+    .filter(n => !Number.isNaN(n))
 }
 
-const openProductSelector = () => {
+function openProductSelector() {
   productSelectorVisible.value = true
 }
 
-const confirmProductSelection = (ids: number[]) => {
+function confirmProductSelection(ids: number[]) {
   selectedProductIds.value = ids
   handleSave(KEYS.RESTRICT_PRODUCT_IDS, 'productIds', ids)
 }
 
-const clearSelectedProducts = () => {
+function clearSelectedProducts() {
   selectedProductIds.value = []
   handleSave(KEYS.RESTRICT_PRODUCT_IDS, 'productIds', [])
 }
@@ -467,6 +289,279 @@ onMounted(() => {
   loadAll()
 })
 </script>
+
+<template>
+  <ContentWrap>
+    <el-form v-loading="loadingAll" :model="formData" label-width="180px">
+      <el-collapse v-model="activeGroups">
+        <!-- 服务配置 -->
+        <el-collapse-item name="service" title="服务配置">
+          <el-row :gutter="16">
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="接单保证金">
+                <el-input-number
+                  v-model="formData.pickOrderDeposit"
+                  :min="0"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.PICK_ORDER_DEPOSIT, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="每日接单次数">
+                <el-input-number
+                  v-model="formData.dailyPickOrderCount"
+                  :min="0"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.DAILY_PICK_ORDER_COUNT, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="接单延迟时间(秒)">
+                <el-input-number
+                  v-model="formData.pickOrderDelayTime"
+                  :min="0"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.PICK_ORDER_DELAY_TIME, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="提现手续费率(%)">
+                <el-input-number
+                  v-model="formData.withdrawFeeRate"
+                  :min="0"
+                  :max="100"
+                  @change="(val: any) => handleSave(KEYS.FEE_RATE, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="订单服务费解冻时间(秒)">
+                <el-input-number
+                  v-model="formData.orderCommissionReleaseTime"
+                  :min="0"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.ORDER_COMMISSION_RELEASE_TIME, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="打赏金额抽成比例(%)">
+                <el-input-number
+                  v-model="formData.commissionRateOnTips"
+                  :min="0"
+                  :max="100"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.COMMISSION_RATE_ON_TIPS, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="是否可以退款接单订单">
+                <el-switch
+                  v-model="formData.canRefundOrder"
+                  @change="(val: any) => handleSave(KEYS.CAN_REFUND, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="是否可以查看申请退款用户手机号" label-width="250px">
+                <el-switch
+                  v-model="formData.canCheckApplyRefundUserMobile"
+                  @change="(val: any) => handleSave(KEYS.CAN_CHECK_APPLY_REFUND_USER_MOBILE, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="是否可以查看未退款用户手机号" label-width="250px">
+                <el-switch
+                  v-model="formData.canCheckNotRefundUserMobile"
+                  @change="(val: any) => handleSave(KEYS.CAN_CHECK_NOT_REFUND_USER_MOBILE, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="查看未退款用户手机号天数">
+                <el-input-number
+                  v-model="formData.canCheckNotRefundUserMobileTime"
+                  :min="-1"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.CAN_CHECK_NOT_REFUND_USER_MOBILE_TIME, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="保证金退还安全期限(天)">
+                <el-input-number
+                  v-model="formData.depositReturnSafeDays"
+                  :min="0"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.DEPOSIT_RETURN_SAFE_DAYS, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="限制指定接单商品编号列表">
+                <el-input
+                  :model-value="selectedProductNamesDisplay"
+                  placeholder="点击选择商品"
+                  readonly
+                  @click="openProductSelector"
+                >
+                  <template #suffix>
+                    <el-button link type="danger" @click.stop="clearSelectedProducts">
+                      清空
+                    </el-button>
+                  </template>
+                </el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="限制每日接单缴费金额">
+                <el-input-number
+                  v-model="formData.limitPickOrderFee" :min="0" :step="1"
+                  @change="(val: any) => handleSave(KEYS.LIMIT_PICK_ORDER_FEE, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="限制同一时间段接单单数">
+                <el-input-number
+                  v-model="formData.limitSameTimePickOrderCount" :min="0" :step="1"
+                  @change="(val: any) => handleSave(KEYS.LIMIT_SAME_TIME_PICK_ORDER_COUNT, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="是否可以设置用户公告">
+                <el-switch
+                  v-model="formData.canSetUserNotice"
+                  @change="(val: any) => handleSave(KEYS.CAN_SET_USER_NOTICE, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="接单验证类型">
+                <el-switch
+                  v-model="formData.pickOrderVerify"
+                  @change="(val: any) => handleSave(KEYS.PICK_ORDER_VERIFY, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="限制升级人数名额">
+                <el-input-number
+                  v-model="formData.limitUpgradePeopleCount" :min="0" :step="1"
+                  @change="(val: any) => handleSave(KEYS.LIMIT_UPGRADE_PEOPLE_COUNT, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="允许充值保证金">
+                <el-switch
+                  v-model="formData.allowRechargeDeposit"
+                  @change="(val: any) => handleSave(KEYS.ALLOW_RECHARGE_DEPOSIT, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="是否可以取消接单订单">
+                <el-switch
+                  v-model="formData.canCancelOrder"
+                  @change="(val: any) => handleSave(KEYS.CAN_CANCEL_ORDER, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-collapse-item>
+
+        <!-- 积分配置 -->
+        <el-collapse-item name="point" title="积分配置">
+          <el-row :gutter="16">
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="好评加分">
+                <el-input-number
+                  v-model="formData.favorableCommentPointAdd" :min="0" :step="1"
+                  @change="(val: any) => handleSave(KEYS.FAVORABLE_COMMENT_POINT_ADD, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="续单加分">
+                <el-input-number
+                  v-model="formData.continuePointAdd" :min="0" :step="1"
+                  @change="(val: any) => handleSave(KEYS.CONTINUE_POINT_ADD, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="差评减分(可为负)">
+                <el-input-number
+                  v-model="formData.complaintPointSub" :step="1" :min="-1000000"
+                  @change="(val: any) => handleSave(KEYS.COMPLAINT_POINT_SUB, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-collapse-item>
+
+        <!-- 话题配置 -->
+        <el-collapse-item name="topic" title="话题配置">
+          <el-form-item label="热门话题列表">
+            <HotTopicListEditor
+              v-model="formData.hotTopicList"
+              @change="(val: any) => handleSave(KEYS.HOT_TOPIC_LIST, 'json', val)"
+            />
+          </el-form-item>
+        </el-collapse-item>
+        <!-- 礼物/商店配置 -->
+        <el-collapse-item name="itemShop" title="礼物/商店配置">
+          <el-row :gutter="16">
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="礼物抽成比例(%)">
+                <el-input-number
+                  v-model="formData.giftCommissionRate"
+                  :min="0"
+                  :max="100"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.GIFT_COMMISSION_RATE, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="置顶卡价格">
+                <el-input-number
+                  v-model="formData.topCardPrice"
+                  :min="0"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.TOP_CARD_PRICE, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="刷新卡价格">
+                <el-input-number
+                  v-model="formData.refreshCardPrice"
+                  :min="0"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.REFRESH_CARD_PRICE, 'number', val)"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-collapse-item>
+      </el-collapse>
+    </el-form>
+  </ContentWrap>
+
+  <ProductSelectorDialog
+    v-model="selectedProductIds" v-model:visible="productSelectorVisible"
+    @confirm="confirmProductSelection"
+  />
+</template>
 
 <style lang="scss" scoped>
 .text-truncate {

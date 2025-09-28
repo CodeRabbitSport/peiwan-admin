@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ProductCategoryApi } from '@/api/gamer/productcategory'
 import type { UserPlayerCard } from '@/api/gamer/userplayercard'
 import { UserPlayerCardApi } from '@/api/gamer/userplayercard'
 import { dateFormatter } from '@/utils/formatTime'
@@ -23,6 +24,7 @@ const queryParams = reactive({
   createTime: [],
 })
 const queryFormRef = ref() // 搜索的表单
+const categoryOptions = ref<{ label: string, value: number }[]>([])
 
 /** 查询列表 */
 async function getList() {
@@ -87,8 +89,20 @@ function handleRowCheckboxChange(records: UserPlayerCard[]) {
   checkedIds.value = records.map(item => item.id)
 }
 
+async function loadCategoryOptions() {
+  try {
+    const { list = [] } = await ProductCategoryApi.getProductCategoryPage()
+    categoryOptions.value = list.map((item: any) => ({
+      label: item.categoryName,
+      value: item.id,
+    }))
+  }
+  catch {}
+}
+
 /** 初始化 */
 onMounted(() => {
+  loadCategoryOptions()
   getList()
 })
 </script>
@@ -103,14 +117,22 @@ onMounted(() => {
       :inline="true"
       label-width="68px"
     >
-      <el-form-item label="游戏分类ID" prop="categoryId">
-        <el-input
+      <el-form-item label="游戏分类" prop="categoryId">
+        <el-select
           v-model="queryParams.categoryId"
-          placeholder="请输入游戏分类ID"
+          placeholder="请选择游戏分类"
           clearable
+          filterable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
-        />
+          @change="handleQuery"
+        >
+          <el-option
+            v-for="item in categoryOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="用户ID" prop="userId">
         <el-input
@@ -180,8 +202,8 @@ onMounted(() => {
       @selection-change="handleRowCheckboxChange"
     >
       <el-table-column type="selection" width="55" />
-      <el-table-column label="名片ID" align="center" prop="id" />
-      <el-table-column label="游戏分类ID" align="center" prop="categoryId" />
+      <el-table-column label="ID" align="center" prop="id" />
+      <el-table-column label="游戏分类" align="center" prop="categoryName" />
       <el-table-column label="用户ID" align="center" prop="userId" />
       <el-table-column label="名片信息" align="center" prop="cardInfo">
         <template #default="scope">

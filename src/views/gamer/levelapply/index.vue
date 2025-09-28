@@ -227,7 +227,7 @@ onMounted(() => {
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" />
       <el-table-column label="用户ID" align="center" prop="userId" />
-      <el-table-column label="所属分类" align="center" prop="productCategoryId" />
+      <el-table-column label="所属分类" align="center" prop="categoryName" />
       <el-table-column label="等级类型" align="center" prop="levelType">
         <template #default="scope">
           <el-tag

@@ -157,7 +157,7 @@ function stringifyContactEntries() {
 </script>
 
 <template>
-  <Dialog v-model="dialogVisible" :title="dialogTitle">
+  <Dialog v-model="dialogVisible" :title="dialogTitle" align-center>
     <el-form
       ref="formRef"
       v-loading="formLoading"

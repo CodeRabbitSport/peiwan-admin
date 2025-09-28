@@ -2,7 +2,6 @@
 import type { UserInfo } from '@/api/gamer/userinfo'
 import { UserInfoApi } from '@/api/gamer/userinfo'
 import { fenToYuan } from '@/utils'
-import UserBalanceUpdateForm from '@/views/member/user/components/UserBalanceUpdateForm.vue'
 
 import UserIncomeExpenseDetail from '../userincomeexpensedetail/index.vue'
 import UserMoment from '../usermoment/index.vue'

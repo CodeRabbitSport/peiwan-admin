@@ -21,6 +21,10 @@ const CONFIG_KEYS = {
   siteFighterCenterContent: 'siteConfigFighterCenterContent',
   siteClubCenterContent: 'siteConfigClubCenterContent',
   siteHelpCenterContent: 'siteConfigHelpCenterContent',
+  // 新增-富文本协议
+  aboutUsContent: 'siteConfigAboutUsContent',
+  employmentAgreementContent: 'siteConfigEmploymentAgreementContent',
+  pickOrderAgreementContent: 'siteConfigPickOrderAgreementContent',
   // 协议与保护
   userRegistrationAgreement: 'siteConfigUserRegisterAgreementContent',
   protectionOfMinors: 'siteConfigProtectionAgreementContent',
@@ -31,18 +35,22 @@ const CONFIG_KEYS = {
   recyclingQrCode: 'recycleConfigQrCode',
 } as const
 
-// 每个 Tab 对应需要保存的 Key
+// 每个 Tab 对应需要保存的 Key（按语义细分分组）
 const TAB_KEYS: Record<string, string[]> = {
   basic: [CONFIG_KEYS.siteLogoUrl, CONFIG_KEYS.siteName],
-  home: [CONFIG_KEYS.siteEnableRecycle, CONFIG_KEYS.orderVirtualCount, CONFIG_KEYS.siteIndexDialogContent],
+  home: [CONFIG_KEYS.orderVirtualCount, CONFIG_KEYS.siteIndexDialogContent],
   mine: [CONFIG_KEYS.siteEnableVoiceRoom],
-  privacy: [CONFIG_KEYS.sitePrivacyContent, CONFIG_KEYS.userRegistrationAgreement, CONFIG_KEYS.protectionOfMinors],
-  order: [CONFIG_KEYS.siteCreateOrderContent],
-  orderDetail: [CONFIG_KEYS.siteOrderDetailContent],
-  fighterCenter: [CONFIG_KEYS.siteFighterCenterContent],
-  clubCenter: [CONFIG_KEYS.siteClubCenterContent],
-  helpCenter: [CONFIG_KEYS.siteHelpCenterContent],
-  recycle: [CONFIG_KEYS.recyclingRuleDetail, CONFIG_KEYS.recyclingQrCode],
+  // 页面内容细分
+  orderPages: [CONFIG_KEYS.siteCreateOrderContent, CONFIG_KEYS.siteOrderDetailContent],
+  centerPages: [CONFIG_KEYS.siteFighterCenterContent, CONFIG_KEYS.siteClubCenterContent],
+  helpCenterPage: [CONFIG_KEYS.siteHelpCenterContent],
+  // 协议与说明细分
+  userAgreementTab: [CONFIG_KEYS.userRegistrationAgreement],
+  privacyProtectionTab: [CONFIG_KEYS.sitePrivacyContent, CONFIG_KEYS.protectionOfMinors],
+  aboutTab: [CONFIG_KEYS.aboutUsContent],
+  rulesTab: [CONFIG_KEYS.employmentAgreementContent, CONFIG_KEYS.pickOrderAgreementContent],
+  // 回收
+  recycle: [CONFIG_KEYS.siteEnableRecycle, CONFIG_KEYS.recyclingRuleDetail, CONFIG_KEYS.recyclingQrCode],
 }
 
 // 标题与描述（用于配置项的标题）
@@ -61,6 +69,9 @@ const TITLE_MAP: Record<string, string> = {
   [CONFIG_KEYS.siteFighterCenterContent]: '打手中心页内容',
   [CONFIG_KEYS.siteClubCenterContent]: '俱乐部中心页内容',
   [CONFIG_KEYS.siteHelpCenterContent]: '帮助中心页内容',
+  [CONFIG_KEYS.aboutUsContent]: '关于我们',
+  [CONFIG_KEYS.employmentAgreementContent]: '入职陪玩协议',
+  [CONFIG_KEYS.pickOrderAgreementContent]: '接单规则',
   [CONFIG_KEYS.recyclingRuleDetail]: '回收规则详情',
   [CONFIG_KEYS.recyclingQrCode]: '回收二维码',
 }
@@ -84,6 +95,9 @@ const form = reactive({
   siteFighterCenterContent: '' as string,
   siteClubCenterContent: '' as string,
   siteHelpCenterContent: '' as string,
+  aboutUsContent: '' as string,
+  employmentAgreementContent: '' as string,
+  pickOrderAgreementContent: '' as string,
   recyclingRuleDetail: '' as string,
   recyclingQrCode: '' as string,
 })
@@ -150,6 +164,15 @@ async function fetchAll() {
     if (map[CONFIG_KEYS.siteHelpCenterContent]) {
       form.siteHelpCenterContent = map[CONFIG_KEYS.siteHelpCenterContent].configValue || ''
     }
+    if (map[CONFIG_KEYS.aboutUsContent]) {
+      form.aboutUsContent = map[CONFIG_KEYS.aboutUsContent].configValue || ''
+    }
+    if (map[CONFIG_KEYS.employmentAgreementContent]) {
+      form.employmentAgreementContent = map[CONFIG_KEYS.employmentAgreementContent].configValue || ''
+    }
+    if (map[CONFIG_KEYS.pickOrderAgreementContent]) {
+      form.pickOrderAgreementContent = map[CONFIG_KEYS.pickOrderAgreementContent].configValue || ''
+    }
     if (map[CONFIG_KEYS.recyclingRuleDetail]) {
       form.recyclingRuleDetail = map[CONFIG_KEYS.recyclingRuleDetail].configValue || ''
     }
@@ -178,6 +201,9 @@ function resolveGroupKey(configKey: string): string | undefined {
     || configKey === CONFIG_KEYS.siteFighterCenterContent
     || configKey === CONFIG_KEYS.siteClubCenterContent
     || configKey === CONFIG_KEYS.siteHelpCenterContent
+    || configKey === CONFIG_KEYS.aboutUsContent
+    || configKey === CONFIG_KEYS.employmentAgreementContent
+    || configKey === CONFIG_KEYS.pickOrderAgreementContent
   ) {
     return 'siteConfig'
   }
@@ -237,6 +263,15 @@ function buildConfigs(keys: string[]): Partial<SystemConfig>[] {
         break
       case CONFIG_KEYS.siteHelpCenterContent:
         value = form.siteHelpCenterContent || ''
+        break
+      case CONFIG_KEYS.aboutUsContent:
+        value = form.aboutUsContent || ''
+        break
+      case CONFIG_KEYS.employmentAgreementContent:
+        value = form.employmentAgreementContent || ''
+        break
+      case CONFIG_KEYS.pickOrderAgreementContent:
+        value = form.pickOrderAgreementContent || ''
         break
       case CONFIG_KEYS.recyclingRuleDetail:
         value = form.recyclingRuleDetail || ''
@@ -337,9 +372,6 @@ onMounted(() => {
 
       <el-tab-pane label="首页配置" name="home">
         <el-form label-width="180px" class="max-w-[900px]">
-          <el-form-item label="是否开启回收">
-            <el-switch v-model="form.siteEnableRecycle" />
-          </el-form-item>
           <el-form-item label="虚拟订单数量">
             <el-input-number v-model="form.orderVirtualCount" :min="0" class="!w-full" />
           </el-form-item>
@@ -357,13 +389,48 @@ onMounted(() => {
         </el-form>
       </el-tab-pane>
 
-      <el-tab-pane label="隐私协议配置" name="privacy">
+      <el-tab-pane label="下单与订单页面" name="orderPages">
+        <el-form label-width="140px" class="max-w-[900px]">
+          <el-form-item label="下单页面内容">
+            <Editor v-model="form.siteCreateOrderContent" height="350px" />
+          </el-form-item>
+          <el-form-item label="订单详情页内容">
+            <Editor v-model="form.siteOrderDetailContent" height="350px" />
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>
+
+      <el-tab-pane label="中心页面配置" name="centerPages">
+        <el-form label-width="140px" class="max-w-[900px]">
+          <el-form-item label="打手中心页内容">
+            <Editor v-model="form.siteFighterCenterContent" height="350px" />
+          </el-form-item>
+          <el-form-item label="俱乐部中心页内容">
+            <Editor v-model="form.siteClubCenterContent" height="350px" />
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>
+
+      <el-tab-pane label="帮助中心页面" name="helpCenterPage">
+        <el-form label-width="140px" class="max-w-[900px]">
+          <el-form-item label="帮助中心页内容">
+            <Editor v-model="form.siteHelpCenterContent" height="350px" />
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>
+
+      <el-tab-pane label="用户协议" name="userAgreementTab">
+        <el-form label-width="140px" class="max-w-[900px]">
+          <el-form-item label="用户注册协议">
+            <Editor v-model="form.userRegistrationAgreement" height="300px" />
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>
+
+      <el-tab-pane label="隐私与保护" name="privacyProtectionTab">
         <el-form label-width="140px" class="max-w-[900px]">
           <el-form-item label="隐私协议">
             <Editor v-model="form.sitePrivacyContent" height="300px" />
-          </el-form-item>
-          <el-form-item label="用户注册协议">
-            <Editor v-model="form.userRegistrationAgreement" height="300px" />
           </el-form-item>
           <el-form-item label="未成年人保护">
             <Editor v-model="form.protectionOfMinors" height="300px" />
@@ -371,28 +438,30 @@ onMounted(() => {
         </el-form>
       </el-tab-pane>
 
-      <el-tab-pane label="下单页面配置" name="order">
-        <Editor v-model="form.siteCreateOrderContent" height="350px" />
+      <el-tab-pane label="关于我们" name="aboutTab">
+        <el-form label-width="140px" class="max-w-[900px]">
+          <el-form-item label="关于我们">
+            <Editor v-model="form.aboutUsContent" height="300px" />
+          </el-form-item>
+        </el-form>
       </el-tab-pane>
 
-      <el-tab-pane label="订单详情页配置" name="orderDetail">
-        <Editor v-model="form.siteOrderDetailContent" height="350px" />
-      </el-tab-pane>
-
-      <el-tab-pane label="打手中心页配置" name="fighterCenter">
-        <Editor v-model="form.siteFighterCenterContent" height="350px" />
-      </el-tab-pane>
-
-      <el-tab-pane label="俱乐部中心页配置" name="clubCenter">
-        <Editor v-model="form.siteClubCenterContent" height="350px" />
-      </el-tab-pane>
-
-      <el-tab-pane label="帮助中心页配置" name="helpCenter">
-        <Editor v-model="form.siteHelpCenterContent" height="350px" />
+      <el-tab-pane label="规则与说明" name="rulesTab">
+        <el-form label-width="140px" class="max-w-[900px]">
+          <el-form-item label="入职陪玩协议">
+            <Editor v-model="form.employmentAgreementContent" height="300px" />
+          </el-form-item>
+          <el-form-item label="接单规则">
+            <Editor v-model="form.pickOrderAgreementContent" height="300px" />
+          </el-form-item>
+        </el-form>
       </el-tab-pane>
 
       <el-tab-pane label="回收配置" name="recycle">
         <el-form label-width="180px" class="max-w-[900px]">
+          <el-form-item label="是否开启回收">
+            <el-switch v-model="form.siteEnableRecycle" />
+          </el-form-item>
           <el-form-item label="回收规则详情">
             <Editor v-model="form.recyclingRuleDetail" height="260px" />
           </el-form-item>
