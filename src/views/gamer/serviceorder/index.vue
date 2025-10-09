@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ProductApi } from '@/api/gamer/product'
 import type { ServiceOrder } from '@/api/gamer/serviceorder'
-import { ServiceOrderApi } from '@/api/gamer/serviceorder'
+import { acceptOrder, ServiceOrderApi } from '@/api/gamer/serviceorder'
 import UserSelectInput from '@/components/UserSelectInput/index.vue'
+import UserInfoPickerDialog from '@/components/UserSelectInput/UserInfoPickerDialog.vue'
 import download from '@/utils/download'
 import { formatDate } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
@@ -274,6 +275,36 @@ onMounted(() => {
   loadProductOptions()
   getList()
 })
+
+// 指定接单人
+const assignPickerRef = ref<InstanceType<typeof UserInfoPickerDialog> | null>(null)
+const currentAssignOrderId = ref<number | null>(null)
+
+function openAssignPicker(row: ServiceOrder) {
+  currentAssignOrderId.value = row.id
+  assignPickerRef.value?.open()
+}
+
+async function handleAssignConfirm(user: any) {
+  if (!currentAssignOrderId.value) return
+  try {
+    await acceptOrder({
+      captchaVerification: undefined,
+      orderId: currentAssignOrderId.value,
+      teamId: undefined,
+      remark: '指定接单人',
+      userId: user.id,
+    })
+    message.success('指定接单人成功')
+    await getList()
+  }
+  catch {
+    message.error('指定接单人失败')
+  }
+  finally {
+    currentAssignOrderId.value = null
+  }
+}
 </script>
 
 <template>
@@ -457,7 +488,16 @@ onMounted(() => {
               <span>完成时间：{{ acceptor.completeTime ? formatDate(acceptor.completeTime) : '-' }}</span>
             </div>
           </div>
-          <span v-else>-</span>
+          <div v-else class="flex items-center justify-center">
+            <el-button
+              v-hasPermi="['gamer:service-order:update']"
+              link
+              type="primary"
+              @click="openAssignPicker(scope.row)"
+            >
+              指定接单人
+            </el-button>
+          </div>
         </template>
       </el-table-column>
 
@@ -647,6 +687,9 @@ onMounted(() => {
 
   <!-- 表单弹窗：添加/修改 -->
   <ServiceOrderForm ref="formRef" @success="getList" />
+
+  <!-- 指定接单人弹窗 -->
+  <UserInfoPickerDialog ref="assignPickerRef" @confirm="handleAssignConfirm" />
 
   <!-- 退款审核弹窗 -->
   <Dialog v-model="refundDialogVisible" title="退款审核" width="480px">

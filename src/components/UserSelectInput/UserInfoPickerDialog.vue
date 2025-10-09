@@ -120,6 +120,15 @@ defineExpose({ open })
         :model="queryParams"
         label-width="80px"
       >
+        <el-form-item label="用户ID" prop="id">
+          <el-input
+            v-model="queryParams.id"
+            placeholder="请输入用户ID"
+            clearable
+            class="!w-[220px]"
+            @keyup.enter="handleQuery"
+          />
+        </el-form-item>
         <el-form-item label="手机号" prop="phone">
           <el-input
             v-model="queryParams.phone"

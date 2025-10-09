@@ -49,11 +49,7 @@ function verifyTypeText(val: number | undefined) {
     case 0:
       return '无需验证'
     case 1:
-      return '短信验证'
-    case 2:
-      return '支付密码验证'
-    default:
-      return '未知'
+      return '验证码验证'
   }
 }
 

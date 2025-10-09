@@ -1,16 +1,18 @@
-import * as FileApi from '@/api/infra/file'
 // import CryptoJS from 'crypto-js'
-import { UploadRawFile, UploadRequestOptions } from 'element-plus/es/components/upload/src/upload'
+import type { UploadRawFile, UploadRequestOptions } from 'element-plus/es/components/upload/src/upload'
+
 import axios from 'axios'
+
+import * as FileApi from '@/api/infra/file'
 
 /**
  * 获得上传 URL
  */
-export const getUploadUrl = (): string => {
-  return import.meta.env.VITE_BASE_URL + import.meta.env.VITE_API_URL + '/infra/file/upload'
+export function getUploadUrl(): string {
+  return `${import.meta.env.VITE_BASE_URL + import.meta.env.VITE_API_URL}/infra/file/upload`
 }
 
-export const useUpload = (directory?: string) => {
+export function useUpload(directory?: string) {
   // 后端上传地址
   const uploadUrl = getUploadUrl()
   // 是否使用前端直连上传
@@ -27,8 +29,8 @@ export const useUpload = (directory?: string) => {
       return axios
         .put(presignedInfo.uploadUrl, options.file, {
           headers: {
-            'Content-Type': options.file.type
-          }
+            'Content-Type': options.file.type,
+          },
         })
         .then(() => {
           // 1.4. 记录文件信息到后端（异步）
@@ -36,7 +38,8 @@ export const useUpload = (directory?: string) => {
           // 通知成功，数据格式保持与后端上传的返回结果一致
           return { data: presignedInfo.url }
         })
-    } else {
+    }
+    else {
       // 模式二：后端上传
       // 重写 el-upload httpRequest 文件上传成功会走成功的钩子，失败走失败的钩子
       return new Promise((resolve, reject) => {
@@ -44,7 +47,8 @@ export const useUpload = (directory?: string) => {
           .then((res) => {
             if (res.code === 0) {
               resolve(res)
-            } else {
+            }
+            else {
               reject(res)
             }
           })
@@ -57,7 +61,7 @@ export const useUpload = (directory?: string) => {
 
   return {
     uploadUrl,
-    httpRequest
+    httpRequest,
   }
 }
 
@@ -74,7 +78,7 @@ function createFile(vo: FileApi.FilePresignedUrlRespVO, file: UploadRawFile) {
     path: vo.path,
     name: file.name,
     type: file.type,
-    size: file.size
+    size: file.size,
   }
   FileApi.createFile(fileVo)
   return fileVo
@@ -103,5 +107,5 @@ enum UPLOAD_TYPE {
   // 客户端直接上传（只支持S3服务）
   CLIENT = 'client',
   // 客户端发送到后端上传
-  SERVER = 'server'
+  SERVER = 'server',
 }

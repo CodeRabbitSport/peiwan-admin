@@ -44,6 +44,19 @@ export interface ServiceOrder {
   payRefundId: number // 退款订单ID
 }
 
+/**
+ * 指定接单人接受订单
+ * @param {object} params 指定服务订单接单人的接受参数
+ * @param {string} params.captchaVerification 验证码，验证码开启时，需要传递
+ * @param {number} params.orderId 订单ID
+ * @param {number} params.teamId 队伍ID（组队接单时必填）
+ * @param {string} params.remark 备注信息
+ * @param {number} params.userId 接单人的用户编号
+ * @returns
+ */
+export function acceptOrder(data: any) {
+  return request.post({ url: `/gamer/service-order/accept-order`, data })
+}
 // 用户订单 API
 export const ServiceOrderApi = {
   // 查询用户订单分页

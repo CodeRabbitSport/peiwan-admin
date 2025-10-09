@@ -13,34 +13,34 @@ export interface FilePresignedUrlRespVO {
 }
 
 // 查询文件列表
-export const getFilePage = (params: PageParam) => {
+export function getFilePage(params: PageParam) {
   return request.get({ url: '/infra/file/page', params })
 }
 
 // 删除文件
-export const deleteFile = (id: number) => {
-  return request.delete({ url: '/infra/file/delete?id=' + id })
+export function deleteFile(id: number) {
+  return request.delete({ url: `/infra/file/delete?id=${id}` })
 }
 
 // 批量删除文件
-export const deleteFileList = (ids: number[]) => {
+export function deleteFileList(ids: number[]) {
   return request.delete({ url: '/infra/file/delete-list', params: { ids: ids.join(',') } })
 }
 
 // 获取文件预签名地址
-export const getFilePresignedUrl = (name: string, directory?: string) => {
+export function getFilePresignedUrl(name: string, directory?: string) {
   return request.get<FilePresignedUrlRespVO>({
     url: '/infra/file/presigned-url',
-    params: { name, directory }
+    params: { name, directory },
   })
 }
 
 // 创建文件
-export const createFile = (data: any) => {
+export function createFile(data: any) {
   return request.post({ url: '/infra/file/create', data })
 }
 
 // 上传文件
-export const updateFile = (data: any) => {
+export function updateFile(data: any) {
   return request.upload({ url: '/infra/file/upload', data })
 }
