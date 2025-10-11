@@ -30,6 +30,8 @@ export interface ServiceOrder {
   payTime: string | Dayjs // 支付时间
   payChannelCode: string // 支付渠道编码
   payOrderId: number // 支付订单ID
+  categoryType: number // 订单类型
+  categoryId: number // 订单类型ID
   cancelReason: string // 取消原因
   cancelTime: string | Dayjs // 取消时间
   cancelUserId: number // 取消操作人ID

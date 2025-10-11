@@ -157,7 +157,7 @@ async function loadProductOptions() {
       .filter((item: any) => item?.productTitle)
       .map((item: any) => ({ label: item.productTitle, value: item.productTitle }))
   }
-  catch {}
+  catch { }
 }
 
 function handleOrderStatusFilterChange(value: string | number | undefined) {
@@ -282,7 +282,7 @@ const currentAssignOrderId = ref<number | null>(null)
 
 function openAssignPicker(row: ServiceOrder) {
   currentAssignOrderId.value = row.id
-  assignPickerRef.value?.open()
+  assignPickerRef.value?.open(undefined, row.categoryType, row.categoryId)
 }
 
 async function handleAssignConfirm(user: any) {
@@ -304,6 +304,18 @@ async function handleAssignConfirm(user: any) {
   finally {
     currentAssignOrderId.value = null
   }
+}
+
+// 结单证明预览
+const voucherPreviewVisible = ref(false)
+const voucherPreviewUrl = ref('')
+function openVoucherPreview(row: any) {
+  const url = row?.completeVoucher
+  if (!url) {
+    return message.warning('暂无结单证明')
+  }
+  voucherPreviewUrl.value = url
+  voucherPreviewVisible.value = true
 }
 </script>
 
@@ -463,64 +475,35 @@ async function handleAssignConfirm(user: any) {
       row-key="id"
       :data="list"
       :stripe="true"
-      :show-overflow-tooltip="true"
       @selection-change="handleRowCheckboxChange"
     >
       <el-table-column type="selection" width="55" />
-      <!-- <el-table-column label="订单ID" align="center" prop="id" /> -->
-      <el-table-column label="订单号" align="center" prop="orderNo" width="180" />
-      <el-table-column label="用户信息" align="center" prop="userId" width="150">
-        <template #default="scope">
-          <div class="flex flex-col items-center">
-            <el-avatar :src="scope.row.avatar" size="small" />
-            <span>{{ scope.row.nickname || '-' }}</span>
-            <span>{{ scope.row.mobile || '-' }}</span>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="接单信息" align="center" min-width="220px">
-        <template #default="scope">
-          <div v-if="Array.isArray(scope.row.acceptorList) && scope.row.acceptorList.length" class="flex flex-col items-start gap-2">
-            <div v-for="acceptor in scope.row.acceptorList" :key="acceptor.id" class="flex flex-col items-center">
-              <el-avatar :src="acceptor.avatar" size="small" />
-              <span>{{ acceptor.nickname || '-' }}</span>
-              <span>接单时间：{{ acceptor.confirmTime ? formatDate(acceptor.confirmTime) : '-' }}</span>
-              <span>完成时间：{{ acceptor.completeTime ? formatDate(acceptor.completeTime) : '-' }}</span>
-            </div>
-          </div>
-          <div v-else class="flex items-center justify-center">
-            <el-button
-              v-hasPermi="['gamer:service-order:update']"
-              link
-              type="primary"
-              @click="openAssignPicker(scope.row)"
-            >
-              指定接单人
-            </el-button>
-          </div>
-        </template>
-      </el-table-column>
-
-      <el-table-column label="下单信息" align="center" width="200px" class-name="col-order-info">
+      <el-table-column label="ID" align="center" prop="id" width="80" />
+      <el-table-column label="订单信息" align="center" width="200px" class-name="col-order-info">
         <template #default="scope">
           <div class="flex flex-col gap-1 text-left">
             <div>
-              订单类型：{{ scope.row.categoryType === 1 ? '陪玩' : scope.row.categoryType === 2 ? '打手' : '未知' }}
+              订单号：{{ scope.row.orderNo || '无' }}
+            </div>
+            <div>
+              订单类型：
+              <el-tag
+                :type="scope.row.categoryType === 1 ? 'success' : scope.row.categoryType === 2 ? 'primary' : 'info'"
+              >
+                {{ scope.row.categoryType === 1 ? '陪玩' : scope.row.categoryType === 2 ? '打手' : '未知' }}
+              </el-tag>
             </div>
             <div v-if="scope.row.gameCard">
               <div v-for="item in parseJsonEntries(scope.row.gameCard)" :key="item.key">
                 {{ item.key }}：{{ item.value }}
               </div>
             </div>
-            <div v-if="scope.row.gameRegion">
-              游戏区服：{{ scope.row.gameRegion }}
-            </div>
             <div v-if="normalizeJackpot(scope.row.jackpotPrizeInfo)">
               <div class="font-semibold">
                 盲盒信息
               </div>
               <div>
-                奖品：{{ normalizeJackpot(scope.row.jackpotPrizeInfo)?.prizeTitle || '-' }}
+                奖品：{{ normalizeJackpot(scope.row.jackpotPrizeInfo)?.prizeTitle || '无' }}
               </div>
               <el-image
                 v-if="normalizeJackpot(scope.row.jackpotPrizeInfo)?.prizeCover"
@@ -529,56 +512,42 @@ async function handleAssignConfirm(user: any) {
                 style="width: 60px; height: 60px"
               />
             </div>
-            <div v-if="scope.row.orderRemark">
-              订单备注：{{ scope.row.orderRemark || '-' }}
-            </div>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="时间" align="center" width="250">
-        <template #default="scope">
-          <div class="text-left">
-            <div v-if="scope.row.acceptTime">
-              接单时间：{{ formatDate(scope.row.acceptTime) || '-' }}
-            </div>
-            <div v-if="scope.row.startTime">
-              开始执行：{{ formatDate(scope.row.startTime) || '-' }}
-            </div>
-            <div v-if="scope.row.completeTime">
-              完成时间：{{ formatDate(scope.row.completeTime) || '-' }}
-            </div>
-            <div v-if="scope.row.confirmTime">
-              确认完成：{{ formatDate(scope.row.confirmTime) || '-' }}
-            </div>
-            <div v-if="scope.row.payTime">
-              支付时间：{{ formatDate(scope.row.payTime) || '-' }}
-            </div>
-            <div v-if="scope.row.cancelTime">
-              取消时间：{{ formatDate(scope.row.cancelTime) || '-' }}
-            </div>
-            <div v-if="scope.row.refundApplyTime">
-              退款申请：{{ formatDate(scope.row.refundApplyTime) || '-' }}
-            </div>
-            <div v-if="scope.row.refundTime">
-              退款时间：{{ formatDate(scope.row.refundTime) || '-' }}
-            </div>
-            <div v-if="scope.row.createTime">
-              创建时间：{{ formatDate(scope.row.createTime) || '-' }}
-            </div>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="商品名称" align="center" prop="productName" />
-      <el-table-column label="金额" align="center" width="180">
-        <template #default="scope">
-          <div class="text-left">
-            <div>价格：{{ scope.row.productPrice != null ? (scope.row.productPrice / 100) : '-' }}</div>
-            <div>订单总金额：{{ scope.row.totalAmount != null ? (scope.row.totalAmount / 100) : '-' }}</div>
-            <div>实际支付金额：{{ scope.row.actualAmount != null ? (scope.row.actualAmount / 100) : '-' }}</div>
-            <div>平台手续费：{{ scope.row.platformFee != null ? (scope.row.platformFee / 100) : '-' }}</div>
-            <div>接单人获得金额：{{ scope.row.acceptorAmount != null ? (scope.row.acceptorAmount / 100) : '-' }}</div>
+            <div>订单金额：{{ scope.row.totalAmount != null ? (scope.row.totalAmount / 100) : '无' }}</div>
+            <div>支付金额：{{ scope.row.actualAmount != null ? (scope.row.actualAmount / 100) : '无' }}</div>
+
             <div v-if="scope.row.refundAmount > 0">
-              退款金额：{{ scope.row.refundAmount != null ? scope.row.refundAmount : '-' }}
+              退款金额：{{ scope.row.refundAmount != null ? scope.row.refundAmount : '无' }}
+            </div>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="商品名称" align="center" prop="productName" width="180">
+        <template #default="scope">
+          <div class="flex flex-col items-center">
+            <el-image :src="scope.row.productPicUrl" fit="cover" style="width: 60px; height: 60px" />
+            <p class="break-all">
+              {{ scope.row.productName || '无' }}
+            </p>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="订单时间" align="center" width="250">
+        <template #default="scope">
+          <div class="text-left">
+            <div>
+              创建时间：{{ formatDate(scope.row.createTime) || '无' }}
+            </div>
+            <div>
+              支付时间：{{ formatDate(scope.row.payTime) || '无' }}
+            </div>
+            <div>
+              取消时间：{{ formatDate(scope.row.cancelTime) || '无' }}
+            </div>
+            <div>
+              退款申请：{{ formatDate(scope.row.refundApplyTime) || '无' }}
+            </div>
+            <div>
+              退款时间：{{ formatDate(scope.row.refundTime) || '无' }}
             </div>
           </div>
         </template>
@@ -604,77 +573,97 @@ async function handleAssignConfirm(user: any) {
           </div>
         </template>
       </el-table-column>
-      <!-- 金额明细已合并到“金额”列 -->
-      <!-- <el-table-column label="使用的用户优惠券ID" align="center" prop="userCouponId" />
-      <el-table-column label="优惠券ID" align="center" prop="couponId" /> -->
-      <!-- 时间明细已合并到“时间”列 -->
-      <!-- <el-table-column label="支付状态" align="center" prop="payStatus" width="100px" class-name="col-order-info">
+      <el-table-column label="用户信息" align="center" prop="userId" width="150">
         <template #default="scope">
-          <el-tag
-            :type="formatPayStatus(scope.row.payStatus).color"
-            effect="plain"
-          >
-            {{ formatPayStatus(scope.row.payStatus).text }}
-          </el-tag>
-          <p v-if="scope.row.refundApplyReason">
-            退款原因：{{ scope.row.refundApplyReason }}
-          </p>
+          <div class="flex flex-col items-center">
+            <el-avatar :src="scope.row.avatar" size="small" />
+            <span>{{ scope.row.nickname || '无' }}</span>
+            <span>{{ scope.row.mobile || '无' }}</span>
+          </div>
         </template>
-      </el-table-column> -->
-      <!-- 支付时间 已合并到“时间”列 -->
-      <!-- <el-table-column label="支付渠道" align="center" prop="payChannelCode" /> -->
-      <!-- <el-table-column label="取消原因" align="center" prop="refundApplyReason" /> -->
-      <!-- 取消时间 已合并到“时间”列 -->
-      <!-- <el-table-column label="退款原因" align="center" prop="refundApplyReason" /> -->
-      <!-- 退款申请时间 已合并到“时间”列 -->
-      <!-- <el-table-column label="退款状态" align="center" prop="refundAuditStatus" width="100px">
+      </el-table-column>
+
+      <el-table-column label="下单信息" align="center" width="200px" class-name="col-order-info">
+        <template #default="scope">
+          <div class="flex flex-col gap-1 text-left">
+            <div>游戏区服：{{ scope.row.gameRegion || '无' }}</div>
+            <div>订单备注：{{ scope.row.orderRemark || '无' }}</div>
+            <div v-if="scope.row.gameCard">
+              <div v-for="item in parseJsonEntries(scope.row.gameCard)" :key="item.key">
+                {{ item.key }}：{{ item.value }}
+              </div>
+            </div>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="接单信息" align="center" width="250px">
         <template #default="scope">
           <div
-            v-if="scope.row.refundAuditStatus !== 0"
+            v-if="Array.isArray(scope.row.acceptorList) && scope.row.acceptorList.length"
+            class="flex flex-col items-start gap-2"
           >
-            <el-tag
-              :type="formatRefundAuditStatus(scope.row.refundAuditStatus)?.color"
-              effect="plain"
+            <div v-for="acceptor in scope.row.acceptorList" :key="acceptor.id" class="flex flex-col items-center">
+              <el-avatar :src="acceptor.avatar" size="small" />
+              <span>{{ acceptor.nickname || '无' }}</span>
+              <span>接单时间：{{ acceptor.confirmTime ? formatDate(acceptor.confirmTime) : '无' }}</span>
+
+              <span>
+                接单人完成时间：{{ formatDate(scope.row.completeTime) || '无' }}
+              </span>
+              <span>
+                用户确认完成：{{ formatDate(scope.row.confirmTime) || '无' }}
+              </span>
+
+              <div>接单人获得金额：{{ scope.row.acceptorAmount != null ? (scope.row.acceptorAmount / 100) : '无' }}</div>
+            </div>
+          </div>
+          <div v-else class="flex items-center justify-center">
+            <el-button
+              v-hasPermi="['gamer:service-order:update']"
+              link
+              type="primary"
+              @click="openAssignPicker(scope.row)"
             >
-              {{ formatRefundAuditStatus(scope.row.refundAuditStatus)?.text }}
-            </el-tag>
-            <p>{{ scope.row.refundAuditReason }}</p>
-          </div> <el-tag v-else type="info">
-            未退款
-          </el-tag>
+              指定接单人
+            </el-button>
+          </div>
         </template>
-      </el-table-column> -->
-      <!-- <el-table-column label="退款审核原因" align="center" prop="refundAuditReason" /> -->
-      <!-- 退款金额 已合并到“金额”列 -->
-      <!-- 退款时间、创建时间 已合并到“时间”列 -->
-      <el-table-column label="操作" align="center" fixed="right" min-width="160px">
+      </el-table-column>
+
+      <el-table-column label="操作" align="center" fixed="right" width="160px">
         <template #default="scope">
-          <!-- 指定接单人 -->
-          <el-button
-            v-hasPermi="['gamer:service-order:update']"
-            link
-            type="primary"
-            @click="openForm('update', scope.row.id)"
-          >
-            查看
-          </el-button>
-          <el-button
-            v-if="scope.row.orderStatus === 4"
-            v-hasPermi="['gamer:service-order:update']"
-            link
-            type="warning"
-            @click="openRefundDialog(scope.row)"
-          >
-            退款审核
-          </el-button>
-          <el-button
-            v-hasPermi="['gamer:service-order:delete']"
-            link
-            type="danger"
-            @click="handleDelete(scope.row.id)"
-          >
-            删除
-          </el-button>
+          <el-dropdown trigger="click">
+            <el-button link type="primary">
+              订单操作
+              <Icon icon="ep:arrow-down" class="ml-[4px]" />
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item
+                  v-hasPermi="['gamer:service-order:update']"
+                  @click="openForm('update', scope.row.id)"
+                >
+                  查看
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-if="scope.row.orderStatus === 4"
+                  v-hasPermi="['gamer:service-order:update']"
+                  @click="openRefundDialog(scope.row)"
+                >
+                  退款审核
+                </el-dropdown-item>
+                <el-dropdown-item @click="openVoucherPreview(scope.row)">
+                  查看结单证明
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-hasPermi="['gamer:service-order:delete']"
+                  @click="handleDelete(scope.row.id)"
+                >
+                  删除
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </template>
       </el-table-column>
     </el-table>
@@ -712,10 +701,28 @@ async function handleAssignConfirm(user: any) {
       <el-button @click="refundDialogVisible = false">
         取 消
       </el-button>
-      <el-button type="primary" :disabled="!refundForm.auditStatus || (refundForm.auditStatus === 2 && !refundForm.auditReason)" @click="submitRefundAudit">
+      <el-button
+        type="primary"
+        :disabled="!refundForm.auditStatus || (refundForm.auditStatus === 2 && !refundForm.auditReason)"
+        @click="submitRefundAudit"
+      >
         确 定
       </el-button>
     </template>
+  </Dialog>
+
+  <!-- 结单证明预览 -->
+  <Dialog v-model="voucherPreviewVisible" title="结单证明" align-center width="80vw">
+    <div class="flex items-center justify-center">
+      <el-image
+        v-if="voucherPreviewUrl"
+        :src="voucherPreviewUrl"
+        :preview-src-list="[voucherPreviewUrl]"
+        :initial-index="0"
+        fit="contain"
+        style="max-width: 100%; max-height: 70vh"
+      />
+    </div>
   </Dialog>
 </template>
 

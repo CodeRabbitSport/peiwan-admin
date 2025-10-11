@@ -31,6 +31,10 @@ export const UserInfoApi = {
     return await request.get({ url: `/gamer/user-info/page`, params })
   },
 
+  getUserInfoPageByLevel: async (params: any) => {
+    return await request.get({ url: `/gamer/user-info/page-by-level`, params })
+  },
+
   // 查询用户信息详情
   getUserInfo: async (id: number) => {
     return await request.get({ url: `/gamer/user-info/get?id=${id}` })

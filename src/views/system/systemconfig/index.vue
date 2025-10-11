@@ -10,6 +10,7 @@ const message = useMessage()
 
 // 配置键常量
 const KEYS = {
+  WITHDRAW_ACCOUNT_CONFIG_ENABLE_WX_FAST_REFUND: 'withdrawAccountConfigEnableWxFastRefund',
   // 话题配置
   HOT_TOPIC_LIST: 'topicConfigHotTopicList',
   // 服务订单配置
@@ -57,6 +58,7 @@ const formData = reactive<any>({
   withdrawFeeRate: 0,
   orderCommissionReleaseTime: 0,
   commissionRateOnTips: 0,
+  withdrawAccountConfigEnableWxFastRefund: false,
   canCancelOrder: false,
   canRefundOrder: false,
   canCheckApplyRefundUserMobile: false,
@@ -138,6 +140,9 @@ async function loadAll() {
           break
         case KEYS.COMMISSION_RATE_ON_TIPS:
           formData.commissionRateOnTips = Number(item.configValue || 0)
+          break
+        case KEYS.WITHDRAW_ACCOUNT_CONFIG_ENABLE_WX_FAST_REFUND:
+          formData.withdrawAccountConfigEnableWxFastRefund = toBool(item.configValue)
           break
         case KEYS.CAN_CANCEL_ORDER:
           formData.canCancelOrder = toBool(item.configValue)
@@ -472,6 +477,14 @@ onMounted(() => {
                 <el-switch
                   v-model="formData.canCancelOrder"
                   @change="(val: any) => handleSave(KEYS.CAN_CANCEL_ORDER, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="是否开启微信急速退款">
+                <el-switch
+                  v-model="formData.withdrawAccountConfigEnableWxFastRefund"
+                  @change="(val: any) => handleSave(KEYS.WITHDRAW_ACCOUNT_CONFIG_ENABLE_WX_FAST_REFUND, 'boolean', val)"
                 />
               </el-form-item>
             </el-col>

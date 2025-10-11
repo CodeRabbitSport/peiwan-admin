@@ -19,23 +19,29 @@ const queryParams = reactive({
   id: undefined as number | undefined,
   phone: undefined as string | undefined,
   nickname: undefined as string | undefined,
+  categoryType: undefined as number | undefined,
+  categoryId: undefined as number | undefined,
 })
 const queryFormRef = ref()
 const tableRef = ref<{ clearSelection: () => void, toggleRowSelection: (row: any, selected?: boolean) => void } | null>(null)
 const isProgrammaticSelection = ref(false)
 
-function open(selectedUserId?: number) {
+function open(selectedUserId?: number, categoryType?: number, categoryId?: number) {
   visible.value = true
   currentUser.value = selectedUserId ? { id: selectedUserId } : null
   if (selectedUserId)
     queryParams.id = selectedUserId
+  if (categoryType)
+    queryParams.categoryType = categoryType
+  if (categoryId)
+    queryParams.categoryId = categoryId
   handleQuery()
 }
 
 async function getList() {
   loading.value = true
   try {
-    const data = await UserInfoApi.getUserInfoPage(queryParams)
+    const data = await UserInfoApi.getUserInfoPageByLevel(queryParams)
     list.value = data.list
     total.value = data.total
     await nextTick()
