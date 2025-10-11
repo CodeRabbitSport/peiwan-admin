@@ -229,6 +229,7 @@ onMounted(() => {
                 :src="scope.row.qrCodeUrl"
                 :preview-src-list="[scope.row.qrCodeUrl]"
                 fit="cover"
+                preview-teleported
                 style="width: 48px; height: 48px"
               />
             </div>

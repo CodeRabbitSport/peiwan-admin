@@ -6,13 +6,13 @@
       ref="queryFormRef"
       :inline="true"
       :model="queryParams"
-      class="-mb-15px"
+      class="-mb-[15px]"
       label-width="68px"
     >
       <el-form-item label="应用名" prop="name">
         <el-input
           v-model="queryParams.name"
-          class="!w-240px"
+          class="!w-[240px]"
           clearable
           placeholder="请输入应用名"
           @keyup.enter="handleQuery"
@@ -21,7 +21,7 @@
       <el-form-item label="开启状态" prop="status">
         <el-select
           v-model="queryParams.status"
-          class="!w-240px"
+          class="!w-[240px]"
           clearable
           placeholder="请选择开启状态"
         >
@@ -37,7 +37,7 @@
         <el-date-picker
           v-model="queryParams.createTime"
           :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-240px"
+          class="!w-[240px]"
           end-placeholder="结束日期"
           start-placeholder="开始日期"
           type="daterange"
@@ -46,15 +46,15 @@
       </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery">
-          <Icon class="mr-5px" icon="ep:search" />
+          <Icon class="mr-[5px]" icon="ep:search" />
           搜索
         </el-button>
         <el-button @click="resetQuery">
-          <Icon class="mr-5px" icon="ep:refresh" />
+          <Icon class="mr-[5px]" icon="ep:refresh" />
           重置
         </el-button>
         <el-button v-hasPermi="['pay:app:create']" plain type="primary" @click="openForm('create')">
-          <Icon class="mr-5px" icon="ep:plus" />
+          <Icon class="mr-[5px]" icon="ep:plus" />
           新增
         </el-button>
       </el-form-item>
@@ -184,14 +184,14 @@
       </el-table-column>
       <el-table-column align="center" fixed="right" label="操作" min-width="110">
         <template #default="scope">
-          <el-button
+          <!-- <el-button
             v-hasPermi="['pay:app:update']"
             link
             type="primary"
             @click="openForm('update', scope.row.id)"
           >
             编辑
-          </el-button>
+          </el-button> -->
           <el-button
             v-hasPermi="['pay:app:delete']"
             link

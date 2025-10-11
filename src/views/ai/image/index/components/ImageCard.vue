@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { Delete, Download, More, RefreshRight } from '@element-plus/icons-vue'
-import { ElLoading, LoadingOptionsResolved } from 'element-plus'
-import { PropType } from 'vue'
+import type { LoadingOptionsResolved } from 'element-plus'
+import type { PropType } from 'vue'
 
-import { ImageVO, ImageMidjourneyButtonsVO } from '@/api/ai/image'
+import { Delete, Download, More, RefreshRight } from '@element-plus/icons-vue'
+import { ElLoading } from 'element-plus'
+
+import type { ImageMidjourneyButtonsVO, ImageVO } from '@/api/ai/image'
 import { AiImageStatusEnum } from '@/views/ai/utils/constants'
 
 // 消息
@@ -11,24 +13,27 @@ import { AiImageStatusEnum } from '@/views/ai/utils/constants'
 const props = defineProps({
   detail: {
     type: Object as PropType<ImageVO>,
-    require: true
-  }
-}) ;const emits = defineEmits(['onBtnClick', 'onMjBtnClick']) ;const message = useMessage()const cardImageRef = ref<any>() // 卡片 image ref
+    require: true,
+  },
+})
+const emits = defineEmits(['onBtnClick', 'onMjBtnClick'])
+const message = useMessage()
+const cardImageRef = ref<any>() // 卡片 image ref
 const cardImageLoadingInstance = ref<any>() // 卡片 image ref
 
 /** 处理点击事件  */
-const handleButtonClick = async (type, detail: ImageVO) => {
+async function handleButtonClick(type, detail: ImageVO) {
   emits('onBtnClick', type, detail)
 }
 
 /** 处理 Midjourney 按钮点击事件  */
-const handleMidjourneyBtnClick = async (button: ImageMidjourneyButtonsVO) => {
+async function handleMidjourneyBtnClick(button: ImageMidjourneyButtonsVO) {
   // 确认窗体
   await message.confirm(`确认操作 "${button.label} ${button.emoji}" ?`)
   emits('onMjBtnClick', button, props.detail)
 }
 
- // emits
+// emits
 
 /** 监听详情 */
 const { detail } = toRefs(props)
@@ -37,15 +42,16 @@ watch(detail, async (newVal, oldVal) => {
 })
 
 /** 处理加载状态 */
-async function handleLoading (status: number) {
+async function handleLoading(status: number) {
   // 情况一：如果是生成中，则设置加载中的 loading
   if (status === AiImageStatusEnum.IN_PROGRESS) {
     cardImageLoadingInstance.value = ElLoading.service({
       target: cardImageRef.value,
-      text: '生成中...'
+      text: '生成中...',
     } as LoadingOptionsResolved)
     // 情况二：如果已经生成结束，则移除 loading
-  } else {
+  }
+  else {
     if (cardImageLoadingInstance.value) {
       cardImageLoadingInstance.value.close()
       cardImageLoadingInstance.value = null
@@ -66,13 +72,13 @@ onMounted(async () => {
   >
     <div class="!flex !flex-row !justify-between">
       <div>
-        <el-button type="primary" text v-if="detail?.status === AiImageStatusEnum.IN_PROGRESS" bg>
+        <el-button v-if="detail?.status === AiImageStatusEnum.IN_PROGRESS" type="primary" text bg>
           生成中
         </el-button>
-        <el-button text v-else-if="detail?.status === AiImageStatusEnum.SUCCESS" bg>
+        <el-button v-else-if="detail?.status === AiImageStatusEnum.SUCCESS" text bg>
           已完成
         </el-button>
-        <el-button type="danger" text v-else-if="detail?.status === AiImageStatusEnum.FAIL" bg>
+        <el-button v-else-if="detail?.status === AiImageStatusEnum.FAIL" type="danger" text bg>
           异常
         </el-button>
       </div>
@@ -104,7 +110,7 @@ onMounted(async () => {
         />
       </div>
     </div>
-    <div ref="cardImageRef" class="!overflow-hidden !mt-[20px] !h-[280px] !flex-1">
+    <div ref="cardImageRef" class="!mt-[20px] !h-[280px] !flex-1 !overflow-hidden">
       <el-image
         class="!w-full !rounded-[10px]"
         :src="detail?.picUrl"
@@ -119,8 +125,8 @@ onMounted(async () => {
     <div class="!mt-[5px] !w-full !flex !flex-row !flex-wrap !justify-start">
       <el-button
         v-for="button in detail?.buttons"
-        size="small"
         :key="button"
+        size="small"
         class="ml-0 mr-[10px] mt-[5px] min-w-[40px]"
         @click="handleMidjourneyBtnClick(button)"
       >

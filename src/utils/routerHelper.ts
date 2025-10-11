@@ -1,15 +1,17 @@
-import type { RouteLocationNormalized, Router, RouteRecordNormalized } from 'vue-router'
-import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
-import { isUrl } from '@/utils/is'
+import type { RouteLocationNormalized, Router, RouteRecordNormalized, RouteRecordRaw } from 'vue-router'
+
 import { cloneDeep, omit } from 'lodash-es'
 import qs from 'qs'
+import { createRouter, createWebHashHistory } from 'vue-router'
+
+import { isUrl } from '@/utils/is'
 
 const modules = import.meta.glob('../views/**/*.{vue,tsx}')
 /**
  * 注册一个异步组件
  * @param componentPath 例:/bpm/oa/leave/detail
  */
-export const registerComponent = (componentPath: string) => {
+export function registerComponent(componentPath: string) {
   for (const item in modules) {
     if (item.includes(componentPath)) {
       // 使用异步组件的方式来动态加载组件
@@ -21,17 +23,17 @@ export const registerComponent = (componentPath: string) => {
 /* Layout */
 export const Layout = () => import('@/layout/Layout.vue')
 
-export const getParentLayout = () => {
+export function getParentLayout() {
   return () =>
     new Promise((resolve) => {
       resolve({
-        name: 'ParentLayout'
+        name: 'ParentLayout',
       })
     })
 }
 
 // 按照路由中meta下的rank等级升序来排序路由
-export const ascending = (arr: any[]) => {
+export function ascending(arr: any[]) {
   arr.forEach((v) => {
     if (v?.meta?.rank === null) v.meta.rank = undefined
     if (v?.meta?.rank === 0) {
@@ -45,23 +47,23 @@ export const ascending = (arr: any[]) => {
   })
 }
 
-export const getRawRoute = (route: RouteLocationNormalized): RouteLocationNormalized => {
+export function getRawRoute(route: RouteLocationNormalized): RouteLocationNormalized {
   if (!route) return route
   const { matched, ...opt } = route
   return {
     ...opt,
     matched: (matched
-      ? matched.map((item) => ({
+      ? matched.map(item => ({
           meta: item.meta,
           name: item.name,
-          path: item.path
+          path: item.path,
         }))
-      : undefined) as RouteRecordNormalized[]
+      : undefined) as RouteRecordNormalized[],
   }
 }
 
 // 后端控制路由生成
-export const generateRoute = (routes: AppCustomRouteRecordRaw[]): AppRouteRecordRaw[] => {
+export function generateRoute(routes: AppCustomRouteRecordRaw[]): AppRouteRecordRaw[] {
   const res: AppRouteRecordRaw[] = []
   const modulesRoutesKeys = Object.keys(modules)
   for (const route of routes) {
@@ -72,14 +74,14 @@ export const generateRoute = (routes: AppCustomRouteRecordRaw[]): AppRouteRecord
       hidden: !route.visible,
       noCache: !route.keepAlive,
       alwaysShow:
-        route.children &&
-        route.children.length > 0 &&
-        (route.alwaysShow !== undefined ? route.alwaysShow : true)
+        route.children
+        && route.children.length > 0
+        && (route.alwaysShow !== undefined ? route.alwaysShow : true),
     } as any
     // 特殊逻辑：如果后端配置的 MenuDO.component 包含 ?，则表示需要传递参数
     // 此时，我们需要解析参数，并且将参数放到 meta.query 中
     // 这样，后续在 Vue 文件中，可以通过 const { currentRoute } = useRouter() 中，通过 meta.query 获取到参数
-    if (route.component && route.component.indexOf('?') > -1) {
+    if (route.component && route.component.includes('?')) {
       const query = route.component.split('?')[1]
       route.component = route.component.split('?')[0]
       meta.query = qs.parse(query)
@@ -89,21 +91,21 @@ export const generateRoute = (routes: AppCustomRouteRecordRaw[]): AppRouteRecord
     // 路由地址转首字母大写驼峰，作为路由名称，适配keepAlive
     let data: AppRouteRecordRaw = {
       path:
-        route.path.indexOf('?') > -1 && !isUrl(route.path) ? route.path.split('?')[0] : route.path, // 注意，需要排除 http 这种 url，避免它带 ? 参数被截取掉
+        route.path.includes('?') && !isUrl(route.path) ? route.path.split('?')[0] : route.path, // 注意，需要排除 http 这种 url，避免它带 ? 参数被截取掉
       name:
         route.componentName && route.componentName.length > 0
           ? route.componentName
           : toCamelCase(route.path, true),
       redirect: route.redirect,
-      meta: meta
+      meta,
     }
-    //处理顶级非目录路由
+    // 处理顶级非目录路由
     if (!route.children && route.parentId == 0 && route.component) {
       data.component = Layout
       data.meta = {
-        hidden: meta.hidden
+        hidden: meta.hidden,
       }
-      data.name = toCamelCase(route.path, true) + 'Parent'
+      data.name = `${toCamelCase(route.path, true)}Parent`
       data.redirect = ''
       meta.alwaysShow = true
       const childrenData: AppRouteRecordRaw = {
@@ -113,34 +115,37 @@ export const generateRoute = (routes: AppCustomRouteRecordRaw[]): AppRouteRecord
             ? route.componentName
             : toCamelCase(route.path, true),
         redirect: route.redirect,
-        meta: meta
+        meta,
       }
       const index = route?.component
-        ? modulesRoutesKeys.findIndex((ev) => ev.includes(route.component))
-        : modulesRoutesKeys.findIndex((ev) => ev.includes(route.path))
+        ? modulesRoutesKeys.findIndex(ev => ev.includes(route.component))
+        : modulesRoutesKeys.findIndex(ev => ev.includes(route.path))
       childrenData.component = modules[modulesRoutesKeys[index]]
       data.children = [childrenData]
-    } else {
+    }
+    else {
       // 目录
       if (route.children?.length) {
         data.component = Layout
         data.redirect = getRedirect(route.path, route.children)
         // 外链
-      } else if (isUrl(route.path)) {
+      }
+      else if (isUrl(route.path)) {
         data = {
           path: '/external-link',
           component: Layout,
           meta: {
-            name: route.name
+            name: route.name,
           },
-          children: [data]
+          children: [data],
         } as AppRouteRecordRaw
         // 菜单
-      } else {
+      }
+      else {
         // 对后端传component组件路径和不传做兼容（如果后端传component组件路径，那么path可以随便写，如果不传，component组件路径会根path保持一致）
         const index = route?.component
-          ? modulesRoutesKeys.findIndex((ev) => ev.includes(route.component))
-          : modulesRoutesKeys.findIndex((ev) => ev.includes(route.path))
+          ? modulesRoutesKeys.findIndex(ev => ev.includes(route.component))
+          : modulesRoutesKeys.findIndex(ev => ev.includes(route.path))
         data.component = modules[modulesRoutesKeys[index]]
       }
       if (route.children) {
@@ -151,7 +156,7 @@ export const generateRoute = (routes: AppCustomRouteRecordRaw[]): AppRouteRecord
   }
   return res
 }
-export const getRedirect = (parentPath: string, children: AppCustomRouteRecordRaw[]) => {
+export function getRedirect(parentPath: string, children: AppCustomRouteRecordRaw[]) {
   if (!children || children.length == 0) {
     return parentPath
   }
@@ -159,16 +164,16 @@ export const getRedirect = (parentPath: string, children: AppCustomRouteRecordRa
   // 递归子节点
   if (children[0].children) return getRedirect(path, children[0].children)
 }
-const generateRoutePath = (parentPath: string, path: string) => {
+function generateRoutePath(parentPath: string, path: string) {
   if (parentPath.endsWith('/')) {
     parentPath = parentPath.slice(0, -1) // 移除默认的 /
   }
   if (!path.startsWith('/')) {
-    path = '/' + path
+    path = `/${path}`
   }
   return parentPath + path
 }
-export const pathResolve = (parentPath: string, path: string) => {
+export function pathResolve(parentPath: string, path: string) {
   if (isUrl(path)) return path
   if (!path) return parentPath // 修复 path 为空时返回 parentPath，避免拼接出错 https://t.zsxq.com/QVr6b
   const childPath = path.startsWith('/') ? path : `/${path}`
@@ -176,7 +181,7 @@ export const pathResolve = (parentPath: string, path: string) => {
 }
 
 // 路由降级
-export const flatMultiLevelRoutes = (routes: AppRouteRecordRaw[]) => {
+export function flatMultiLevelRoutes(routes: AppRouteRecordRaw[]) {
   const modules: AppRouteRecordRaw[] = cloneDeep(routes)
   for (let index = 0; index < modules.length; index++) {
     const route = modules[index]
@@ -189,7 +194,7 @@ export const flatMultiLevelRoutes = (routes: AppRouteRecordRaw[]) => {
 }
 
 // 层级是否大于2
-const isMultipleRoute = (route: AppRouteRecordRaw) => {
+function isMultipleRoute(route: AppRouteRecordRaw) {
   if (!route || !Reflect.has(route, 'children') || !route.children?.length) {
     return false
   }
@@ -208,33 +213,29 @@ const isMultipleRoute = (route: AppRouteRecordRaw) => {
 }
 
 // 生成二级路由
-const promoteRouteLevel = (route: AppRouteRecordRaw) => {
+function promoteRouteLevel(route: AppRouteRecordRaw) {
   let router: Router | null = createRouter({
     routes: [route as RouteRecordRaw],
-    history: createWebHashHistory()
+    history: createWebHashHistory(),
   })
 
   const routes = router.getRoutes()
   addToChildren(routes, route.children || [], route)
   router = null
 
-  route.children = route.children?.map((item) => omit(item, 'children'))
+  route.children = route.children?.map(item => omit(item, 'children'))
 }
 
 // 添加所有子菜单
-const addToChildren = (
-  routes: RouteRecordNormalized[],
-  children: AppRouteRecordRaw[],
-  routeModule: AppRouteRecordRaw
-) => {
+function addToChildren(routes: RouteRecordNormalized[], children: AppRouteRecordRaw[], routeModule: AppRouteRecordRaw) {
   for (let index = 0; index < children.length; index++) {
     const child = children[index]
-    const route = routes.find((item) => item.name === child.name)
+    const route = routes.find(item => item.name === child.name)
     if (!route) {
       continue
     }
     routeModule.children = routeModule.children || []
-    if (!routeModule.children.find((item) => item.name === route.name)) {
+    if (!routeModule.children.find(item => item.name === route.name)) {
       routeModule.children?.push(route as unknown as AppRouteRecordRaw)
     }
     if (child.children?.length) {
@@ -242,9 +243,9 @@ const addToChildren = (
     }
   }
 }
-const toCamelCase = (str: string, upperCaseFirst: boolean) => {
+function toCamelCase(str: string, upperCaseFirst: boolean) {
   str = (str || '')
-    .replace(/-(.)/g, function (group1: string) {
+    .replace(/-(.)/g, (group1: string) => {
       return group1.toUpperCase()
     })
     .replaceAll('-', '')

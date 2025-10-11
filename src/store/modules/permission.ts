@@ -1,9 +1,10 @@
-import { defineStore } from 'pinia'
-import { store } from '@/store'
 import { cloneDeep } from 'lodash-es'
-import remainingRouter from '@/router/modules/remaining'
-import { flatMultiLevelRoutes, generateRoute } from '@/utils/routerHelper'
+import { defineStore } from 'pinia'
+
 import { CACHE_KEY, useCache } from '@/hooks/web/useCache'
+import remainingRouter from '@/router/modules/remaining'
+import { store } from '@/store'
+import { flatMultiLevelRoutes, generateRoute } from '@/utils/routerHelper'
 
 const { wsCache } = useCache()
 
@@ -17,7 +18,7 @@ export const usePermissionStore = defineStore('permission', {
   state: (): PermissionState => ({
     routers: [],
     addRouters: [],
-    menuTabRouters: []
+    menuTabRouters: [],
   }),
   getters: {
     getRouters(): AppRouteRecordRaw[] {
@@ -28,7 +29,7 @@ export const usePermissionStore = defineStore('permission', {
     },
     getMenuTabRouters(): AppRouteRecordRaw[] {
       return this.menuTabRouters
-    }
+    },
   },
   actions: {
     async generateRoutes(): Promise<unknown> {
@@ -50,9 +51,9 @@ export const usePermissionStore = defineStore('permission', {
             name: '404Page',
             meta: {
               hidden: true,
-              breadcrumb: false
-            }
-          }
+              breadcrumb: false,
+            },
+          },
         ])
         // 渲染菜单的所有路由
         this.routers = cloneDeep(remainingRouter).concat(routerMap)
@@ -61,11 +62,11 @@ export const usePermissionStore = defineStore('permission', {
     },
     setMenuTabRouters(routers: AppRouteRecordRaw[]): void {
       this.menuTabRouters = routers
-    }
+    },
   },
-  persist: false
+  persist: false,
 })
 
-export const usePermissionStoreWithOut = () => {
+export function usePermissionStoreWithOut() {
   return usePermissionStore(store)
 }

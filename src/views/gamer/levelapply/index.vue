@@ -243,7 +243,7 @@ onMounted(() => {
       <el-table-column label="联系方式" align="center" prop="contact" />
       <el-table-column label="图片附件" align="center" prop="imageAttachment">
         <template #default="scope">
-          <el-image :src="scope.row.imageAttachment" :preview-src-list="[scope.row.imageAttachment]" fit="cover" />
+          <el-image :src="scope.row.imageAttachment" :preview-src-list="[scope.row.imageAttachment]" fit="cover" preview-teleported/>
         </template>
       </el-table-column>
       <el-table-column label="附件" align="center" prop="attachment" />

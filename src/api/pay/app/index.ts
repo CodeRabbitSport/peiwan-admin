@@ -7,6 +7,7 @@ export interface AppVO {
   status: number
   remark: string
   payNotifyUrl: string
+  orderNotifyUrl: string
   refundNotifyUrl: string
   transferNotifyUrl: string
   merchantId: number

@@ -229,7 +229,7 @@ onMounted(() => {
       <el-table-column label="身份证号码" align="center" prop="idCardNo" />
       <el-table-column label="身份证正面图片" align="center" prop="frontImageUrl">
         <template #default="scope">
-          <el-image :src="scope.row.frontImageUrl" :preview-src-list="[scope.row.frontImageUrl]" fit="cover" />
+          <el-image :src="scope.row.frontImageUrl" :preview-src-list="[scope.row.frontImageUrl]" fit="cover" preview-teleported/>
         </template>
       </el-table-column>
       <el-table-column label="审核状态" align="center" prop="status">

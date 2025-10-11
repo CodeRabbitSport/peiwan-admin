@@ -10,12 +10,12 @@
     size="large"
   >
     <el-row class="mx-[-10px]">
-      <el-col :span="24" class="px-10px">
+      <el-col :span="24" class="px-[10px]">
         <el-form-item>
           <LoginFormTitle class="w-full" />
         </el-form-item>
       </el-col>
-      <el-col :span="24" class="px-10px">
+      <el-col :span="24" class="px-[10px]">
         <el-form-item v-if="loginData.tenantEnable === 'true'" prop="tenantName">
           <el-input
             v-model="loginData.loginForm.tenantName"
@@ -26,7 +26,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="24" class="px-10px">
+      <el-col :span="24" class="px-[10px]">
         <el-form-item prop="username">
           <el-input
             v-model="loginData.loginForm.username"
@@ -35,7 +35,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="24" class="px-10px">
+      <el-col :span="24" class="px-[10px]">
         <el-form-item prop="password">
           <el-input
             v-model="loginData.loginForm.password"
@@ -47,7 +47,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="24" class="px-10px mt-[-20px] mb-[-20px]">
+      <el-col :span="24" class="px-[10px] mt-[-20px] mb-[-20px]">
         <el-form-item>
           <el-row justify="space-between" style="width: 100%">
             <el-col :span="6">
@@ -67,7 +67,7 @@
           </el-row>
         </el-form-item>
       </el-col>
-      <el-col :span="24" class="px-10px">
+      <el-col :span="24" class="px-[10px]">
         <el-form-item>
           <XButton
             :loading="loginLoading"
@@ -86,7 +86,7 @@
         mode="pop"
         @success="handleLogin"
       />
-      <el-col :span="24" class="px-10px">
+     <!--  <el-col :span="24" class="px-[10px]">
         <el-form-item>
           <el-row :gutter="5" justify="space-between" style="width: 100%">
             <el-col :span="8">
@@ -114,7 +114,7 @@
         </el-form-item>
       </el-col>
       <el-divider content-position="center">{{ t('login.otherLogin') }}</el-divider>
-      <el-col :span="24" class="px-10px">
+      <el-col :span="24" class="px-[10px]">
         <el-form-item>
           <div class="w-full flex justify-between">
             <Icon
@@ -128,22 +128,7 @@
             />
           </div>
         </el-form-item>
-      </el-col>
-      <el-divider content-position="center">萌新必读</el-divider>
-      <el-col :span="24" class="px-10px">
-        <el-form-item>
-          <div class="w-full flex justify-between">
-            <el-link href="https://doc.iocoder.cn/" target="_blank">📚开发指南</el-link>
-            <el-link href="https://doc.iocoder.cn/video/" target="_blank">🔥视频教程</el-link>
-            <el-link href="https://www.iocoder.cn/Interview/good-collection/" target="_blank">
-              ⚡面试手册
-            </el-link>
-            <el-link href="http://static.yudao.iocoder.cn/mp/Aix9975.jpeg" target="_blank">
-              🤝外包咨询
-            </el-link>
-          </div>
-        </el-form-item>
-      </el-col>
+      </el-col> -->
     </el-row>
   </el-form>
 </template>

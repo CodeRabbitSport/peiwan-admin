@@ -198,7 +198,7 @@ onMounted(() => {
       <el-table-column label="银行名称" align="center" prop="bankName" />
       <el-table-column label="收款二维码" align="center" prop="qrCodeUrl">
         <template #default="scope">
-          <el-image :src="scope.row.qrCodeUrl" :preview-src-list="[scope.row.qrCodeUrl]" fit="cover" />
+          <el-image :src="scope.row.qrCodeUrl" :preview-src-list="[scope.row.qrCodeUrl]" fit="cover" preview-teleported />
         </template>
       </el-table-column>
       <el-table-column label="是否默认账户" align="center" prop="isDefault">

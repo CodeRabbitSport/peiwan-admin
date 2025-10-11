@@ -575,7 +575,7 @@ onMounted(() => {
       <el-table-column label="图片" align="center" prop="images">
         <template #default="scope">
           <div class="flex flex-wrap gap-2">
-            <el-image v-if="scope.row?.images || scope.row?.images !== ''" :src="JSON.parse(scope.row?.images || '[]')?.[0]" fit="cover" style="width: 60px; height: 60px" :preview-src-list="JSON.parse(scope.row?.images || '[]')" />
+            <el-image v-if="scope.row?.images || scope.row?.images !== ''" :src="JSON.parse(scope.row?.images || '[]')?.[0]" fit="cover" style="width: 60px; height: 60px" :preview-src-list="JSON.parse(scope.row?.images || '[]')" preview-teleported/>
             <span v-else>-</span>
           </div>
         </template>

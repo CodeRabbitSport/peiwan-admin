@@ -95,7 +95,7 @@ onMounted(() => {
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="接单人用户ID" prop="acceptorId">
+      <el-form-item label="接单人用户ID" prop="acceptorId" label-width="120px">
         <el-input
           v-model="queryParams.acceptorId"
           placeholder="请输入接单人用户ID"

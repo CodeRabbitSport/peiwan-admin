@@ -1,21 +1,21 @@
-import router from './router'
 import type { RouteRecordRaw } from 'vue-router'
+
 import { isRelogin } from '@/config/axios/service'
-import { getAccessToken } from '@/utils/auth'
-import { useTitle } from '@/hooks/web/useTitle'
 import { useNProgress } from '@/hooks/web/useNProgress'
 import { usePageLoading } from '@/hooks/web/usePageLoading'
+import { useTitle } from '@/hooks/web/useTitle'
 import { useDictStoreWithOut } from '@/store/modules/dict'
-import { useUserStoreWithOut } from '@/store/modules/user'
 import { usePermissionStoreWithOut } from '@/store/modules/permission'
+import { useUserStoreWithOut } from '@/store/modules/user'
+import { getAccessToken } from '@/utils/auth'
+
+import router from './router'
 
 const { start, done } = useNProgress()
 
 const { loadStart, loadDone } = usePageLoading()
 
-const parseURL = (
-  url: string | null | undefined
-): { basePath: string; paramsObject: { [key: string]: string } } => {
+function parseURL(url: string | null | undefined): { basePath: string, paramsObject: { [key: string]: string } } {
   // 如果输入为 null 或 undefined，返回空字符串和空对象
   if (url == null) {
     return { basePath: '', paramsObject: {} }
@@ -53,7 +53,7 @@ const whiteList = [
   '/auth-redirect',
   '/bind',
   '/register',
-  '/oauthLogin/gitee'
+  '/oauthLogin/gitee',
 ]
 
 // 路由加载前
@@ -63,7 +63,8 @@ router.beforeEach(async (to, from, next) => {
   if (getAccessToken()) {
     if (to.path === '/login') {
       next({ path: '/' })
-    } else {
+    }
+    else {
       // 获取所有字典
       const dictStore = useDictStoreWithOut()
       const userStore = useUserStoreWithOut()
@@ -86,14 +87,17 @@ router.beforeEach(async (to, from, next) => {
         const { paramsObject: query } = parseURL(redirect)
         const nextData = to.path === redirect ? { ...to, replace: true } : { path: redirect, query }
         next(nextData)
-      } else {
+      }
+      else {
         next()
       }
     }
-  } else {
-    if (whiteList.indexOf(to.path) !== -1) {
+  }
+  else {
+    if (whiteList.includes(to.path)) {
       next()
-    } else {
+    }
+    else {
       next(`/login?redirect=${to.fullPath}`) // 否则全部重定向到登录页
     }
   }

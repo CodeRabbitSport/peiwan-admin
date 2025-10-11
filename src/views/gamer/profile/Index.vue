@@ -1,3 +1,17 @@
+<script lang="ts" setup>
+import { BasicInfo, ProfileUser, ResetPwd, UserSocial } from './components'
+
+defineOptions({ name: 'UserProfile' })
+const { t } = useI18n()
+const activeName = ref('basicInfo')
+const profileUserRef = ref()
+
+// 处理基本信息更新成功
+async function handleBasicInfoSuccess() {
+  await profileUserRef.value?.refresh()
+}
+</script>
+
 <template>
   <!-- TODO @芋艿：可优化，对标 vben 版本 -->
   <div class="flex">
@@ -19,26 +33,14 @@
             <ResetPwd />
           </el-tab-pane>
           <el-tab-pane :label="t('profile.info.userSocial')" name="userSocial">
-            <UserSocial v-model:activeName="activeName" />
+            <UserSocial v-model:active-name="activeName" />
           </el-tab-pane>
         </el-tabs>
       </div>
     </el-card>
   </div>
 </template>
-<script lang="ts" setup>
-import { BasicInfo, ProfileUser, ResetPwd, UserSocial } from './components'
 
-const { t } = useI18n()
-defineOptions({ name: 'Profile' })
-const activeName = ref('basicInfo')
-const profileUserRef = ref()
-
-// 处理基本信息更新成功
-const handleBasicInfoSuccess = async () => {
-  await profileUserRef.value?.refresh()
-}
-</script>
 <style scoped>
 .user {
   max-height: 960px;

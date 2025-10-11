@@ -2,6 +2,7 @@
 import type { UserInfo } from '@/api/gamer/userinfo'
 import { UserInfoApi } from '@/api/gamer/userinfo'
 import { fenToYuan } from '@/utils'
+import UserBalanceUpdateForm from '@/views/member/user/components/UserBalanceUpdateForm.vue'
 
 import UserIncomeExpenseDetail from '../userincomeexpensedetail/index.vue'
 import UserMoment from '../usermoment/index.vue'
@@ -359,7 +360,7 @@ onMounted(() => {
               <el-menu-item
                 v-hasPermi="['pay:wallet:update-balance']"
                 index="balance"
-                @click="UpdateBalanceFormRef.open(scope.row.id)"
+                @click="() => UpdateBalanceFormRef.open(scope.row.id)"
               >
                 修改余额
               </el-menu-item>
