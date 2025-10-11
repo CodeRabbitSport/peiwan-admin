@@ -7,7 +7,7 @@
           <XButton preIcon="ep:folder-opened" title="打开文件" @click="refFile.click()" />
           <el-tooltip effect="light" placement="bottom">
             <template #content>
-              <div style="color: #409eff">
+              <div style="color: #3b82f6">
                 <!-- <el-button link @click="downloadProcessAsXml()">下载为XML文件</el-button> -->
                 <XTextButton title="下载为XML文件" @click="downloadProcessAsXml()" />
                 <br />

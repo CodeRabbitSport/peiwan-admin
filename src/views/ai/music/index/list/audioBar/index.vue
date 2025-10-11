@@ -16,7 +16,7 @@
       <Icon icon="majesticons:next-circle" :size="20" class="text-gray-300 cursor-pointer"/>
       <div class="flex gap-[16px] items-center">
         <span>{{audioProps.currentTime}}</span>
-        <el-slider v-model="audioProps.duration" color="#409eff" class="w-[160px!important] "/>
+        <el-slider v-model="audioProps.duration" color="#3b82f6" class="w-[160px!important] "/>
         <span>{{ audioProps.duration }}</span>
       </div>
       <!-- 音频 -->
@@ -28,7 +28,7 @@
     <!-- 音量控制器 -->
     <div class="flex gap-[16px] items-center">
       <Icon :icon="audioProps.muted ? 'tabler:volume-off' : 'tabler:volume'" :size="20" class="cursor-pointer" @click="toggleStatus('muted')"/>
-      <el-slider v-model="audioProps.volume" color="#409eff" class="w-[160px!important] "/>
+      <el-slider v-model="audioProps.volume" color="#3b82f6" class="w-[160px!important] "/>
     </div>
   </div>
 </template>

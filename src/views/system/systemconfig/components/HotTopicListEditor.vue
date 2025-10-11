@@ -66,13 +66,13 @@ watch(
 
 const emitChange = () => {
   const normalized = [...localList.value]
-    .map((i) => ({ name: i.name || '', color: i.color || '#409EFF' }))
+    .map((i) => ({ name: i.name || '', color: i.color || '#3b82f6' }))
   emit('update:modelValue', normalized)
   emit('change', normalized)
 }
 
 const addItem = () => {
-  localList.value.push({ name: '', color: '#409EFF' })
+  localList.value.push({ name: '', color: '#3b82f6' })
   emitChange()
 }
 

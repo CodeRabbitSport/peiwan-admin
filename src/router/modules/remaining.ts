@@ -71,7 +71,7 @@ const remainingRouter: AppRouteRecordRaw[] = [
     ],
   },
   {
-    path: '/userinfo',
+    path: '/user',
     component: Layout,
     name: 'UserInfoProfile',
     meta: {

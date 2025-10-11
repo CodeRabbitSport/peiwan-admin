@@ -254,7 +254,7 @@ const getUserTypeColor = (type: number) => {
     case 'danger':
       return '#F56C6C'
   }
-  return '#409EFF'
+  return '#3b82f6'
 }
 
 // 订单详情
@@ -359,7 +359,7 @@ onMounted(async () => {
       width: 3px;
       height: 20px;
       margin-right: 10px;
-      background-color: #409eff;
+      background-color: #3b82f6;
       content: '';
     }
   }

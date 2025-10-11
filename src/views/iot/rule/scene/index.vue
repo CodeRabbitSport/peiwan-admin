@@ -4,7 +4,7 @@
     <div class="flex justify-between items-start mb-20px">
       <div class="flex-1">
         <h2 class="flex items-center m-0 mb-8px text-24px font-600 text-[#303133]">
-          <Icon icon="ep:connection" class="ml-5px mr-12px text-[#409eff]" />
+          <Icon icon="ep:connection" class="ml-5px mr-12px text-[#3b82f6]" />
           场景联动规则
         </h2>
         <p class="m-0 text-[#606266] text-14px">

@@ -42,7 +42,7 @@ const handleOpenEditDialog = () => {
 <style scoped lang="scss">
 .hot-zone {
   position: absolute;
-  background: #409effbf;
+  background: #3b82f6bf;
   border: 1px solid var(--el-color-primary);
   color: #fff;
   font-size: 12px;

@@ -7,7 +7,7 @@
   >
     <!-- 标题栏：可点击展开/收起 -->
     <div
-      class="text-14px text-[#666] mb-8px flex items-center justify-between cursor-pointer hover:text-[#409eff]"
+      class="text-14px text-[#666] mb-8px flex items-center justify-between cursor-pointer hover:text-[#3b82f6]"
       @click="toggleExpanded"
     >
       <div class="flex items-center">

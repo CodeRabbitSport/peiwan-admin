@@ -5,11 +5,11 @@
       <div
         v-for="(file, index) in modelValue.list"
         :key="index"
-        class="flex items-center py-4px px-12px border-l-4 border-l-[#409eff] rounded-sm shadow-sm hover:bg-[#ecf5ff] transition-all duration-300"
+        class="flex items-center py-4px px-12px border-l-4 border-l-[#3b82f6] rounded-sm shadow-sm hover:bg-[#ecf5ff] transition-all duration-300"
       >
         <!-- 文件图标和名称 -->
         <div class="flex items-center min-w-[200px] mr-10px">
-          <Icon icon="ep:document" class="mr-8px text-[#409eff]" />
+          <Icon icon="ep:document" class="mr-8px text-[#3b82f6]" />
           <span class="text-[13px] text-[#303133] break-all">{{ file.name }}</span>
         </div>
 

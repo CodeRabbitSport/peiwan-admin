@@ -51,7 +51,7 @@ const getUserTypeColor = (type: number) => {
     case 'danger':
       return '#F56C6C'
   }
-  return '#409EFF'
+  return '#3b82f6'
 }
 </script>
 

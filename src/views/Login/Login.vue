@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { useAppStore } from '@/store/modules/app'
 import { underlineToHump } from '@/utils'
+
 import { LoginForm } from './components'
 
 defineOptions({ name: 'Login' })
@@ -10,11 +11,11 @@ const appStore = useAppStore()
 </script>
 
 <template>
-  <div id="userLayout" class="w-full h-full relative">
-    <div class="rounded-lg flex items-center justify-evenly w-full h-full md:w-screen md:h-screen md:bg-[#194bfb] bg-white">
-      <div class="md:w-3/5 w-10/12 h-full flex items-center justify-evenly relative">
-        <div class="oblique h-[130%] w-3/5 bg-white dark:bg-slate-900 transform -rotate-12 absolute -ml-52" />
-        <div class="z-[999] pt-12 pb-10 md:w-96 w-full rounded-lg flex flex-col justify-between box-border">
+  <div id="userLayout" class="relative h-full w-full">
+    <div class="h-full w-full flex items-center justify-evenly rounded-lg bg-white md:h-screen md:w-screen md:bg-[#174AFB]">
+      <div class="h-full w-10/12 flex items-center justify-evenly md:w-3/5">
+        <div class="absolute h-[130%] w-3/5 transform bg-white oblique -ml-52 -rotate-12 dark:bg-slate-900" />
+        <div class="z-[999] box-border w-full flex flex-col justify-between rounded-lg pb-10 pt-12 md:w-96">
           <div>
             <div class="flex items-center justify-center">
               <img class="w-24" src="@/assets/imgs/logo.png" alt="">
@@ -23,7 +24,7 @@ const appStore = useAppStore()
               <p class="text-center text-4xl font-bold">
                 {{ underlineToHump(appStore.getTitle) }}
               </p>
-              <p class="text-center text-sm font-normal text-gray-500 mt-2.5">
+              <p class="mt-2.5 text-center text-sm text-gray-500 font-normal">
                 {{ t('login.message') }}
               </p>
             </div>
@@ -31,17 +32,15 @@ const appStore = useAppStore()
           </div>
         </div>
       </div>
-      <div class="hidden md:block w-1/2 h-full float-right bg-[#194bfb]">
-        <img class="h-full" src="@/assets/svgs/login-bg.svg" alt="banner">
+      <div class="float-right hidden h-full w-1/2 bg-[#194bfb] md:block">
+        <img class="h-full" src="@/assets/imgs/bg.jpeg" alt="">
       </div>
     </div>
   </div>
-  
 </template>
 
- 
-
 <style lang="scss">
+/* remove clip-path to let rotate create a straight diagonal */
 .dark .login-form {
   .el-divider__text {
     background-color: var(--login-bg-color);

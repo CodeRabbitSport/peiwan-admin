@@ -33,7 +33,7 @@
             <el-icon color="orange"><WarningFilled /></el-icon>
           </el-tooltip>
           <el-tooltip :content="helpText" placement="top">
-            <el-icon color="#409EFF" style="cursor: pointer" @click="showHelp = true"
+            <el-icon color="#3b82f6" style="cursor: pointer" @click="showHelp = true"
               ><QuestionFilled
             /></el-icon>
           </el-tooltip>

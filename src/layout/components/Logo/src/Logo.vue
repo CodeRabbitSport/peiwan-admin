@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref, unref, watch } from 'vue'
-import { useAppStore } from '@/store/modules/app'
+
 import { useDesign } from '@/hooks/web/useDesign'
+import { useAppStore } from '@/store/modules/app'
 
 defineOptions({ name: 'Logo' })
 
@@ -34,10 +35,11 @@ watch(
       setTimeout(() => {
         show.value = !collapse
       }, 400)
-    } else {
+    }
+    else {
       show.value = !collapse
     }
-  }
+  },
 )
 
 watch(
@@ -45,41 +47,36 @@ watch(
   (layout) => {
     if (layout === 'top' || layout === 'cutMenu') {
       show.value = true
-    } else {
+    }
+    else {
       if (unref(collapse)) {
         show.value = false
-      } else {
+      }
+      else {
         show.value = true
       }
     }
-  }
+  },
 )
 </script>
 
 <template>
   <div>
     <router-link
-      :class="[
+      class="relative flex cursor-pointer items-center overflow-hidden pl-[8px] decoration-none !h-[var(--logo-height)]" :class="[
         prefixCls,
         layout !== 'classic' ? `${prefixCls}__Top` : '',
-        'flex !h-[var(--logo-height)] items-center cursor-pointer pl-8px relative decoration-none overflow-hidden'
       ]"
       to="/"
     >
       <img
         class="h-[calc(var(--logo-height)-10px)] w-[calc(var(--logo-height)-10px)]"
         src="@/assets/imgs/logo.png"
-      />
+      >
       <div
         v-if="show"
-        :class="[
-          'ml-10px text-16px font-700',
-          {
-            'text-[var(--logo-title-text-color)]': layout === 'classic',
-            'text-[var(--top-header-text-color)]':
-              layout === 'topLeft' || layout === 'top' || layout === 'cutMenu'
-          }
-        ]"
+        class="ml-[10px] text-[16px] font-bold text-[#334155]" 
+        
       >
         {{ title }}
       </div>

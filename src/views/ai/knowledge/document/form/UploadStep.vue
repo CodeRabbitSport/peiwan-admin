@@ -3,7 +3,7 @@
     <el-form-item class="mb-20px">
       <div class="w-full">
         <div
-          class="w-full border-2 border-dashed border-[#dcdfe6] rounded-md p-20px text-center hover:border-[#409eff]"
+          class="w-full border-2 border-dashed border-[#dcdfe6] rounded-md p-20px text-center hover:border-[#3b82f6]"
         >
           <el-upload
             ref="uploadRef"
@@ -26,7 +26,7 @@
               <Icon icon="ep:upload-filled" class="text-[48px] text-[#c0c4cc] mb-10px" />
               <div class="el-upload__text text-[16px] text-[#606266]">
                 拖拽文件至此，或者
-                <em class="text-[#409eff] not-italic cursor-pointer">选择文件</em>
+                <em class="text-[#3b82f6] not-italic cursor-pointer">选择文件</em>
               </div>
               <div class="el-upload__tip mt-10px text-[#909399] text-[12px]">
                 已支持 {{ supportedFileTypes.join('、') }}，每个文件不超过 {{ maxFileSize }} MB。
@@ -42,10 +42,10 @@
           <div
             v-for="(file, index) in modelData.list"
             :key="index"
-            class="flex justify-between items-center py-4px px-12px border-l-4 border-l-[#409eff] rounded-sm shadow-sm hover:bg-[#ecf5ff] transition-all duration-300"
+            class="flex justify-between items-center py-4px px-12px border-l-4 border-l-[#3b82f6] rounded-sm shadow-sm hover:bg-[#ecf5ff] transition-all duration-300"
           >
             <div class="flex items-center">
-              <Icon icon="ep:document" class="mr-8px text-[#409eff]" />
+              <Icon icon="ep:document" class="mr-8px text-[#3b82f6]" />
               <span class="text-[13px] text-[#303133] break-all">{{ file.name }}</span>
             </div>
             <el-button type="danger" link @click="removeFile(index)" class="ml-2">

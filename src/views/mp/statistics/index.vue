@@ -176,7 +176,7 @@ const upstreamMessageOption = reactive({
 })
 // 接口分析况数据图表配置项
 const interfaceSummaryOption = reactive({
-  color: ['#67C23A', '#E5323E', '#E6A23C', '#409EFF'],
+  color: ['#67C23A', '#E5323E', '#E6A23C', '#3b82f6'],
   legend: {
     data: ['被动回复用户消息的次数', '失败次数', '最大耗时', '总耗时']
   },

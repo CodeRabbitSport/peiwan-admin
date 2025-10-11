@@ -1,12 +1,15 @@
 <script lang="tsx">
-import { PropType } from 'vue'
+import type { PropType } from 'vue'
+
 import { ElMenu, ElScrollbar } from 'element-plus'
+
+import { useDesign } from '@/hooks/web/useDesign'
 import { useAppStore } from '@/store/modules/app'
 import { usePermissionStore } from '@/store/modules/permission'
-import { useRenderMenuItem } from './components/useRenderMenuItem'
+import type { LayoutType } from '@/types/layout'
 import { isUrl } from '@/utils/is'
-import { useDesign } from '@/hooks/web/useDesign'
-import { LayoutType } from '@/types/layout'
+
+import { useRenderMenuItem } from './components/useRenderMenuItem'
 
 const { getPrefixCls } = useDesign()
 
@@ -18,8 +21,8 @@ export default defineComponent({
   props: {
     menuSelect: {
       type: Function as PropType<(index: string) => void>,
-      default: undefined
-    }
+      default: undefined,
+    },
   },
   setup(props) {
     const appStore = useAppStore()
@@ -36,13 +39,14 @@ export default defineComponent({
 
       if (vertical.includes(unref(layout))) {
         return 'vertical'
-      } else {
+      }
+      else {
         return 'horizontal'
       }
     })
 
     const routers = computed(() =>
-      unref(layout) === 'cutMenu' ? permissionStore.getMenuTabRouters : permissionStore.getRouters
+      unref(layout) === 'cutMenu' ? permissionStore.getMenuTabRouters : permissionStore.getRouters,
     )
 
     const collapse = computed(() => appStore.getCollapse)
@@ -65,7 +69,8 @@ export default defineComponent({
       // 自定义事件
       if (isUrl(index)) {
         window.open(index)
-      } else {
+      }
+      else {
         push(index)
       }
     }
@@ -73,7 +78,8 @@ export default defineComponent({
     const renderMenuWrap = () => {
       if (unref(layout) === 'top') {
         return renderMenu()
-      } else {
+      }
+      else {
         return <ElScrollbar>{renderMenu()}</ElScrollbar>
       }
     }
@@ -101,7 +107,7 @@ export default defineComponent({
             default: () => {
               const { renderMenuItem } = useRenderMenuItem(unref(menuMode))
               return renderMenuItem(unref(routers))
-            }
+            },
           }}
         </ElMenu>
       )
@@ -115,14 +121,14 @@ export default defineComponent({
           'h-[100%] overflow-hidden flex-col bg-[var(--left-menu-bg-color)]',
           {
             'w-[var(--left-menu-min-width)]': unref(collapse) && unref(layout) !== 'cutMenu',
-            'w-[var(--left-menu-max-width)]': !unref(collapse) && unref(layout) !== 'cutMenu'
-          }
+            'w-[var(--left-menu-max-width)]': !unref(collapse) && unref(layout) !== 'cutMenu',
+          },
         ]}
       >
         {renderMenuWrap()}
       </div>
     )
-  }
+  },
 })
 </script>
 
@@ -140,7 +146,8 @@ $prefix-cls: #{$namespace}-menu;
     // 设置选中时子标题的颜色
     .is-active {
       & > .#{$elNamespace}-sub-menu__title {
-        color: var(--left-menu-text-active-color) !important;
+        // background-color: #3b82f633 !important;
+        color: var(--left-menu-bg-active-color) !important;
       }
     }
 
@@ -148,8 +155,10 @@ $prefix-cls: #{$namespace}-menu;
     .#{$elNamespace}-sub-menu__title,
     .#{$elNamespace}-menu-item {
       &:hover {
-        color: var(--left-menu-text-active-color) !important;
-        background-color: var(--left-menu-bg-color) !important;
+        // color: var(--left-menu-text-active-color) !important;
+        // background-color: var(--left-menu-bg-color) !important;
+        background-color: #3b82f633 !important;
+        color: #000 !important;
       }
     }
 
@@ -171,7 +180,7 @@ $prefix-cls: #{$namespace}-menu;
     .#{$elNamespace}-menu {
       .#{$elNamespace}-sub-menu__title,
       .#{$elNamespace}-menu-item:not(.is-active) {
-        background-color: var(--left-menu-bg-light-color) !important;
+        background-color: var(--left-menu-bg-light-color);
       }
     }
   }
@@ -253,9 +262,11 @@ $prefix-cls: #{$namespace}-menu-popper;
   // 设置子菜单悬停的高亮和背景色
   .el-sub-menu__title,
   .el-menu-item {
-    &:hover {
-      color: var(--left-menu-text-active-color) !important;
-      background-color: var(--left-menu-bg-color) !important;
+    &:not(.is-disabled):hover {
+      // color: var(--left-menu-text-active-color) !important;
+      // background-color: var(--left-menu-bg-color) !important;
+      background-color: #3b82f633 !important;
+      color: #000 !important;
     }
   }
 

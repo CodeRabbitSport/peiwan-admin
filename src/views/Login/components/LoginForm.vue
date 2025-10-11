@@ -12,7 +12,7 @@
     <el-row class="mx-[-10px]">
       <el-col :span="24" class="px-[10px]">
         <el-form-item>
-          <LoginFormTitle class="w-full" />
+          <LoginFormTitle class="w-full text-white" />
         </el-form-item>
       </el-col>
       <el-col :span="24" class="px-[10px]">

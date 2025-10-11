@@ -161,7 +161,7 @@ export const PREDEFINE_COLORS = [
   '#00ced1',
   '#1e90ff',
   '#c71585',
-  '#409EFF',
+  '#3b82f6',
   '#909399',
   '#C0C4CC',
   '#b7390b',

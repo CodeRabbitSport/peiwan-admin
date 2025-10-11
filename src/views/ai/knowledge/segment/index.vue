@@ -61,7 +61,7 @@
               line-height: 1.5;
               background-color: #f9f9f9;
               border-radius: 4px;
-              border-left: 3px solid #409eff;
+              border-left: 3px solid #3b82f6;
             "
           >
             <div
