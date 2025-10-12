@@ -5,7 +5,7 @@ import type { Product } from '@/api/gamer/product'
 import { ProductApi } from '@/api/gamer/product'
 
 /** 打手等级配置 表单 */
-defineOptions({ n!w-[240px]velConfigForm' })
+defineOptions({ name: 'LevelConfigForm' })
 
 // 提供 open 方法，用于打开弹窗
 
@@ -19,7 +19,7 @@ const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref<Partial<LevelConfig>>({
-  id: undefined,!w-[240px]
+  id: undefined,
   categoryType: undefined,
   levelName: undefined,
   levelNumber: undefined,
@@ -27,18 +27,18 @@ const formData = ref<Partial<LevelConfig>>({
   upgradeDays: undefined,
   isDefault: undefined,
   canUpgrade: undefined,
-  depositFee: und!w-[240px]
+  depositFee:undefined,
   dailyOrderLimit: undefined,
   newOrderDelaySeconds: undefined,
   withdrawalFeeRate: undefined,
   orderFeeUnfreezeSeconds: undefined,
   rewardCommissionRate: undefined,
   canCancelOrder: undefined,
-  canRefundOrder: undefmr-[5px]
+  canRefundOrder: undefined,
   canViewRefundPhone: undefined,
   canViewUnrefundedPhone: undefined,
   viewPhoneDaysLimit: undefined,
-  canSetAnnouncement: umr-[5px]ed,
+  canSetAnnouncement: undefined,
   depositRefundSafeDays: undefined,
   restrictedProductIds: undefined,
   dailyOrderFeeLimit: undefined,

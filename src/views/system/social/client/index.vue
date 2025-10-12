@@ -93,19 +93,18 @@ onMounted(() => {
           class="!w-[240px]"
           clearable
           placeholder="请输入应用名"
-          
         />
       </el-form-item>
       <el-form-item label="社交平台" prop="socialType">
         <el-select
           v-model="queryParams.socialType"
-          class="!w-240px"
+          class="!w-[240px]"
           clearable
           placeholder="请选择社交平台"
         >
           <el-option
             v-for="dict in getIntDictOptions(DICT_TYPE.SYSTEM_SOCIAL_TYPE)"
-            :key="!w-[240px]lue&quot;"
+            :key="dict.value"
             :label="dict.label"
             :value="dict.value"
           />
@@ -124,47 +123,44 @@ onMounted(() => {
             :label="dict.label"
             :value="dict.value"
           />
-          </el-sele!w-[240px]
-          </el-form-item>
-          <el-form-item label="客户端编号" prop="clientId">
-            <el-input
-              v-model="queryParams.clientId"
-              class="!w-240px"
-              clearable
-              placeholder="请输入客户端编号"
-              
-            />mr-[5px]
-          </el-form-item>
-          <el-form-item label="状态" prop="status">
-            <el-select v-model="queryParams.status" class="!w-240px" clearable placeholder="请选择状态">
-              <el-optionmr-[5px]
-                v-for="dict in getIntDictOptions(DICT_TYPE.COMMON_STATUS)"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button @click="handleQuery">
-              <Icon class="mr-5px" icon="ep:search" />
-              搜索
-            </el-button>
-            <el-button @click="resetQuery">
-              <Icon class="mr-5px" icon="ep:refresh" />
-              重置
-            </el-button>
-            <el-button
-              v-hasPermi="['system:social-client:create']"
-              plainh-[30px] w-[30px]
-              type="primary"
-              @click="openForm('create')"
-            >
-              <Icon class="mr-5px" icon="ep:plus" />
-              新增
-            </el-button>
-          </el-form-item>
         </el-select>
+      </el-form-item>
+      <el-form-item label="客户端编号" prop="clientId">
+        <el-input
+          v-model="queryParams.clientId"
+          class="!w-[240px]"
+          clearable
+          placeholder="请输入客户端编号"
+        />
+      </el-form-item>
+      <el-form-item label="状态" prop="status">
+        <el-select v-model="queryParams.status" class="!w-[240px]" clearable placeholder="请选择状态">
+          <el-option
+            v-for="dict in getIntDictOptions(DICT_TYPE.COMMON_STATUS)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item>
+        <el-button @click="handleQuery">
+          <Icon class="mr-[5px]" icon="ep:search" />
+          搜索
+        </el-button>
+        <el-button @click="resetQuery">
+          <Icon class="mr-[5px]" icon="ep:refresh" />
+          重置
+        </el-button>
+        <el-button
+          v-hasPermi="['system:social-client:create']"
+          plain
+          type="primary"
+          @click="openForm('create')"
+        >
+          <Icon class="mr-[5px]" icon="ep:plus" />
+          新增
+        </el-button>
       </el-form-item>
     </el-form>
   </ContentWrap>
