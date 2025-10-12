@@ -219,7 +219,7 @@
 <script lang="ts" setup>
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
-import { ElMessageBox } from 'element-plus'
+import { promptDialog } from '@/components/PromptDialog'
 import * as ProcessInstanceApi from '@/api/bpm/processInstance'
 import { CategoryApi, CategoryVO } from '@/api/bpm/category'
 import { ProcessInstanceVO } from '@/api/bpm/processInstance'
@@ -305,7 +305,9 @@ const handleDetail = (row: ProcessInstanceVO) => {
 /** 取消按钮操作 */
 const handleCancel = async (row: ProcessInstanceVO) => {
   // 二次确认
-  const { value } = await ElMessageBox.prompt('请输入取消原因', '取消流程', {
+  const { value } = await promptDialog({
+    title: '取消流程',
+    content: '请输入取消原因',
     confirmButtonText: t('common.ok'),
     cancelButtonText: t('common.cancel'),
     inputPattern: /^[\s\S]*.*\S[\s\S]*$/, // 判断非空，且非空格

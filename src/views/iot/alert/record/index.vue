@@ -194,6 +194,7 @@ import { AlertConfigApi, AlertConfig } from '@/api/iot/alert/config'
 import { ProductApi, ProductVO } from '@/api/iot/product/product'
 import { DeviceApi, DeviceVO } from '@/api/iot/device/device'
 import { DICT_TYPE, getIntDictOptions, getBoolDictOptions } from '@/utils/dict'
+import { promptDialog } from '@/components/PromptDialog'
 
 /** IoT 告警记录列表 */
 defineOptions({ name: 'IotAlertRecord' })
@@ -276,7 +277,9 @@ const handleProductChange = () => {
 /** 处理告警记录 */
 const handleProcess = async (row: AlertRecord) => {
   try {
-    const { value: processRemark } = await ElMessageBox.prompt('请输入处理原因', '处理告警记录', {
+    const { value: processRemark } = await promptDialog({
+      title: '处理告警记录',
+      content: '请输入处理原因',
       confirmButtonText: '确定',
       cancelButtonText: '取消'
     })

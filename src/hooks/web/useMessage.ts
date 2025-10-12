@@ -1,5 +1,7 @@
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 
+import { promptDialog } from '@/components/PromptDialog'
+
 import { useI18n } from './useI18n'
 
 export function useMessage() {
@@ -85,19 +87,13 @@ export function useMessage() {
         },
       )
     },
-    // 提交内容
+    // 提交内容（以ElDialog代替 MessageBox.prompt）
     prompt(content: string, tip: string) {
-      return ElMessageBox.prompt(content, tip, {
+      return promptDialog({
+        title: tip,
+        content,
         confirmButtonText: t('common.ok'),
         cancelButtonText: t('common.cancel'),
-        type: 'warning',
-        beforeClose: (action, instance, done) => {
-          const d = getCurrentInstance()
-          console.log('%c🤪 ~ file: /Users/soya/Desktop/p-admin/src/hooks/web/useMessage.ts:95 [] -> d : ', 'color: #22b81c', d)
-          if (action === 'confirm') {
-
-          }
-        },
       })
     },
   }

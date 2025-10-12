@@ -219,7 +219,9 @@ const handleDetail = (row: LeaveApi.LeaveVO) => {
 /** 取消请假操作 */
 const cancelLeave = async (row) => {
   // 二次确认
-  const { value } = await ElMessageBox.prompt('请输入取消原因', '取消流程', {
+  const { value } = await promptDialog({
+    title: '取消流程',
+    content: '请输入取消原因',
     confirmButtonText: t('common.ok'),
     cancelButtonText: t('common.cancel'),
     inputPattern: /^[\s\S]*.*\S[\s\S]*$/, // 判断非空，且非空格

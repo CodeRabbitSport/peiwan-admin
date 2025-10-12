@@ -138,6 +138,7 @@ import { ChatConversationApi, ChatConversationVO } from '@/api/ai/chat/conversat
 import RoleRepository from '../role/RoleRepository.vue'
 import { Bottom, Top } from '@element-plus/icons-vue'
 import roleAvatarDefaultImg from '@/assets/ai/gpt.svg'
+import { promptDialog } from '@/components/PromptDialog'
 
 const message = useMessage() // 消息弹窗
 
@@ -288,10 +289,14 @@ const createConversation = async () => {
 /** 修改对话的标题 */
 const updateConversationTitle = async (conversation: ChatConversationVO) => {
   // 1. 二次确认
-  const { value } = await ElMessageBox.prompt('修改标题', {
-    inputPattern: /^[\s\S]*.*\S[\s\S]*$/, // 判断非空，且非空格
+  const { value } = await promptDialog({
+    title: '修改标题',
+    content: '',
+    inputPattern: /^[\s\S]*.*\S[\s\S]*$/,
     inputErrorMessage: '标题不能为空',
-    inputValue: conversation.title
+    defaultValue: conversation.title,
+    confirmButtonText: '确定',
+    cancelButtonText: '取消'
   })
   // 2. 发起修改
   await ChatConversationApi.updateChatConversationMy({
