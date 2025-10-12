@@ -1,6 +1,6 @@
 <template>
-  <doc-alert title="【交易】交易订单" url="https://doc.iocoder.cn/mall/trade-order/" />
-  <doc-alert title="【交易】购物车" url="https://doc.iocoder.cn/mall/trade-cart/" />
+  
+  
 
   <!-- 搜索 -->
   <ContentWrap>
@@ -121,7 +121,7 @@
           class="!w-280px"
           clearable
           placeholder="请输入自提核销码"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="聚合搜索">

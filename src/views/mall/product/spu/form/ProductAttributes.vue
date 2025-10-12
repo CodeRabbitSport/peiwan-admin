@@ -1,66 +1,20 @@
 <!-- 商品发布 - 库存价格 - 属性列表 -->
-<template>
-  <el-col v-for="(item, index) in attributeList" :key="index">
-    <div>
-      <el-text class="mx-1">属性名：</el-text>
-      <el-tag :closable="!isDetail" class="mx-1" type="success" @close="handleCloseProperty(index)">
-        {{ item.name }}
-      </el-tag>
-    </div>
-    <div>
-      <el-text class="mx-1">属性值：</el-text>
-      <el-tag
-        v-for="(value, valueIndex) in item.values"
-        :key="value.id"
-        :closable="!isDetail"
-        class="mx-1"
-        @close="handleCloseValue(index, valueIndex)"
-      >
-        {{ value.name }}
-      </el-tag>
-      <el-select
-        v-show="inputVisible(index)"
-        :id="`input${index}`"
-        :ref="setInputRef"
-        v-model="inputValue"
-        :reserve-keyword="false"
-        allow-create
-        class="!w-30"
-        default-first-option
-        filterable
-        size="small"
-        @blur="handleInputConfirm(index, item.id)"
-        @change="handleInputConfirm(index, item.id)"
-        @keyup.enter="handleInputConfirm(index, item.id)"
-      >
-        <el-option
-          v-for="item2 in attributeOptions"
-          :key="item2.id"
-          :label="item2.name"
-          :value="item2.name"
-        />
-      </el-select>
-      <el-button
-        v-show="!inputVisible(index)"
-        class="button-new-tag ml-1"
-        size="small"
-        @click="showInput(index)"
-      >
-        + 添加
-      </el-button>
-    </div>
-    <el-divider class="my-10px" />
-  </el-col>
-</template>
-
 <script lang="ts" setup>
 import * as PropertyApi from '@/api/mall/product/property'
-import { PropertyAndValues } from '@/views/mall/product/spu/components'
 import { propTypes } from '@/utils/propTypes'
+import { PropertyAndValues } from '@/views/mall/product/spu/components'
 
 defineOptions({ name: 'ProductAttributes' })
 
-const { t } = useI18n() // 国际化
+// 商品属性名称下拉框
+const props = defineProps({
+  propertyList: {
+    type: Array,
+    default: () => {}
+  },
+  isDetail: propTypes.bool.def(false) // 是否作为详情组件
+}) ;/** 输入框失去焦点或点击回车时触发 */
+const emit = defineEmits(['success']) ;const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
 const inputValue = ref('') // 输入框值
 const attributeIndex = ref<number | null>(null) // 获取焦点时记录当前属性项的index
@@ -79,16 +33,7 @@ const setInputRef = (el: any) => {
   }
 }
 const attributeList = ref<PropertyAndValues[]>([]) // 商品属性列表
-const attributeOptions = ref([] as PropertyApi.PropertyValueVO[]) // 商品属性名称下拉框
-const props = defineProps({
-  propertyList: {
-    type: Array,
-    default: () => {}
-  },
-  isDetail: propTypes.bool.def(false) // 是否作为详情组件
-})
-
-watch(
+const attributeOptions = ref([] as PropertyApi.PropertyValueVO[])watch(
   () => props.propertyList,
   (data) => {
     if (!data) return
@@ -119,9 +64,8 @@ const showInput = async (index: number) => {
   await getAttributeOptions(attributeList.value[index].id)
 }
 
-/** 输入框失去焦点或点击回车时触发 */
-const emit = defineEmits(['success']) // 定义 success 事件，用于操作成功后的回调
-const handleInputConfirm = async (index: number, propertyId: number) => {
+ // 定义 success 事件，用于操作成功后的回调
+async function handleInputConfirm (index: number, propertyId: number) {
   if (inputValue.value) {
     // 1. 重复添加校验
     if (attributeList.value[index].values.find((item) => item.name === inputValue.value)) {
@@ -156,7 +100,64 @@ const handleInputConfirm = async (index: number, propertyId: number) => {
 }
 
 /** 获取商品属性下拉选项 */
-const getAttributeOptions = async (propertyId: number) => {
+async function getAttributeOptions (propertyId: number) {
   attributeOptions.value = await PropertyApi.getPropertyValueSimpleList(propertyId)
 }
 </script>
+
+<template>
+  <el-col v-for="(item, index) in attributeList" :key="index">
+    <div>
+      <el-text class="mx-1">
+属性名：
+</el-text>
+      <el-tag :closable="!isDetail" class="mx-1" type="success" @close="handleCloseProperty(index)">
+        {{ item.name }}
+      </el-tag>
+    </div>
+    <div>
+      <el-text class="mx-1">
+属性值：
+</el-text>
+      <el-tag
+        v-for="(value, valueIndex) in item.values"
+        :key="value.id"
+        :closable="!isDetail"
+        class="mx-1"
+        @close="handleCloseValue(index, valueIndex)"
+      >
+        {{ value.name }}
+      </el-tag>
+      <el-select
+        v-show="inputVisible(index)"
+        :id="`input${index}`"
+        :ref="setInputRef"
+        v-model="inputValue"
+        :reserve-keyword="false"
+        allow-create
+        class="!w-30"
+        default-first-option
+        filterable
+        size="small"
+        @blur="handleInputConfirm(index, item.id)"
+        @change="handleInputConfirm(index, item.id)"
+      >
+        <el-option
+          v-for="item2 in attributeOptions"
+          :key="item2.id"
+          :label="item2.name"
+          :value="item2.name"
+        />
+      </el-select>
+      <el-button
+        v-show="!inputVisible(index)"
+        class="button-new-tag ml-1"
+        size="small"
+        @click="showInput(index)"
+      >
+        + 添加
+      </el-button>
+    </div>
+    <el-divider class="my-[10px]" />
+  </el-col>
+</template>

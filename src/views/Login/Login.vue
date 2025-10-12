@@ -4,6 +4,7 @@ import { underlineToHump } from '@/utils'
 
 import { LoginForm } from './components'
 import ForgetPasswordForm from './components/ForgetPasswordForm.vue'
+import MobileForm from './components/MobileForm.vue'
 
 defineOptions({ name: 'Login' })
 
@@ -31,6 +32,8 @@ const appStore = useAppStore()
             </div>
             <LoginForm />
             <ForgetPasswordForm class="m-auto h-auto p-[20px] lt-xl:rounded-3xl xl:light:bg-white" />
+            <MobileForm class="m-auto h-auto p-20px lt-xl:(rounded-3xl light:bg-white)" />
+
           </div>
         </div>
       </div>

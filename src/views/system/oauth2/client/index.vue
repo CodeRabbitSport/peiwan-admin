@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="OAuth 2.0（SSO 单点登录)" url="https://doc.iocoder.cn/oauth2/" />
+  
 
   <!-- 搜索 -->
   <ContentWrap>
@@ -15,7 +15,7 @@
           v-model="queryParams.name"
           placeholder="请输入应用名"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

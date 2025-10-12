@@ -14,7 +14,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入字典名称"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="字典类型" prop="type">
@@ -23,7 +23,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入字典类型"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="状态" prop="status">

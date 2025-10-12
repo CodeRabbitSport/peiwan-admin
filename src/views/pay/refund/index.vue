@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="支付宝、微信退款接入" url="https://doc.iocoder.cn/pay/refund-demo/" />
+  
 
   <!-- 搜索工作栏 -->
   <ContentWrap>
@@ -40,7 +40,7 @@
           v-model="queryParams.merchantOrderId"
           placeholder="请输入商户支付单号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -49,7 +49,7 @@
           v-model="queryParams.merchantRefundId"
           placeholder="请输入商户退款单号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -58,7 +58,7 @@
           v-model="queryParams.channelOrderNo"
           placeholder="请输入渠道支付单号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -67,7 +67,7 @@
           v-model="queryParams.channelRefundNo"
           placeholder="请输入渠道退款单号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

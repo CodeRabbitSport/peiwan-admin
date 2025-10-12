@@ -152,7 +152,7 @@ onMounted(() => {
           placeholder="请输入用户ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
 
@@ -162,7 +162,7 @@ onMounted(() => {
           placeholder="请输入订单号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="类型" prop="type">

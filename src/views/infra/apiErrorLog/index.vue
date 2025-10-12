@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="系统日志" url="https://doc.iocoder.cn/system-log/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -15,7 +15,7 @@
           v-model="queryParams.userId"
           placeholder="请输入用户编号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -39,7 +39,7 @@
           v-model="queryParams.applicationName"
           placeholder="请输入应用名"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

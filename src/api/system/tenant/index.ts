@@ -33,41 +33,41 @@ export interface TenantExportReqVO {
 }
 
 // 查询租户列表
-export const getTenantPage = (params: TenantPageReqVO) => {
-  return request.get({ url: '/system/tenant/page', params })
+export function getTenantPage(params: TenantPageReqVO) {
+  return request.get({ url: '/system/tenant-new/page', params })
 }
 
 // 查询租户详情
-export const getTenant = (id: number) => {
-  return request.get({ url: '/system/tenant/get?id=' + id })
+export function getTenant(id: number) {
+  return request.get({ url: `/system/tenant/get?id=${id}` })
 }
 
 // 获取租户精简信息列表
-export const getTenantList = () => {
+export function getTenantList() {
   return request.get({ url: '/system/tenant/simple-list' })
 }
 
 // 新增租户
-export const createTenant = (data: TenantVO) => {
+export function createTenant(data: TenantVO) {
   return request.post({ url: '/system/tenant/create', data })
 }
 
 // 修改租户
-export const updateTenant = (data: TenantVO) => {
+export function updateTenant(data: TenantVO) {
   return request.put({ url: '/system/tenant/update', data })
 }
 
 // 删除租户
-export const deleteTenant = (id: number) => {
-  return request.delete({ url: '/system/tenant/delete?id=' + id })
+export function deleteTenant(id: number) {
+  return request.delete({ url: `/system/tenant/delete?id=${id}` })
 }
 
 // 批量删除租户
-export const deleteTenantList = (ids: number[]) => {
+export function deleteTenantList(ids: number[]) {
   return request.delete({ url: '/system/tenant/delete-list', params: { ids: ids.join(',') } })
 }
 
 // 导出租户
-export const exportTenant = (params: TenantExportReqVO) => {
+export function exportTenant(params: TenantExportReqVO) {
   return request.download({ url: '/system/tenant/export-excel', params })
 }

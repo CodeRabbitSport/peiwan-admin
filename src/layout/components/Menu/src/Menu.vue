@@ -155,10 +155,8 @@ $prefix-cls: #{$namespace}-menu;
     .#{$elNamespace}-sub-menu__title,
     .#{$elNamespace}-menu-item {
       &:hover {
-        // color: var(--left-menu-text-active-color) !important;
-        // background-color: var(--left-menu-bg-color) !important;
-        background-color: #3b82f633 !important;
-        color: #000 !important;
+        background-color: var(--left-menu-hover-bg-color) !important;
+        color: var(--left-menu-text-color) !important;
       }
     }
 
@@ -263,10 +261,8 @@ $prefix-cls: #{$namespace}-menu-popper;
   .el-sub-menu__title,
   .el-menu-item {
     &:not(.is-disabled):hover {
-      // color: var(--left-menu-text-active-color) !important;
-      // background-color: var(--left-menu-bg-color) !important;
-      background-color: #3b82f633 !important;
-      color: #000 !important;
+      background-color: var(--left-menu-hover-bg-color) !important;
+      color: var(--left-menu-text-color) !important;
     }
   }
 

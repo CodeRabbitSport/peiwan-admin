@@ -13,7 +13,7 @@
           v-model="queryParams.nickname"
           placeholder="请输入签到用户"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -22,7 +22,7 @@
           v-model="queryParams.day"
           placeholder="请输入签到天数"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

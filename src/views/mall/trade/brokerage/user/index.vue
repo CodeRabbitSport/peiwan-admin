@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="【交易】分销返佣" url="https://doc.iocoder.cn/mall/trade-brokerage/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -16,7 +16,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入推广员编号"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="推广资格" prop="brokerageEnabled">

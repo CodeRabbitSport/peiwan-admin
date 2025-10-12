@@ -32,9 +32,9 @@ async function handleBasicInfoSuccess() {
           <el-tab-pane :label="t('profile.info.resetPwd')" name="resetPwd">
             <ResetPwd />
           </el-tab-pane>
-          <el-tab-pane :label="t('profile.info.userSocial')" name="userSocial">
+          <!-- <el-tab-pane :label="t('profile.info.userSocial')" name="userSocial">
             <UserSocial v-model:active-name="activeName" />
-          </el-tab-pane>
+          </el-tab-pane> -->
         </el-tabs>
       </div>
     </el-card>

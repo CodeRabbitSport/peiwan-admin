@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="AI 知识库" url="https://doc.iocoder.cn/ai/knowledge/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -15,7 +15,7 @@
           v-model="queryParams.name"
           placeholder="请输入知识库名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

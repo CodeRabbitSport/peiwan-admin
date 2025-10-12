@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="【商品】商品评价" url="https://doc.iocoder.cn/mall/product-comment/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -20,7 +20,7 @@
         <el-input
           v-model="queryParams.spuName"
           placeholder="请输入商品名称"
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -28,7 +28,7 @@
         <el-input
           v-model="queryParams.userNickname"
           placeholder="请输入用户名称"
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -36,7 +36,7 @@
         <el-input
           v-model="queryParams.orderId"
           placeholder="请输入订单编号"
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

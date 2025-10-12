@@ -17,7 +17,7 @@
             v-model="queryParams.name"
             placeholder="搜索流程"
             clearable
-            @keyup.enter="handleQuery"
+            
             class="!w-240px"
           >
             <template #prefix>

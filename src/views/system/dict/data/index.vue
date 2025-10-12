@@ -22,7 +22,7 @@
           v-model="queryParams.label"
           placeholder="请输入字典标签"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="【交易】快递发货" url="https://doc.iocoder.cn/mall/trade-delivery-express/" />
+  
 
   <!-- 搜索工作栏 -->
   <ContentWrap>
@@ -10,7 +10,7 @@
           class="!w-240px"
           clearable
           placeholder="请输门店手机"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="门店名称" prop="name">
@@ -19,7 +19,7 @@
           class="!w-240px"
           clearable
           placeholder="请输门店名称"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="门店状态" prop="status">

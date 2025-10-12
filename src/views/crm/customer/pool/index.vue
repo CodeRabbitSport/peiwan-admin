@@ -1,6 +1,6 @@
 <template>
-  <doc-alert title="【客户】客户管理、公海客户" url="https://doc.iocoder.cn/crm/customer/" />
-  <doc-alert title="【通用】数据权限" url="https://doc.iocoder.cn/crm/permission/" />
+  
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -17,7 +17,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入客户名称"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="手机" prop="mobile">
@@ -26,7 +26,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入手机"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="所属行业" prop="industryId">

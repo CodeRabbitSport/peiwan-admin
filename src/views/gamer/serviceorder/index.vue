@@ -335,7 +335,7 @@ function openVoucherPreview(row: any) {
           placeholder="请输入订单号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="用户ID" prop="userId">

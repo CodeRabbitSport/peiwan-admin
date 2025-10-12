@@ -1,7 +1,7 @@
 <template>
-  <doc-alert title="定时任务" url="https://doc.iocoder.cn/job/" />
-  <doc-alert title="异步任务" url="https://doc.iocoder.cn/async-task/" />
-  <doc-alert title="消息队列" url="https://doc.iocoder.cn/message-queue/" />
+  
+  
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -17,7 +17,7 @@
           v-model="queryParams.name"
           placeholder="请输入任务名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -41,7 +41,7 @@
           v-model="queryParams.handlerName"
           placeholder="请输入处理器的名字"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

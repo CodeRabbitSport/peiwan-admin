@@ -244,7 +244,7 @@ function clear() {
       />
 
       <!-- 头部主题 -->
-      <ElDivider>{{ t('setting.headerTheme') }}</ElDivider>
+      <!-- <ElDivider>{{ t('setting.headerTheme') }}</ElDivider>
       <ColorRadioPicker
         v-model="headerTheme" :schema="[
           '#fff',
@@ -256,7 +256,7 @@ function clear() {
           '#009688',
           '#383f45',
         ]" @change="setHeaderTheme"
-      />
+      /> -->
 
       <!-- 菜单主题 -->
       <template v-if="layout !== 'top'">

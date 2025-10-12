@@ -1,6 +1,6 @@
 <template>
-  <doc-alert title="【回款】回款管理、回款计划" url="https://doc.iocoder.cn/crm/receivable/" />
-  <doc-alert title="【通用】数据权限" url="https://doc.iocoder.cn/crm/permission/" />
+  
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -17,7 +17,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入回款编号"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="客户名称" prop="customerId">
@@ -25,7 +25,7 @@
           v-model="queryParams.customerId"
           class="!w-240px"
           placeholder="请选择客户"
-          @keyup.enter="handleQuery"
+          
         >
           <el-option
             v-for="item in customerList"

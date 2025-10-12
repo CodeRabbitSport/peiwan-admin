@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="支付功能开启" url="https://doc.iocoder.cn/pay/build/" />
+  
   <!-- 搜索 -->
   <ContentWrap>
     <el-form
@@ -15,7 +15,7 @@
           class="!w-[240px]"
           clearable
           placeholder="请输入应用名"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="开启状态" prop="status">

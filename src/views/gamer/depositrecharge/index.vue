@@ -134,7 +134,7 @@ onMounted(() => {
           placeholder="请输入流水号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="用户编号" prop="userId">
@@ -143,7 +143,7 @@ onMounted(() => {
           placeholder="请输入用户编号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="支付状态" prop="payStatus">
@@ -162,7 +162,7 @@ onMounted(() => {
           placeholder="请输入支付订单编号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="支付渠道" prop="payChannelCode">
@@ -171,7 +171,7 @@ onMounted(() => {
           placeholder="请输入支付渠道"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="退款单号" prop="payRefundId">
@@ -180,7 +180,7 @@ onMounted(() => {
           placeholder="请输入退款单号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="退款状态" prop="refundStatus">

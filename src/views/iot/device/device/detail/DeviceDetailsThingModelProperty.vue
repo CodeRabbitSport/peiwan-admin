@@ -16,7 +16,7 @@
           placeholder="请输入属性名称、标志符"
           clearable
           class="!w-240px"
-          @keyup.enter="handleQuery"
+          
           @clear="handleQuery"
         />
       </el-form-item>

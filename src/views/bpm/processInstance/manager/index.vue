@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="工作流手册" url="https://doc.iocoder.cn/bpm/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -25,7 +25,7 @@
           v-model="queryParams.name"
           placeholder="请输入流程名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -34,7 +34,7 @@
           v-model="queryParams.processDefinitionId"
           placeholder="请输入流程定义的编号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

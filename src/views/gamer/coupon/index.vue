@@ -12,7 +12,7 @@
           v-model="queryParams.couponName"
           placeholder="请输入优惠券名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-[240px]" />
       </el-form-item>
 

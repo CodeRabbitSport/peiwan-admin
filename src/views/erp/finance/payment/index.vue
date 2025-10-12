@@ -18,7 +18,7 @@
           v-model="queryParams.no"
           placeholder="请输入付款单号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -112,7 +112,7 @@
           v-model="queryParams.remark"
           placeholder="请输入备注"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -121,7 +121,7 @@
           v-model="queryParams.bizNo"
           placeholder="请输入采购单号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

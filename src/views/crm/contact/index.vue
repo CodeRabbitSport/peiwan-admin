@@ -1,6 +1,6 @@
 <template>
-  <doc-alert title="【客户】客户管理、公海客户" url="https://doc.iocoder.cn/crm/customer/" />
-  <doc-alert title="【通用】数据权限" url="https://doc.iocoder.cn/crm/permission/" />
+  
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -19,7 +19,7 @@
           lable-key="name"
           placeholder="请选择客户"
           value-key="id"
-          @keyup.enter="handleQuery"
+          
         >
           <el-option
             v-for="item in customerList"
@@ -35,7 +35,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入姓名"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="手机号" prop="mobile">
@@ -44,7 +44,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入手机号"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="电话" prop="telephone">
@@ -53,7 +53,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入电话"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="微信" prop="wechat">
@@ -62,7 +62,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入微信"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="电子邮箱" prop="email">
@@ -71,7 +71,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入电子邮箱"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item>

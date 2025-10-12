@@ -1,7 +1,7 @@
 <template>
-  <doc-alert title="支付宝支付接入" url="https://doc.iocoder.cn/pay/alipay-pay-demo/" />
-  <doc-alert title="微信公众号支付接入" url="https://doc.iocoder.cn/pay/wx-pub-pay-demo/" />
-  <doc-alert title="微信小程序支付接入" url="https://doc.iocoder.cn/pay/wx-lite-pay-demo/" />
+  
+  
+  
 
   <ContentWrap>
     <el-form
@@ -41,7 +41,7 @@
           v-model="queryParams.merchantOrderId"
           placeholder="请输入商户单号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -50,7 +50,7 @@
           v-model="queryParams.no"
           placeholder="请输入支付单号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -59,7 +59,7 @@
           v-model="queryParams.channelOrderNo"
           placeholder="请输入渠道单号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

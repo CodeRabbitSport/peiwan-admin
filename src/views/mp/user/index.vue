@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="公众号粉丝" url="https://doc.iocoder.cn/mp/user/" />
+  
 
   <!-- 搜索工作栏 -->
   <ContentWrap>
@@ -18,7 +18,7 @@
           v-model="queryParams.openid"
           placeholder="请输入用户标识"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -27,7 +27,7 @@
           v-model="queryParams.nickname"
           placeholder="请输入昵称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

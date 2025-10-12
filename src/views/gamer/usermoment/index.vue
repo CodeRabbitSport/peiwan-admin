@@ -212,7 +212,7 @@ onMounted(() => {
           placeholder="请输入用户ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="动态类型" prop="momentType">
@@ -234,7 +234,7 @@ onMounted(() => {
           placeholder="请输入话题"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="状态" prop="status">

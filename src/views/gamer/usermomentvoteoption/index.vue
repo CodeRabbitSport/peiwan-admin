@@ -13,7 +13,7 @@
           v-model="queryParams.voteId"
           placeholder="请输入投票ID"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -22,7 +22,7 @@
           v-model="queryParams.momentId"
           placeholder="请输入动态ID"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -31,7 +31,7 @@
           v-model="queryParams.optionText"
           placeholder="请输入选项内容"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

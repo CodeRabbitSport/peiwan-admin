@@ -133,7 +133,7 @@ onMounted(() => {
           placeholder="请输入流水号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="用户ID" prop="userId">
@@ -142,7 +142,7 @@ onMounted(() => {
           placeholder="请输入用户ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="人工退款" prop="isManualTransferred">

@@ -14,7 +14,7 @@
             class="!w-240px"
             clearable
             placeholder="请输入商品名称"
-            @keyup.enter="handleQuery"
+            
           />
         </el-form-item>
         <el-form-item label="商品分类" prop="categoryId">

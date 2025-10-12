@@ -143,7 +143,7 @@ onMounted(() => {
           placeholder="请输入用户ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="商品分类" prop="productCategoryId">
@@ -152,7 +152,7 @@ onMounted(() => {
           placeholder="请输入所属商品分类ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="等级类型" prop="levelType">
@@ -172,7 +172,7 @@ onMounted(() => {
           placeholder="请输入级别"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">

@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="AI 工具调用（function calling）" url="https://doc.iocoder.cn/ai/tool/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -15,7 +15,7 @@
           v-model="queryParams.name"
           placeholder="请输入工具名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="配置中心" url="https://doc.iocoder.cn/config-center/" />
+  
 
   <!-- 搜索 -->
   <ContentWrap>
@@ -15,7 +15,7 @@
           v-model="queryParams.name"
           placeholder="请输入参数名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -24,7 +24,7 @@
           v-model="queryParams.key"
           placeholder="请输入参数键名"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

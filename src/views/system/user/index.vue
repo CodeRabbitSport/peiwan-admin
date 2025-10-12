@@ -173,8 +173,12 @@ async function handleResetPwd(row: UserApi.UserVO) {
     const result = await message.prompt(
       `请输入"${row.username}"的新密码`,
       t('common.reminder'),
+    
     )
     const password = result.value
+    if (!password) {
+      return message.info('密码不能为空')
+    }
     // 发起重置
     await UserApi.resetUserPassword(row.id, password)
     message.success(`修改成功，新密码是：${password}`)
@@ -225,7 +229,6 @@ onMounted(() => {
               placeholder="请输入手机号码"
               clearable
               class="!w-[240px]"
-              @keyup.enter="handleQuery"
             />
           </el-form-item>
           <el-form-item label="状态" prop="status">

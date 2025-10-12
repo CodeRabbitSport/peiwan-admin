@@ -1,5 +1,82 @@
+<script lang="ts" setup>
+import * as SocialClientApi from '@/api/system/social/client'
+import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
+import { dateFormatter } from '@/utils/formatTime'
+
+import SocialClientForm from './SocialClientForm.vue'
+
+defineOptions({ name: 'SocialClient' })
+
+const message = useMessage() // 消息弹窗
+const { t } = useI18n() // 国际化
+
+const loading = ref(true) // 列表的加载中
+const total = ref(0) // 列表的总页数
+const list = ref([]) // 列表的数据
+const queryParams = reactive({
+  pageNo: 1,
+  pageSize: 10,
+  name: undefined,
+  socialType: undefined,
+  userType: undefined,
+  clientId: undefined,
+  status: undefined,
+})
+const queryFormRef = ref() // 搜索的表单
+
+/** 查询列表 */
+async function getList() {
+  loading.value = true
+  try {
+    const data = await SocialClientApi.getSocialClientPage(queryParams)
+    list.value = data.list
+    total.value = data.total
+  }
+  finally {
+    loading.value = false
+  }
+}
+
+/** 搜索按钮操作 */
+function handleQuery() {
+  queryParams.pageNo = 1
+  getList()
+}
+
+/** 重置按钮操作 */
+function resetQuery() {
+  queryFormRef.value.resetFields()
+  handleQuery()
+}
+
+/** 添加/修改操作 */
+const formRef = ref()
+function openForm(type: string, id?: number) {
+  formRef.value.open(type, id)
+}
+
+/** 删除按钮操作 */
+async function handleDelete(id: number) {
+  try {
+    // 删除的二次确认
+    await message.delConfirm()
+    // 发起删除
+    await SocialClientApi.deleteSocialClient(id)
+    message.success(t('common.delSuccess'))
+    // 刷新列表
+    await getList()
+  }
+  catch {}
+}
+
+/** 初始化 */
+onMounted(() => {
+  getList()
+})
+</script>
+
 <template>
-  <doc-alert title="三方登录" url="https://doc.iocoder.cn/social-user/" />
+  <!--  -->
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -7,16 +84,16 @@
       ref="queryFormRef"
       :inline="true"
       :model="queryParams"
-      class="-mb-15px"
+      class="-mb-[15px]"
       label-width="130px"
     >
       <el-form-item label="应用名" prop="name">
         <el-input
           v-model="queryParams.name"
-          class="!w-240px"
+          class="!w-[240px]"
           clearable
           placeholder="请输入应用名"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="社交平台" prop="socialType">
@@ -28,7 +105,7 @@
         >
           <el-option
             v-for="dict in getIntDictOptions(DICT_TYPE.SYSTEM_SOCIAL_TYPE)"
-            :key="dict.value"
+            :key="!w-[240px]lue&quot;"
             :label="dict.label"
             :value="dict.value"
           />
@@ -37,7 +114,7 @@
       <el-form-item label="用户类型" prop="userType">
         <el-select
           v-model="queryParams.userType"
-          class="!w-240px"
+          class="!w-[240px]"
           clearable
           placeholder="请选择用户类型"
         >
@@ -47,45 +124,47 @@
             :label="dict.label"
             :value="dict.value"
           />
+          </el-sele!w-[240px]
+          </el-form-item>
+          <el-form-item label="客户端编号" prop="clientId">
+            <el-input
+              v-model="queryParams.clientId"
+              class="!w-240px"
+              clearable
+              placeholder="请输入客户端编号"
+              
+            />mr-[5px]
+          </el-form-item>
+          <el-form-item label="状态" prop="status">
+            <el-select v-model="queryParams.status" class="!w-240px" clearable placeholder="请选择状态">
+              <el-optionmr-[5px]
+                v-for="dict in getIntDictOptions(DICT_TYPE.COMMON_STATUS)"
+                :key="dict.value"
+                :label="dict.label"
+                :value="dict.value"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="handleQuery">
+              <Icon class="mr-5px" icon="ep:search" />
+              搜索
+            </el-button>
+            <el-button @click="resetQuery">
+              <Icon class="mr-5px" icon="ep:refresh" />
+              重置
+            </el-button>
+            <el-button
+              v-hasPermi="['system:social-client:create']"
+              plainh-[30px] w-[30px]
+              type="primary"
+              @click="openForm('create')"
+            >
+              <Icon class="mr-5px" icon="ep:plus" />
+              新增
+            </el-button>
+          </el-form-item>
         </el-select>
-      </el-form-item>
-      <el-form-item label="客户端编号" prop="clientId">
-        <el-input
-          v-model="queryParams.clientId"
-          class="!w-240px"
-          clearable
-          placeholder="请输入客户端编号"
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" class="!w-240px" clearable placeholder="请选择状态">
-          <el-option
-            v-for="dict in getIntDictOptions(DICT_TYPE.COMMON_STATUS)"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button @click="handleQuery">
-          <Icon class="mr-5px" icon="ep:search" />
-          搜索
-        </el-button>
-        <el-button @click="resetQuery">
-          <Icon class="mr-5px" icon="ep:refresh" />
-          重置
-        </el-button>
-        <el-button
-          v-hasPermi="['system:social-client:create']"
-          plain
-          type="primary"
-          @click="openForm('create')"
-        >
-          <Icon class="mr-5px" icon="ep:plus" />
-          新增
-        </el-button>
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -151,77 +230,3 @@
   <!-- 表单弹窗：添加/修改 -->
   <SocialClientForm ref="formRef" @success="getList" />
 </template>
-
-<script lang="ts" setup>
-import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
-import { dateFormatter } from '@/utils/formatTime'
-import * as SocialClientApi from '@/api/system/social/client'
-import SocialClientForm from './SocialClientForm.vue'
-
-defineOptions({ name: 'SocialClient' })
-
-const message = useMessage() // 消息弹窗
-const { t } = useI18n() // 国际化
-
-const loading = ref(true) // 列表的加载中
-const total = ref(0) // 列表的总页数
-const list = ref([]) // 列表的数据
-const queryParams = reactive({
-  pageNo: 1,
-  pageSize: 10,
-  name: undefined,
-  socialType: undefined,
-  userType: undefined,
-  clientId: undefined,
-  status: undefined
-})
-const queryFormRef = ref() // 搜索的表单
-
-/** 查询列表 */
-const getList = async () => {
-  loading.value = true
-  try {
-    const data = await SocialClientApi.getSocialClientPage(queryParams)
-    list.value = data.list
-    total.value = data.total
-  } finally {
-    loading.value = false
-  }
-}
-
-/** 搜索按钮操作 */
-const handleQuery = () => {
-  queryParams.pageNo = 1
-  getList()
-}
-
-/** 重置按钮操作 */
-const resetQuery = () => {
-  queryFormRef.value.resetFields()
-  handleQuery()
-}
-
-/** 添加/修改操作 */
-const formRef = ref()
-const openForm = (type: string, id?: number) => {
-  formRef.value.open(type, id)
-}
-
-/** 删除按钮操作 */
-const handleDelete = async (id: number) => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await SocialClientApi.deleteSocialClient(id)
-    message.success(t('common.delSuccess'))
-    // 刷新列表
-    await getList()
-  } catch {}
-}
-
-/** 初始化 **/
-onMounted(() => {
-  getList()
-})
-</script>

@@ -28,7 +28,7 @@
           v-model="queryParams.deviceName"
           placeholder="请输入 DeviceName"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -37,7 +37,7 @@
           v-model="queryParams.nickname"
           placeholder="请输入备注名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

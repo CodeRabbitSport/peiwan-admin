@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="AI 思维导图" url="https://doc.iocoder.cn/ai/mindmap/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -30,7 +30,7 @@
           v-model="queryParams.prompt"
           placeholder="请输入提示词"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

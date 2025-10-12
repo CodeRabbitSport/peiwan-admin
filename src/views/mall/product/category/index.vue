@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="【商品】商品分类" url="https://doc.iocoder.cn/mall/product-category/" />
+  
 
   <!-- 搜索工作栏 -->
   <ContentWrap>
@@ -15,7 +15,7 @@
           v-model="queryParams.name"
           placeholder="请输入分类名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

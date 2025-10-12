@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="【营销】内容管理" url="https://doc.iocoder.cn/mall/promotion-content/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -16,7 +16,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入Banner标题"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="活动状态" prop="status">

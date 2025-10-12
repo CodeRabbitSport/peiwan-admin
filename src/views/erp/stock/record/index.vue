@@ -1,6 +1,6 @@
 <!-- ERP 产品库存明细列表 -->
 <template>
-  <doc-alert title="【库存】产品库存、库存明细" url="https://doc.iocoder.cn/erp/stock/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -63,7 +63,7 @@
           v-model="queryParams.bizNo"
           placeholder="请输入业务单号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

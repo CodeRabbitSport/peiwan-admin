@@ -13,7 +13,7 @@
           v-model="queryParams.conversationId"
           placeholder="请输入对话编号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

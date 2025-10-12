@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="【商品】商品属性" url="https://doc.iocoder.cn/mall/product-property/" />
+  
 
   <!-- 搜索工作栏 -->
   <ContentWrap>
@@ -16,7 +16,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入名称"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">

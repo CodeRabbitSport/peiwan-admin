@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="AI 音乐创作" url="https://doc.iocoder.cn/ai/music/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -30,7 +30,7 @@
           v-model="queryParams.title"
           placeholder="请输入音乐名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

@@ -14,7 +14,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入目的名称"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="目的状态" prop="status">

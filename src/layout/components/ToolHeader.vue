@@ -1,16 +1,17 @@
 <script lang="tsx">
-import { defineComponent, computed } from 'vue'
-import { Message } from '@/layout/components//Message'
-import { Collapse } from '@/layout/components/Collapse'
-import { UserInfo } from '@/layout/components/UserInfo'
-import { Screenfull } from '@/layout/components/Screenfull'
-import { Breadcrumb } from '@/layout/components/Breadcrumb'
-import { SizeDropdown } from '@/layout/components/SizeDropdown'
-import { LocaleDropdown } from '@/layout/components/LocaleDropdown'
+import { computed, defineComponent } from 'vue'
+
 import RouterSearch from '@/components/RouterSearch/index.vue'
-import TenantVisit from '@/layout/components/TenantVisit/index.vue'
-import { useAppStore } from '@/store/modules/app'
 import { useDesign } from '@/hooks/web/useDesign'
+import { Message } from '@/layout/components//Message'
+import { Breadcrumb } from '@/layout/components/Breadcrumb'
+import { Collapse } from '@/layout/components/Collapse'
+import { LocaleDropdown } from '@/layout/components/LocaleDropdown'
+import { Screenfull } from '@/layout/components/Screenfull'
+import { SizeDropdown } from '@/layout/components/SizeDropdown'
+import TenantVisit from '@/layout/components/TenantVisit/index.vue'
+import { UserInfo } from '@/layout/components/UserInfo'
+import { useAppStore } from '@/store/modules/app'
 import { checkPermi } from '@/utils/permission'
 
 const { getPrefixCls, variables } = useDesign()
@@ -45,7 +46,7 @@ const message = computed(() => appStore.getMessage)
 
 // 租户切换权限
 const hasTenantVisitPermission = computed(
-  () => import.meta.env.VITE_APP_TENANT_ENABLE === 'true' && checkPermi(['system:tenant:visit'])
+  () => import.meta.env.VITE_APP_TENANT_ENABLE === 'true' && checkPermi(['system:tenant:visit']),
 )
 
 export default defineComponent({
@@ -57,40 +58,53 @@ export default defineComponent({
         class={[
           prefixCls,
           'h-[var(--top-tool-height)] relative px-[var(--top-tool-p-x)] flex items-center justify-between',
-          'dark:bg-[var(--el-bg-color)]'
+          'bg-[var(--left-menu-bg-color)]',
         ]}
       >
-        {layout.value !== 'top' ? (
-          <div class="h-full flex items-center">
-            {hamburger.value && layout.value !== 'cutMenu' ? (
-              <Collapse class="custom-hover" color="var(--top-header-text-color)"></Collapse>
-            ) : undefined}
-            {breadcrumb.value ? <Breadcrumb class="lt-md:hidden"></Breadcrumb> : undefined}
-          </div>
-        ) : undefined}
+        {layout.value !== 'top'
+          ? (
+              <div class="h-full flex items-center">
+                {hamburger.value && layout.value !== 'cutMenu'
+                  ? (
+                      <Collapse class="custom-hover" color="var(--left-menu-text-color)"></Collapse>
+                    )
+                  : undefined}
+                {breadcrumb.value ? <Breadcrumb class="lt-md:hidden"></Breadcrumb> : undefined}
+              </div>
+            )
+          : undefined}
         <div class="h-full flex items-center">
           {hasTenantVisitPermission.value ? <TenantVisit /> : undefined}
-          {screenfull.value ? (
-            <Screenfull class="custom-hover" color="var(--top-header-text-color)"></Screenfull>
-          ) : undefined}
-          {search.value ? <RouterSearch isModal={false} color="var(--top-header-text-color)"/> : undefined}
-          {size.value ? (
-            <SizeDropdown class="custom-hover" color="var(--top-header-text-color)"></SizeDropdown>
-          ) : undefined}
-          {locale.value ? (
-            <LocaleDropdown
-              class="custom-hover"
-              color="var(--top-header-text-color)"
-            ></LocaleDropdown>
-          ) : undefined}
-          {message.value ? (
-            <Message class="custom-hover" color="var(--top-header-text-color)"></Message>
-          ) : undefined}
+          {screenfull.value
+            ? (
+                <Screenfull class="custom-hover" color="var(--left-menu-text-color)"></Screenfull>
+              )
+            : undefined}
+          {search.value ? <RouterSearch isModal={false} color="var(--left-menu-text-color)" /> : undefined}
+          {size.value
+            ? (
+                <SizeDropdown class="custom-hover" color="var(--left-menu-text-color)"></SizeDropdown>
+              )
+            : undefined}
+          {locale.value
+            ? (
+                <LocaleDropdown
+                  class="custom-hover"
+                  color="var(--left-menu-text-color)"
+                >
+                </LocaleDropdown>
+              )
+            : undefined}
+          {message.value
+            ? (
+                <Message class="custom-hover" color="var(--left-menu-text-color)"></Message>
+              )
+            : undefined}
           <UserInfo></UserInfo>
         </div>
       </div>
     )
-  }
+  },
 })
 </script>
 

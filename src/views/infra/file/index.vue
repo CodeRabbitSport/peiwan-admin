@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="上传下载" url="https://doc.iocoder.cn/file/" />
+  
   <!-- 搜索 -->
   <ContentWrap>
     <el-form
@@ -14,7 +14,7 @@
           v-model="queryParams.path"
           placeholder="请输入文件路径"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -23,7 +23,7 @@
           v-model="queryParams.type"
           placeholder="请输入文件类型"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="【库存】其它入库、其它出库" url="https://doc.iocoder.cn/erp/stock-in-out/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -15,7 +15,7 @@
           v-model="queryParams.no"
           placeholder="请输入入库单号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -109,7 +109,7 @@
           v-model="queryParams.remark"
           placeholder="请输入备注"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

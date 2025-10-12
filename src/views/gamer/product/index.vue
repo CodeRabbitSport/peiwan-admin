@@ -213,7 +213,7 @@ onMounted(() => {
           placeholder="请输入商品标题"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="分类" prop="categoryId">

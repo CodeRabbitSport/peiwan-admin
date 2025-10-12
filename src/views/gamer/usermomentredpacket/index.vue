@@ -13,7 +13,7 @@
           v-model="queryParams.momentId"
           placeholder="请输入动态ID"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-[240px]"
         />
       </el-form-item>
@@ -22,7 +22,7 @@
           v-model="queryParams.totalCount"
           placeholder="请输入红包个数"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-[240px]"
         />
       </el-form-item>

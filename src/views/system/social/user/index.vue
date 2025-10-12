@@ -1,5 +1,71 @@
+<script lang="ts" setup>
+import * as SocialUserApi from '@/api/system/social/user'
+import { createImageViewer } from '@/components/ImageViewer'
+import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
+import { dateFormatter } from '@/utils/formatTime'
+
+import SocialUserDetail from './SocialUserDetail.vue'
+
+defineOptions({ name: 'SocialUser' })
+
+const loading = ref(true) // 列表的加载中
+const total = ref(0) // 列表的总页数
+const list = ref([]) // 列表的数据
+const queryParams = reactive({
+  pageNo: 1,
+  pageSize: 10,
+  type: undefined,
+  openid: undefined,
+  nickname: undefined,
+  createTime: [],
+})
+const queryFormRef = ref() // 搜索的表单
+
+/** 查询列表 */
+async function getList() {
+  loading.value = true
+  try {
+    const data = await SocialUserApi.getSocialUserPage(queryParams)
+    list.value = data.list
+    total.value = data.total
+  }
+  finally {
+    loading.value = false
+  }
+}
+
+/** 搜索按钮操作 */
+function handleQuery() {
+  queryParams.pageNo = 1
+  getList()
+}
+
+/** 重置按钮操作 */
+function resetQuery() {
+  queryFormRef.value.resetFields()
+  handleQuery()
+}
+
+function imagePreview(imgUrl: string) {
+  createImageViewer({
+    urlList: [imgUrl],
+  })
+}
+
+/** 详情操作 */
+const detailRef = ref()
+function openDetail(id: number) {
+  detailRef.value.open(id)
+}
+
+/** 初始化 */
+onMounted(() => {
+  getList()
+})
+</script>
+
 <template>
-  <doc-alert title="三方登录" url="https://doc.iocoder.cn/social-user/" />
+  <!--  -->
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -31,7 +97,6 @@
           class="!w-240px"
           clearable
           placeholder="请输入用户昵称"
-          @keyup.enter="handleQuery"
         />
       </el-form-item>
       <el-form-item label="社交 openid" prop="openid">
@@ -40,7 +105,6 @@
           class="!w-240px"
           clearable
           placeholder="请输入社交 openid"
-          @keyup.enter="handleQuery"
         />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
@@ -121,67 +185,3 @@
   <!-- 表单弹窗：详情 -->
   <SocialUserDetail ref="detailRef" />
 </template>
-
-<script lang="ts" setup>
-import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
-import { dateFormatter } from '@/utils/formatTime'
-import * as SocialUserApi from '@/api/system/social/user'
-import SocialUserDetail from './SocialUserDetail.vue'
-import { createImageViewer } from '@/components/ImageViewer'
-
-defineOptions({ name: 'SocialUser' })
-
-const loading = ref(true) // 列表的加载中
-const total = ref(0) // 列表的总页数
-const list = ref([]) // 列表的数据
-const queryParams = reactive({
-  pageNo: 1,
-  pageSize: 10,
-  type: undefined,
-  openid: undefined,
-  nickname: undefined,
-  createTime: []
-})
-const queryFormRef = ref() // 搜索的表单
-
-/** 查询列表 */
-const getList = async () => {
-  loading.value = true
-  try {
-    const data = await SocialUserApi.getSocialUserPage(queryParams)
-    list.value = data.list
-    total.value = data.total
-  } finally {
-    loading.value = false
-  }
-}
-
-/** 搜索按钮操作 */
-const handleQuery = () => {
-  queryParams.pageNo = 1
-  getList()
-}
-
-/** 重置按钮操作 */
-const resetQuery = () => {
-  queryFormRef.value.resetFields()
-  handleQuery()
-}
-
-const imagePreview = (imgUrl: string) => {
-  createImageViewer({
-    urlList: [imgUrl]
-  })
-}
-
-/** 详情操作 */
-const detailRef = ref()
-const openDetail = (id: number) => {
-  detailRef.value.open(id)
-}
-
-/** 初始化 **/
-onMounted(() => {
-  getList()
-})
-</script>

@@ -92,7 +92,7 @@ onMounted(() => {
           placeholder="请输入订单ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="接单人用户ID" prop="acceptorId" label-width="120px">
@@ -101,7 +101,7 @@ onMounted(() => {
           placeholder="请输入接单人用户ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item
@@ -134,7 +134,7 @@ onMounted(() => {
           placeholder="请输入队伍ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="临时队伍ID" prop="tempTeamId">
@@ -143,7 +143,7 @@ onMounted(() => {
           placeholder="请输入临时队伍ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="队伍名称" prop="teamName">
@@ -152,7 +152,7 @@ onMounted(() => {
           placeholder="请输入队伍名称"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">

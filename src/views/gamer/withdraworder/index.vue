@@ -121,7 +121,7 @@ onMounted(() => {
           placeholder="请输入提现订单号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="用户ID" prop="userId">
@@ -130,7 +130,7 @@ onMounted(() => {
           placeholder="请输入用户ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="提现渠道" prop="channel">
@@ -139,7 +139,7 @@ onMounted(() => {
           placeholder="请输入提现渠道"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         >
           <el-option label="微信收款" :value="1" />
           <el-option label="支付宝收款" :value="2" />
@@ -153,7 +153,7 @@ onMounted(() => {
           placeholder="请输入手机号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
 
@@ -163,7 +163,7 @@ onMounted(() => {
           placeholder="请输入账号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
 

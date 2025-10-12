@@ -12,7 +12,7 @@
           v-model="queryParams.groupTitle"
           placeholder="请输入分组名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-[240px]" />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">

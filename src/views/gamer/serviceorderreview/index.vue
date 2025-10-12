@@ -127,7 +127,7 @@ onMounted(() => {
           placeholder="请输入订单ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">

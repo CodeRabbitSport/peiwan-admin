@@ -110,7 +110,7 @@ onMounted(() => {
           placeholder="请输入用户ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="提现渠道" prop="channel">
@@ -132,7 +132,7 @@ onMounted(() => {
           placeholder="请输入手机号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="账号" prop="accountNo">
@@ -141,7 +141,7 @@ onMounted(() => {
           placeholder="请输入账号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item>

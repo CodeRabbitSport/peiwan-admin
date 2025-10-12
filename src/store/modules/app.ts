@@ -1,11 +1,13 @@
-import { CACHE_KEY, useCache } from '@/hooks/web/useCache'
-import { ElementPlusSize } from '@/types/elementPlus'
-import { LayoutType } from '@/types/layout'
-import { ThemeTypes } from '@/types/theme'
-import { humpToUnderline, setCssVar } from '@/utils'
-import { getCssColorVariable, hexToRGB, mix } from '@/utils/color'
 import { ElMessage } from 'element-plus'
 import { defineStore } from 'pinia'
+
+import { CACHE_KEY, useCache } from '@/hooks/web/useCache'
+import type { ElementPlusSize } from '@/types/elementPlus'
+import type { LayoutType } from '@/types/layout'
+import type { ThemeTypes } from '@/types/theme'
+import { humpToUnderline, setCssVar } from '@/utils'
+import { getCssColorVariable, hexToRGB, mix } from '@/utils/color'
+
 import { store } from '../index'
 
 const { wsCache } = useCache()
@@ -73,7 +75,7 @@ export const useAppStore = defineStore('app', {
       currentSize: wsCache.get('default') || 'default', // 组件尺寸
       theme: wsCache.get(CACHE_KEY.THEME) || {
         // 主题色
-        elColorPrimary: '#4d70ff',
+        elColorPrimary: '#3b82f6',
         // 左侧菜单边框颜色
         leftMenuBorderColor: 'inherit',
         // 左侧菜单背景颜色
@@ -99,8 +101,8 @@ export const useAppStore = defineStore('app', {
         // 头部悬停颜色
         topHeaderHoverColor: '#f6f6f6',
         // 头部边框颜色
-        topToolBorderColor: '#eee'
-      }
+        topToolBorderColor: '#eee',
+      },
     }
   },
   getters: {
@@ -181,7 +183,7 @@ export const useAppStore = defineStore('app', {
     },
     getFooter(): boolean {
       return this.footer
-    }
+    },
   },
   actions: {
     setPrimaryLight() {
@@ -286,12 +288,53 @@ export const useAppStore = defineStore('app', {
       if (this.isDark) {
         document.documentElement.classList.add('dark')
         document.documentElement.classList.remove('light')
-      } else {
+      }
+      else {
         document.documentElement.classList.add('light')
         document.documentElement.classList.remove('dark')
       }
       wsCache.set(CACHE_KEY.IS_DARK, this.isDark)
       this.setPrimaryLight()
+
+      // Apply layout palette per mode: menu + header vars
+      if (this.isDark) {
+        // left menu palette (slate)
+        this.setTheme({
+          leftMenuBorderColor: 'inherit',
+          leftMenuBgColor: '#0f172a', // slate-900
+          leftMenuBgLightColor: '#111827', // slate-800
+          leftMenuBgActiveColor: 'var(--el-color-primary)',
+          leftMenuCollapseBgActiveColor: 'var(--el-color-primary)',
+          leftMenuTextColor: '#94a3b8', // slate-400
+          leftMenuTextActiveColor: '#fff',
+          logoTitleTextColor: '#e5e7eb', // slate-200
+          logoBorderColor: 'inherit',
+        })
+        // header vars follow Element Plus dark tokens
+        setCssVar('--top-header-bg-color', 'var(--el-bg-color)')
+        setCssVar('--top-header-text-color', 'var(--el-text-color-primary)')
+        setCssVar('--top-header-hover-color', 'var(--el-bg-color-overlay)')
+        // sidebar hover
+        setCssVar('--left-menu-hover-bg-color', 'var(--el-bg-color-overlay)')
+      }
+      else {
+        this.setTheme({
+          leftMenuBorderColor: '#eee',
+          leftMenuBgColor: '#fff',
+          leftMenuBgLightColor: '#fff',
+          leftMenuBgActiveColor: 'var(--el-color-primary)',
+          leftMenuCollapseBgActiveColor: 'var(--el-color-primary)',
+          leftMenuTextColor: '#333',
+          leftMenuTextActiveColor: '#fff',
+          logoTitleTextColor: 'inherit',
+          logoBorderColor: '#eee',
+        })
+        setCssVar('--top-header-bg-color', '#fff')
+        setCssVar('--top-header-text-color', 'inherit')
+        setCssVar('--top-header-hover-color', '#f6f6f6')
+        setCssVar('--left-menu-hover-bg-color', 'rgba(59, 130, 246, 0.2)')
+      }
+      this.setCssVarTheme()
     },
     setCurrentSize(currentSize: ElementPlusSize) {
       this.currentSize = currentSize
@@ -312,11 +355,11 @@ export const useAppStore = defineStore('app', {
     },
     setFooter(footer: boolean) {
       this.footer = footer
-    }
+    },
   },
-  persist: false
+  persist: false,
 })
 
-export const useAppStoreWithOut = () => {
+export function useAppStoreWithOut() {
   return useAppStore(store)
 }

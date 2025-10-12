@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="审批接入（业务表单）" url="https://doc.iocoder.cn/bpm/use-business-form/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -57,7 +57,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入原因"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item>

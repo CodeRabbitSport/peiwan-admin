@@ -12,7 +12,7 @@
           v-model="queryParams.prizeTitle"
           placeholder="请输入奖品标题"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-[240px]" />
       </el-form-item>
       <el-form-item>

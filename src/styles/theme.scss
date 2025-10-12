@@ -63,4 +63,38 @@
 /* Dark mode primary alignment */
 .dark {
   --el-color-primary: #177ddc;
+
+  /* Table variables aligned to left menu palette */
+  --el-table-bg-color: var(--left-menu-bg-color);
+  --el-table-tr-bg-color: var(--left-menu-bg-color);
+  --el-table-header-bg-color: var(--left-menu-bg-color);
+  --el-table-header-text-color: var(--left-menu-text-color);
+  --el-table-text-color: var(--left-menu-text-color);
+  --el-table-border-color: var(--el-border-color);
+  --el-table-row-hover-bg-color: var(--left-menu-hover-bg-color);
+
+  /* Force table surfaces to use the same background and text as menu */
+  .el-table,
+  .el-table__inner-wrapper,
+  .el-table__body-wrapper,
+  .el-table__header-wrapper {
+    background-color: var(--left-menu-bg-color) !important;
+  }
+
+  .el-table th.el-table__cell,
+  .el-table td.el-table__cell,
+  .el-table .cell {
+    background-color: var(--left-menu-bg-color) !important;
+    color: var(--left-menu-text-color) !important;
+  }
+
+  .el-table--enable-row-hover .el-table__body tr:hover > td {
+    background-color: var(--left-menu-hover-bg-color) !important;
+  }
+
+  .el-table__empty-block,
+  .el-table__expanded-cell {
+    background-color: var(--left-menu-bg-color) !important;
+    color: var(--left-menu-text-color) !important;
+  }
 }

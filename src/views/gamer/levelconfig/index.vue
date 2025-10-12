@@ -149,7 +149,7 @@ onMounted(() => {
           placeholder="请输入等级名称"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="级别号" prop="levelNumber">
@@ -158,7 +158,7 @@ onMounted(() => {
           placeholder="请输入级别号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
 

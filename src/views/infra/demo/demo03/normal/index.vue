@@ -13,7 +13,7 @@
           v-model="queryParams.name"
           placeholder="请输入名字"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

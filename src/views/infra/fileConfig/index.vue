@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="上传下载" url="https://doc.iocoder.cn/file/" />
+  
 
   <!-- 搜索 -->
   <ContentWrap>
@@ -15,7 +15,7 @@
           v-model="queryParams.name"
           placeholder="请输入配置名"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

@@ -23,7 +23,7 @@
                 v-model="queryParams.username"
                 placeholder="请输入用户名称"
                 clearable
-                @keyup.enter="handleQuery"
+                
                 class="!w-240px"
               />
             </el-form-item>
@@ -32,7 +32,7 @@
                 v-model="queryParams.mobile"
                 placeholder="请输入手机号码"
                 clearable
-                @keyup.enter="handleQuery"
+                
                 class="!w-240px"
               />
             </el-form-item>

@@ -1,6 +1,6 @@
 <template>
-  <doc-alert title="【线索】线索管理" url="https://doc.iocoder.cn/crm/clue/" />
-  <doc-alert title="【通用】数据权限" url="https://doc.iocoder.cn/crm/permission/" />
+  
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -16,7 +16,7 @@
           v-model="queryParams.name"
           placeholder="请输入线索名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -31,7 +31,7 @@
           v-model="queryParams.mobile"
           placeholder="请输入手机号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -40,7 +40,7 @@
           v-model="queryParams.telephone"
           placeholder="请输入电话"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

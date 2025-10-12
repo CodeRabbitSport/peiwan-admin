@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="【交易】快递发货" url="https://doc.iocoder.cn/mall/trade-delivery-express/" />
+  
 
   <!-- 搜索工作栏 -->
   <ContentWrap>
@@ -15,7 +15,7 @@
           v-model="queryParams.code"
           placeholder="请输快递公司编号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -24,7 +24,7 @@
           v-model="queryParams.name"
           placeholder="请输快递公司名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

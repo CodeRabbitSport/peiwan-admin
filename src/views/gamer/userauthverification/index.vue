@@ -131,7 +131,7 @@ onMounted(() => {
           placeholder="请输入用户ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="真实姓名" prop="realName">
@@ -140,7 +140,7 @@ onMounted(() => {
           placeholder="请输入真实姓名"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <!-- <el-form-item label="身份证号码" label-width="100px" prop="idCardNo">
@@ -149,7 +149,7 @@ onMounted(() => {
           placeholder="请输入身份证号码"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item> -->
       <el-form-item label="审核状态" prop="status">
@@ -170,7 +170,7 @@ onMounted(() => {
           placeholder="请输入审核人ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">

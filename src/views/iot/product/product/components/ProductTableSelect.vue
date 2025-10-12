@@ -16,7 +16,7 @@
             class="!w-240px"
             clearable
             placeholder="请输入产品名称"
-            @keyup.enter="handleQuery"
+            
           />
         </el-form-item>
         <el-form-item label="ProductKey" prop="productKey">
@@ -25,7 +25,7 @@
             class="!w-240px"
             clearable
             placeholder="请输入产品标识"
-            @keyup.enter="handleQuery"
+            
           />
         </el-form-item>
         <el-form-item>

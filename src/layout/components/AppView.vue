@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { useTagsViewStore } from '@/store/modules/tagsView'
-import { useAppStore } from '@/store/modules/app'
 import { Footer } from '@/layout/components/Footer'
+import { useAppStore } from '@/store/modules/app'
+import { useTagsViewStore } from '@/store/modules/tagsView'
 
 defineOptions({ name: 'AppView' })
 
@@ -21,26 +21,25 @@ const getCaches = computed((): string[] => {
 
 const tagsView = computed(() => appStore.getTagsView)
 
-//region 无感刷新
+// region 无感刷新
 const routerAlive = ref(true)
 // 无感刷新，防止出现页面闪烁白屏
-const reload = () => {
+function reload() {
   routerAlive.value = false
   nextTick(() => (routerAlive.value = true))
 }
 // 为组件后代提供刷新方法
 provide('reload', reload)
-//endregion
+// endregion
 </script>
 
 <template>
   <section
-    :class="[
-      'p-[var(--app-content-padding)] w-full bg-[var(--app-content-bg-color)] dark:bg-[var(--el-bg-color)]',
+    class="w-full bg-[var(--app-content-bg-color)] p-[var(--app-content-padding)] dark:bg-[var(--el-bg-color)]" :class="[
       {
         '!min-h-[calc(100vh-var(--top-tool-height)-var(--tags-view-height)-var(--app-footer-height))] pb-0':
-          footer
-      }
+          footer,
+      },
     ]"
   >
     <router-view v-if="routerAlive">

@@ -13,7 +13,7 @@
           v-model="queryParams.momentId"
           placeholder="请输入动态ID"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -22,7 +22,7 @@
           v-model="queryParams.userId"
           placeholder="请输入领取用户"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

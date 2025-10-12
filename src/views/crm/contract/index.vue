@@ -1,6 +1,6 @@
 <template>
-  <doc-alert title="【合同】合同管理、合同提醒" url="https://doc.iocoder.cn/crm/contract/" />
-  <doc-alert title="【通用】数据权限" url="https://doc.iocoder.cn/crm/permission/" />
+  
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -17,7 +17,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入合同编号"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="合同名称" prop="name">
@@ -26,7 +26,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入合同名称"
-          @keyup.enter="handleQuery"
+          
         />
         <el-form-item label="客户" prop="customerId">
           <el-select
@@ -36,7 +36,7 @@
             lable-key="name"
             placeholder="请选择客户"
             value-key="id"
-            @keyup.enter="handleQuery"
+            
           >
             <el-option
               v-for="item in customerList"

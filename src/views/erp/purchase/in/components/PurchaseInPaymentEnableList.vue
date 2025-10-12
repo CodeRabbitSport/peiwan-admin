@@ -21,7 +21,7 @@
             v-model="queryParams.no"
             placeholder="请输入入库单号"
             clearable
-            @keyup.enter="handleQuery"
+            
             class="!w-160px"
           />
         </el-form-item>

@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="工作流手册" url="https://doc.iocoder.cn/bpm/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -16,7 +16,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入任务名称"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">

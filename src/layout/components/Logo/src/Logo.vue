@@ -75,8 +75,8 @@ watch(
       >
       <div
         v-if="show"
-        class="ml-[10px] text-[16px] font-bold text-[#334155]" 
-        
+        class="ml-[10px] text-[16px] font-bold"
+        :style="{ color: 'var(--logo-title-text-color)' }"
       >
         {{ title }}
       </div>

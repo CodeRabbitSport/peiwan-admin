@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="流程表达式" url="https://doc.iocoder.cn/bpm/expression/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -15,7 +15,7 @@
           v-model="queryParams.name"
           placeholder="请输入名字"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

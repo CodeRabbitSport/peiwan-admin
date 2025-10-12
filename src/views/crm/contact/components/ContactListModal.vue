@@ -15,7 +15,7 @@
             class="!w-240px"
             clearable
             placeholder="请输入联系人名称"
-            @keyup.enter="handleQuery"
+            
           />
         </el-form-item>
         <el-form-item>

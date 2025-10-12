@@ -13,7 +13,7 @@
           v-model="queryParams.no"
           placeholder="请输入转账单号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -37,7 +37,7 @@
           v-model="queryParams.merchantTransferId"
           placeholder="请输入商户单号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -71,7 +71,7 @@
           v-model="queryParams.userName"
           placeholder="请输入收款人姓名"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -80,7 +80,7 @@
           v-model="queryParams.accountNo"
           placeholder="请输入收款人账号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -89,7 +89,7 @@
           v-model="queryParams.channelTransferNo"
           placeholder="渠道单号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="【交易】售后退款" url="https://doc.iocoder.cn/mall/trade-aftersale/" />
+  
 
   <!-- 搜索 -->
   <ContentWrap>
@@ -10,7 +10,7 @@
           class="!w-280px"
           clearable
           placeholder="请输入商品 SPU 名称"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="退款编号" prop="no">
@@ -19,7 +19,7 @@
           class="!w-280px"
           clearable
           placeholder="请输入退款编号"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="订单编号" prop="orderNo">
@@ -28,7 +28,7 @@
           class="!w-280px"
           clearable
           placeholder="请输入订单编号"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="售后状态" prop="status">

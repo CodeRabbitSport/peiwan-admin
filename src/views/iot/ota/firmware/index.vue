@@ -13,7 +13,7 @@
           v-model="queryParams.name"
           placeholder="请输入固件名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -22,7 +22,7 @@
           v-model="queryParams.productId"
           placeholder="请选择产品"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         >
           <el-option

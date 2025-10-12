@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="【营销】内容管理" url="https://doc.iocoder.cn/mall/promotion-content/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -15,7 +15,7 @@
           v-model="queryParams.categoryId"
           class="!w-240px"
           placeholder="全部"
-          @keyup.enter="handleQuery"
+          
         >
           <el-option
             v-for="item in categoryList"
@@ -31,7 +31,7 @@
           class="!w-240px"
           clearable
           placeholder="请输入文章标题"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="状态" prop="status">

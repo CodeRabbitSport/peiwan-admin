@@ -22,7 +22,6 @@
           class="!w-240px"
           clearable
           placeholder="请输入表名称"
-          @keyup.enter="getList"
         />
       </el-form-item>
       <el-form-item label="表描述" prop="comment">
@@ -31,7 +30,6 @@
           class="!w-240px"
           clearable
           placeholder="请输入表描述"
-          @keyup.enter="getList"
         />
       </el-form-item>
       <el-form-item>

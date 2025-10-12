@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import * as TenantApi from '@/api/system/tenant'
 import * as TenantPackageApi from '@/api/system/tenantPackage'
+import { fenToYuan } from '@/utils'
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 import download from '@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
@@ -119,7 +120,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <doc-alert title="SaaS 多租户" url="https://doc.iocoder.cn/saas-tenant/" />
+  <!--  -->
 
   <!-- 搜索 -->
   <ContentWrap>
@@ -136,7 +137,7 @@ onMounted(async () => {
           placeholder="请输入租户名"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="联系人" prop="contactName">
@@ -145,7 +146,7 @@ onMounted(async () => {
           placeholder="请输入联系人"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="联系手机" prop="contactMobile">
@@ -154,7 +155,7 @@ onMounted(async () => {
           placeholder="请输入联系手机"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="租户状态" prop="status">
@@ -246,6 +247,16 @@ onMounted(async () => {
       </el-table-column>
       <el-table-column label="联系人" align="center" prop="contactName" />
       <el-table-column label="联系手机" align="center" prop="contactMobile" />
+      <el-table-column label="当月收入" align="center" prop="currentMonthProfit">
+        <template #default="scope">
+          {{ fenToYuan(scope.row.currentMonthProfit || 0) }}元
+        </template>
+      </el-table-column>
+      <el-table-column label="总收入" align="center" prop="totalProfit">
+        <template #default="scope">
+          {{ fenToYuan(scope.row.totalProfit || 0) }}元
+        </template>
+      </el-table-column>
       <!-- <el-table-column label="账号额度" align="center" prop="accountCount">
         <template #default="scope">
           <el-tag>{{ scope.row.accountCount }}</el-tag>

@@ -118,7 +118,7 @@
           class="!w-280px"
           clearable
           placeholder="请输入自提核销码"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="聚合搜索">

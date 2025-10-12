@@ -8,7 +8,7 @@
             class="!w-240px"
             clearable
             placeholder="请输入商品名称"
-            @keyup.enter="handleQuery"
+            
           />
         </el-col>
         <el-col :span="6">

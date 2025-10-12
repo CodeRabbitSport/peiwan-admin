@@ -13,7 +13,7 @@
           v-model="queryParams.documentId"
           placeholder="请输入文档编号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

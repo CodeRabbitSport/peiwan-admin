@@ -13,7 +13,7 @@
           v-model="queryParams.title"
           placeholder="请输入公告标题"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

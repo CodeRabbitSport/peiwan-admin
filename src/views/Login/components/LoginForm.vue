@@ -228,8 +228,7 @@ onMounted(() => {
             :placeholder="t('login.passwordPlaceholder')"
             :prefix-icon="iconLock"
             show-password
-            type="password"
-            @keyup.enter="getCode()" />
+            type="password" />
         </el-form-item>
       </el-col>
       <el-col :span="24" class="px-[10px] mt-[-20px] mb-[-20px]">
@@ -259,6 +258,15 @@ onMounted(() => {
             class="w-full"
             type="primary"
             @click="getCode()" />
+        </el-form-item>
+      </el-col>
+      <el-col :span="24" class="px-[10px]">
+        <el-form-item>
+          <XButton
+            :loading="loginLoading"
+            :title="t('login.btnMobile')"
+            class="w-full"
+            @click="setLoginState(LoginStateEnum.MOBILE)" />
         </el-form-item>
       </el-col>
       <Verify

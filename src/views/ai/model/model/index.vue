@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="AI 手册" url="https://doc.iocoder.cn/ai/build/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -15,7 +15,7 @@
           v-model="queryParams.name"
           placeholder="请输入模型名字"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -24,7 +24,7 @@
           v-model="queryParams.model"
           placeholder="请输入模型标识"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -33,7 +33,7 @@
           v-model="queryParams.platform"
           placeholder="请输入模型平台"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

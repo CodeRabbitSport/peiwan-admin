@@ -13,7 +13,7 @@
           v-model="queryParams.followerId"
           placeholder="请输入关注者ID"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -22,7 +22,7 @@
           v-model="queryParams.followedId"
           placeholder="请输入被关注者ID"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

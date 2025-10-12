@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="商城手册（功能开启）" url="https://doc.iocoder.cn/mall/build/" />
+  
 
   <!-- 搜索工作栏 -->
   <ContentWrap>
@@ -15,7 +15,7 @@
           v-model="queryParams.name"
           placeholder="请输入品牌名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

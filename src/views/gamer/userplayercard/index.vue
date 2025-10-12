@@ -140,7 +140,6 @@ onMounted(() => {
           placeholder="请输入用户ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
         />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
@@ -221,14 +220,14 @@ onMounted(() => {
       />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
-          <el-button
+          <!-- <el-button
             v-hasPermi="['gamer:user-player-card:update']"
             link
             type="primary"
             @click="openForm('update', scope.row.id)"
           >
             编辑
-          </el-button>
+          </el-button> -->
           <el-button
             v-hasPermi="['gamer:user-player-card:delete']"
             link

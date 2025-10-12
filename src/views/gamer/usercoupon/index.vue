@@ -13,7 +13,7 @@
           v-model="queryParams.userId"
           placeholder="请输入用户ID"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -22,7 +22,7 @@
           v-model="queryParams.couponId"
           placeholder="请输入优惠券ID"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -31,7 +31,7 @@
           v-model="queryParams.couponCode"
           placeholder="请输入优惠券唯一编码"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -40,7 +40,7 @@
           v-model="queryParams.couponName"
           placeholder="请输入优惠券名称(冗余存储，防止优惠券删除后无法显示)"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -69,7 +69,7 @@
           v-model="queryParams.bizId"
           placeholder="请输入业务ID"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

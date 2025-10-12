@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="【营销】商城装修" url="https://doc.iocoder.cn/mall/diy/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -15,7 +15,7 @@
           v-model="queryParams.name"
           placeholder="请输入页面名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

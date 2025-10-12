@@ -14,7 +14,7 @@
             v-model="queryParams.name"
             placeholder="请输入商机名称"
             clearable
-            @keyup.enter="handleQuery"
+            
             class="!w-240px"
           />
         </el-form-item>

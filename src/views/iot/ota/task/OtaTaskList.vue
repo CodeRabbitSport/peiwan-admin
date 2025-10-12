@@ -19,7 +19,7 @@
           v-model="queryParams.name"
           placeholder="请输入任务名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

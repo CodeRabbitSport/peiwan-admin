@@ -13,7 +13,7 @@
           v-model="queryParams.userId"
           placeholder="请输入用户编号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

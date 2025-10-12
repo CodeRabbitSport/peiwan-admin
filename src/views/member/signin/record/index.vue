@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="会员等级、积分、签到" url="https://doc.iocoder.cn/member/level/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -15,7 +15,7 @@
           v-model="queryParams.nickname"
           placeholder="请输入签到用户"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -24,7 +24,7 @@
           v-model="queryParams.day"
           placeholder="请输入签到天数"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

@@ -116,7 +116,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <doc-alert title="会员用户、标签、分组" url="https://doc.iocoder.cn/member/user/" />
+  
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -133,7 +133,7 @@ onMounted(() => {
           class="!w-[240px]"
           clearable
           placeholder="请输入用户昵称"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="手机号" prop="mobile">
@@ -142,7 +142,7 @@ onMounted(() => {
           class="!w-[240px]"
           clearable
           placeholder="请输入手机号"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="注册时间" prop="createTime">

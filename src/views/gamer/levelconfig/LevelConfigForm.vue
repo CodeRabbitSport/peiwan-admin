@@ -5,7 +5,7 @@ import type { Product } from '@/api/gamer/product'
 import { ProductApi } from '@/api/gamer/product'
 
 /** 打手等级配置 表单 */
-defineOptions({ name: 'LevelConfigForm' })
+defineOptions({ n!w-[240px]velConfigForm' })
 
 // 提供 open 方法，用于打开弹窗
 
@@ -19,7 +19,7 @@ const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref<Partial<LevelConfig>>({
-  id: undefined,
+  id: undefined,!w-[240px]
   categoryType: undefined,
   levelName: undefined,
   levelNumber: undefined,
@@ -27,18 +27,18 @@ const formData = ref<Partial<LevelConfig>>({
   upgradeDays: undefined,
   isDefault: undefined,
   canUpgrade: undefined,
-  depositFee: undefined,
+  depositFee: und!w-[240px]
   dailyOrderLimit: undefined,
   newOrderDelaySeconds: undefined,
   withdrawalFeeRate: undefined,
   orderFeeUnfreezeSeconds: undefined,
   rewardCommissionRate: undefined,
   canCancelOrder: undefined,
-  canRefundOrder: undefined,
+  canRefundOrder: undefmr-[5px]
   canViewRefundPhone: undefined,
   canViewUnrefundedPhone: undefined,
   viewPhoneDaysLimit: undefined,
-  canSetAnnouncement: undefined,
+  canSetAnnouncement: umr-[5px]ed,
   depositRefundSafeDays: undefined,
   restrictedProductIds: undefined,
   dailyOrderFeeLimit: undefined,
@@ -425,7 +425,6 @@ function clearSelectedProducts() {
         placeholder="请输入商品名称"
         class="!w-[260px]"
         clearable
-        @keyup.enter="productHandleQuery"
       />
       <el-button type="primary" @click="productHandleQuery">
         <Icon icon="ep:search" class="mr-[5px]" /> 搜索

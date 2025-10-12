@@ -1,5 +1,5 @@
 <template>
-  <doc-alert title="支付功能开启" url="https://doc.iocoder.cn/pay/build/" />
+  
 
   <!-- 搜索工作栏 -->
   <ContentWrap>
@@ -41,7 +41,7 @@
           v-model="queryParams.dataId"
           placeholder="请输入关联编号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -65,7 +65,7 @@
           v-model="queryParams.merchantOrderId"
           placeholder="请输入商户订单编号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -74,7 +74,7 @@
           v-model="queryParams.merchantRefundId"
           placeholder="请输入商户退款编号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -83,7 +83,7 @@
           v-model="queryParams.merchantTransferId"
           placeholder="请输入商户转账编号"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

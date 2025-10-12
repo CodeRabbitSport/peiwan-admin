@@ -33,7 +33,7 @@
             v-model="queryParams.name"
             placeholder="请输入规则名称"
             clearable
-            @keyup.enter="handleQuery"
+            
             class="!w-240px"
           />
         </el-form-item>

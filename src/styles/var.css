@@ -1,15 +1,17 @@
 :root {
   --login-bg-color: #293146;
 
-  --left-menu-max-width: 200px;
+  --left-menu-max-width: 256px;
 
-  --left-menu-min-width: 64px;
+  --left-menu-min-width: 80px;
 
   --left-menu-bg-color: #001529;
 
   --left-menu-bg-light-color: #0f2438;
 
   --left-menu-bg-active-color: var(--el-color-primary);
+  /* hover background for menu items (light mode default) */
+  --left-menu-hover-bg-color: rgba(59, 130, 246, 0.2);
 
   --left-menu-text-color: #bfcbd9;
 
@@ -19,15 +21,15 @@
   /* left menu end */
 
   /* logo start */
-  --logo-height: 50px;
+  --logo-height: 64px;
 
   --logo-title-text-color: #fff;
   /* logo end */
 
   /* header start */
-  --top-header-bg-color: '#fff';
+  --top-header-bg-color: #fff;
 
-  --top-header-text-color: 'inherit';
+  --top-header-text-color: inherit;
 
   --top-header-hover-color: #f6f6f6;
 
@@ -57,6 +59,14 @@
 
 .dark {
   --app-content-bg-color: var(--el-bg-color);
+  /* Align top header colors with Element Plus dark tokens */
+  --top-header-bg-color: var(--el-bg-color);
+  --top-header-text-color: var(--el-text-color-primary);
+  --top-header-hover-color: var(--el-bg-color-overlay);
+  /* dark hover color for left menu */
+  --left-menu-hover-bg-color: var(--el-bg-color-overlay);
+  --el-bg-color-overlay: var(--left-menu-bg-color) !important;
+  --el-bg-color:#1E293B !important;
 }
 
 html,

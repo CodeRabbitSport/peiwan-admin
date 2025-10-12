@@ -18,7 +18,7 @@
           v-model="queryParams.name"
           placeholder="请输入名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -27,7 +27,7 @@
           v-model="queryParams.no"
           placeholder="请输入编码"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -36,7 +36,7 @@
           v-model="queryParams.remark"
           placeholder="请输入备注"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>

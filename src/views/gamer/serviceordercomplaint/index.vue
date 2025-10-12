@@ -285,7 +285,7 @@ onMounted(() => {
           placeholder="订单ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="用户ID" prop="userId">
@@ -294,7 +294,7 @@ onMounted(() => {
           placeholder="用户ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="投诉状态" prop="userType">

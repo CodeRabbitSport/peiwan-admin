@@ -172,7 +172,7 @@ onMounted(() => {
           placeholder="请输入用户唯一编号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="手机号" prop="phone">
@@ -181,7 +181,7 @@ onMounted(() => {
           placeholder="请输入手机号"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="用户昵称" prop="nickname">
@@ -190,7 +190,7 @@ onMounted(() => {
           placeholder="请输入用户昵称"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
 
@@ -200,10 +200,10 @@ onMounted(() => {
           placeholder="请输入城市"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
-      <el-form-item label="语音审核状态" prop="voiceAuditStatus">
+      <!-- <el-form-item label="语音审核状态" prop="voiceAuditStatus">
         <el-select
           v-model="queryParams.voiceAuditStatus"
           placeholder="请选择语音审核状态"
@@ -213,7 +213,7 @@ onMounted(() => {
           <el-option label="审核通过" value="1" />
           <el-option label="审核失败" value="0" />
         </el-select>
-      </el-form-item>
+      </el-form-item> -->
 
       <el-form-item>
         <el-button @click="handleQuery">

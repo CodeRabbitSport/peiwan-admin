@@ -97,7 +97,7 @@ function resetForm() {
 
 async function loadCategoryOptions() {
   try {
-    const { list = [] } = await ProductCategoryApi.getProductCategoryPage({ pageNo: 1, pageSize: 500 })
+    const { list = [] } = await ProductCategoryApi.getProductCategoryPage()
     categoryOptions.value = list.map((item: any) => ({
       label: item.categoryName,
       value: item.id,

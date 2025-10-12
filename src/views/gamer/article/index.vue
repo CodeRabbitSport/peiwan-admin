@@ -12,7 +12,7 @@
           v-model="queryParams.articleTitle"
           placeholder="请输入文章标题"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-[240px]x]" />
       </el-form-item>
       <el-form-item label="文章分类" prop="categoryId">

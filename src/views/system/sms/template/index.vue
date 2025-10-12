@@ -1,10 +1,10 @@
 <template>
-  <doc-alert title="短信配置" url="https://doc.iocoder.cn/sms/" />
+  <!--  -->
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
     <el-form
-      class="-mb-15px"
+      class="-mb-[15px]"
       :model="queryParams"
       ref="queryFormRef"
       :inline="true"
@@ -15,7 +15,7 @@
           v-model="queryParams.type"
           placeholder="请选择短信类型"
           clearable
-          class="!w-240px"
+          class="!w-[240px]"
         >
           <el-option
             v-for="dict in getIntDictOptions(DICT_TYPE.SYSTEM_SMS_TEMPLATE_TYPE)"
@@ -30,7 +30,7 @@
           v-model="queryParams.status"
           placeholder="请选择开启状态"
           clearable
-          class="!w-240px"
+          class="!w-[240px]"
         >
           <el-option
             v-for="dict in getIntDictOptions(DICT_TYPE.COMMON_STATUS)"
@@ -45,8 +45,8 @@
           v-model="queryParams.code"
           placeholder="请输入模板编码"
           clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
+          
+          class="!w-[240px]"
         />
       </el-form-item>
       <el-form-item label="短信 API 的模板编号" prop="apiTemplateId">
@@ -54,8 +54,8 @@
           v-model="queryParams.apiTemplateId"
           placeholder="请输入短信 API 的模板编号"
           clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
+          
+          class="!w-[240px]"
         />
       </el-form-item>
       <el-form-item label="短信渠道" prop="channelId">
@@ -63,7 +63,7 @@
           v-model="queryParams.channelId"
           placeholder="请选择短信渠道"
           clearable
-          class="!w-240px"
+          class="!w-[240px]"
         >
           <el-option
             v-for="channel in channelList"
@@ -84,19 +84,19 @@
           value-format="YYYY-MM-DD HH:mm:ss"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
-          class="!w-240px"
+          class="!w-[240px]"
         />
       </el-form-item>
       <el-form-item>
-        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
-        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
+        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-[5px]" /> 搜索</el-button>
+        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-[5px]" /> 重置</el-button>
         <el-button
           type="primary"
           plain
           @click="openForm('create')"
           v-hasPermi="['system:sms-template:create']"
         >
-          <Icon icon="ep:plus" class="mr-5px" />新增
+          <Icon icon="ep:plus" class="mr-[5px]" />新增
         </el-button>
         <el-button
           type="danger"
@@ -105,7 +105,7 @@
           @click="handleDeleteBatch"
           v-hasPermi="['system:sms-template:delete']"
         >
-          <Icon icon="ep:delete" class="mr-5px" />批量删除
+          <Icon icon="ep:delete" class="mr-[5px]" />批量删除
         </el-button>
         <el-button
           type="success"
@@ -114,7 +114,7 @@
           :loading="exportLoading"
           v-hasPermi="['system:sms-template:export']"
         >
-          <Icon icon="ep:download" class="mr-5px" /> 导出
+          <Icon icon="ep:download" class="mr-[5px]" /> 导出
         </el-button>
       </el-form-item>
     </el-form>

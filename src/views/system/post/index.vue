@@ -14,7 +14,7 @@
           placeholder="请输入岗位名称"
           clearable
           class="!w-240px"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="岗位编码" prop="code">
@@ -23,7 +23,7 @@
           placeholder="请输入岗位编码"
           clearable
           class="!w-240px"
-          @keyup.enter="handleQuery"
+          
         />
       </el-form-item>
       <el-form-item label="状态" prop="status">

@@ -13,7 +13,7 @@
           v-model="queryParams.code"
           placeholder="请输入流程标识"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
@@ -22,7 +22,7 @@
           v-model="queryParams.name"
           placeholder="请输入流程名称"
           clearable
-          @keyup.enter="handleQuery"
+          
           class="!w-240px"
         />
       </el-form-item>
