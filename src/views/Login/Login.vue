@@ -3,6 +3,7 @@ import { useAppStore } from '@/store/modules/app'
 import { underlineToHump } from '@/utils'
 
 import { LoginForm } from './components'
+import ForgetPasswordForm from './components/ForgetPasswordForm.vue'
 
 defineOptions({ name: 'Login' })
 
@@ -29,6 +30,7 @@ const appStore = useAppStore()
               </p>
             </div>
             <LoginForm />
+            <ForgetPasswordForm class="m-auto h-auto p-[20px] lt-xl:rounded-3xl xl:light:bg-white" />
           </div>
         </div>
       </div>

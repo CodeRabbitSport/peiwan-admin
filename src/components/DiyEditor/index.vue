@@ -1,6 +1,9 @@
 <script lang="ts">
 // 注册所有的组件
-import { components } from './components/mobile/index'
+
+// export default {
+//   components: { ...components },
+// }
 </script>
 
 <script lang="ts" setup>
@@ -41,10 +44,6 @@ const props = defineProps({
 
 // 工具栏操作
 const emits = defineEmits(['reset', 'preview', 'save', 'update:modelValue'])
-
-export default {
-  components: { ...components },
-}
 
 // 左侧组件库
 const componentLibrary = ref()
@@ -371,7 +370,7 @@ onMounted(() => setDefaultSelectedComponent())
           </draggable>
         </el-scrollbar>
         <!-- 手机底部导航 -->
-        <div v-if="showTabBar" class="editor-design-bottom component cursor-pointer!" >
+        <div v-if="showTabBar" class="editor-design-bottom component cursor-pointer!">
           <ComponentContainer
             :active="selectedComponent?.id === tabBarComponent.id"
             :component="tabBarComponent"

@@ -79,7 +79,6 @@
         </el-form-item>
       </el-col>
       <Verify
-        v-if="loginData.captchaEnable === 'true'"
         ref="verify"
         :captchaType="captchaType"
         :imgSize="{ width: '400px', height: '200px' }"
@@ -191,13 +190,13 @@ const socialList = [
 // 获取验证码
 const getCode = async () => {
   // 情况一，未开启：则直接登录
-  if (loginData.captchaEnable === 'false') {
-    await handleLogin({})
-  } else {
+  // if (loginData.captchaEnable === 'false') {
+  //   await handleLogin({})
+  // } else {
     // 情况二，已开启：则展示验证码；只有完成验证码的情况，才进行登录
     // 弹出验证码
     verify.value.show()
-  }
+  // }
 }
 // 获取租户 ID
 const getTenantId = async () => {
