@@ -10,7 +10,7 @@
       <el-form-item label="类型名称" prop="typeName">
         <el-input
           v-model="queryParams.typeName"
-          placeholder="请输入類型名稱"
+          placeholder="请输入类型名称"
           clearable
           @keyup.enter="handleQuery"
           class="!w-[240px]" />
@@ -88,7 +88,7 @@
         </template>
       </el-table-column>
       <el-table-column label="排序" align="center" prop="sortOrder" />
-      <el-table-column label="創建時間" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
+      <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
           <el-button
@@ -97,6 +97,7 @@
             @click="openForm('update', scope.row.id)"
             v-hasPermi="['gamer:product-type:update']">
             编辑
+            <template #dot="slotProps"></template>
           </el-button>
           <el-button
             link

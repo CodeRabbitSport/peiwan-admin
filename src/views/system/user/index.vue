@@ -195,10 +195,6 @@ onMounted(() => {
 </script>
 
 <template>
-  <doc-alert title="用户体系" url="https://doc.iocoder.cn/user-center/" />
-  <doc-alert title="三方登陆" url="https://doc.iocoder.cn/social-user/" />
-  <doc-alert title="Excel 导入导出" url="https://doc.iocoder.cn/excel-import-and-export/" />
-
   <el-row :gutter="20">
     <!-- 左侧部门树 -->
     <el-col :span="4" :xs="24">
@@ -221,11 +217,7 @@ onMounted(() => {
               v-model="queryParams.username"
             >
               <template #suffix />
-            </el-input> placeholder="请输入用户名称"
-            clearable
-            @keyup.enter="handleQuery"
-            class="!w-240px"
-            />
+            </el-input>
           </el-form-item>
           <el-form-item label="手机号码" prop="mobile">
             <el-input
