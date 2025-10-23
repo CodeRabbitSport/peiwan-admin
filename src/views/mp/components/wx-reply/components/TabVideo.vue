@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-loading="uploading">
     <el-row>
       <el-input v-model="reply.title" class="input-margin-bottom" placeholder="请输入标题" />
       <el-input class="input-margin-bottom" v-model="reply.description" placeholder="请输入描述" />
@@ -36,8 +36,10 @@
               :limit="1"
               :file-list="fileList"
               :data="uploadData"
-              :before-upload="beforeVideoUpload"
+              :before-upload="localBeforeVideoUpload"
               :on-success="onUploadSuccess"
+              :on-progress="onProgress"
+              :on-error="onUploadError"
             >
               <el-button type="primary">新建视频 <Icon icon="ep:upload" /></el-button>
             </el-upload>
@@ -51,7 +53,7 @@
 <script lang="ts" setup>
 import WxVideoPlayer from '@/views/mp/components/wx-video-play'
 import WxMaterialSelect from '@/views/mp/components/wx-material-select'
-import type { UploadRawFile } from 'element-plus'
+import type { UploadProps, UploadRawFile } from 'element-plus'
 import { UploadType, useBeforeUpload } from '@/views/mp/hooks/useUpload'
 import { getAccessToken } from '@/utils/auth'
 import { Reply } from './types'
@@ -83,7 +85,19 @@ const uploadData = reactive({
 
 const beforeVideoUpload = (rawFile: UploadRawFile) => useBeforeUpload(UploadType.Video, 10)(rawFile)
 
+const uploading = ref(false)
+const localBeforeVideoUpload: UploadProps['beforeUpload'] = (file) => {
+  const ok = beforeVideoUpload(file)
+  if (ok !== false) uploading.value = true
+  return ok
+}
+
+const onProgress: UploadProps['onProgress'] = () => {
+  uploading.value = true
+}
+
 const onUploadSuccess = (res: any) => {
+  uploading.value = false
   if (res.code !== 0) {
     message.error('上传出错：' + res.msg)
     return false
@@ -95,6 +109,11 @@ const onUploadSuccess = (res: any) => {
   uploadData.introduction = ''
 
   selectMaterial(res.data)
+}
+
+const onUploadError: UploadProps['onError'] = (err: Error) => {
+  uploading.value = false
+  message.error('上传失败: ' + err.message)
 }
 
 /** 选择素材后设置 */

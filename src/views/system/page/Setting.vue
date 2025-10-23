@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { SystemConfig } from '@/api/gamer/systemconfig'
 import { SystemConfigApi } from '@/api/gamer/systemconfig'
+import { TenantNew_getAssessmentCode } from '@/api/system/tenant'
 
 const message = useMessage()
 
 const activeTab = ref('basic')
 const saving = ref(false)
+const assessmentCode = ref<string>('')
 
 // 配置键定义（与后端常量保持一致）
 const CONFIG_KEYS = {
@@ -14,6 +16,7 @@ const CONFIG_KEYS = {
   siteName: 'siteConfigSiteName',
   sitePrivacyContent: 'siteConfigPrivacyContent',
   siteIndexDialogContent: 'siteConfigIndexDialogContent',
+  siteConfigEnableIndexDialog: 'siteConfigEnableIndexDialog',
   siteEnableRecycle: 'recycleConfigEnableRecycle',
   siteEnableVoiceRoom: 'siteConfigEnableVoiceRoom',
   siteCreateOrderContent: 'siteConfigCreateOrderContent',
@@ -33,12 +36,21 @@ const CONFIG_KEYS = {
   // 回收配置
   recyclingRuleDetail: 'recycleConfigRuleDetail',
   recyclingQrCode: 'recycleConfigQrCode',
+  siteConfigGlobalProductPlacementMap: 'siteConfigGlobalProductPlacementMap',
+  siteConfigEnableAssessmentCode: 'siteConfigEnableAssessmentCode',
+  siteConfigAssessmentGroupQrCode: 'siteConfigAssessmentGroupQrCode',
 } as const
 
 // 每个 Tab 对应需要保存的 Key（按语义细分分组）
 const TAB_KEYS: Record<string, string[]> = {
-  basic: [CONFIG_KEYS.siteLogoUrl, CONFIG_KEYS.siteName],
-  home: [CONFIG_KEYS.orderVirtualCount, CONFIG_KEYS.siteIndexDialogContent],
+  basic: [
+    CONFIG_KEYS.siteLogoUrl,
+    CONFIG_KEYS.siteName,
+    CONFIG_KEYS.siteConfigGlobalProductPlacementMap,
+    CONFIG_KEYS.siteConfigEnableAssessmentCode,
+    CONFIG_KEYS.siteConfigAssessmentGroupQrCode,
+  ],
+  home: [CONFIG_KEYS.orderVirtualCount, CONFIG_KEYS.siteIndexDialogContent, CONFIG_KEYS.siteConfigEnableIndexDialog],
   mine: [CONFIG_KEYS.siteEnableVoiceRoom],
   // 页面内容细分
   orderPages: [CONFIG_KEYS.siteCreateOrderContent, CONFIG_KEYS.siteOrderDetailContent],
@@ -49,17 +61,29 @@ const TAB_KEYS: Record<string, string[]> = {
   privacyProtectionTab: [CONFIG_KEYS.sitePrivacyContent, CONFIG_KEYS.protectionOfMinors],
   aboutTab: [CONFIG_KEYS.aboutUsContent],
   rulesTab: [CONFIG_KEYS.employmentAgreementContent, CONFIG_KEYS.pickOrderAgreementContent],
-  // 回收
   recycle: [CONFIG_KEYS.siteEnableRecycle, CONFIG_KEYS.recyclingRuleDetail, CONFIG_KEYS.recyclingQrCode],
+}
+
+// 获取当前考核码
+async function fetchAssessmentCode() {
+  try {
+    assessmentCode.value = await TenantNew_getAssessmentCode({})
+  }
+  catch (err) {
+    console.error('获取考核码失败:', err)
+    message.error('获取考核码失败')
+  }
 }
 
 // 标题与描述（用于配置项的标题）
 const TITLE_MAP: Record<string, string> = {
   [CONFIG_KEYS.siteLogoUrl]: '客户端 LOGO',
   [CONFIG_KEYS.siteName]: '网站名称',
+  [CONFIG_KEYS.siteConfigGlobalProductPlacementMap]: '商品全局底部图',
   [CONFIG_KEYS.siteEnableRecycle]: '首页-是否开启回收',
   [CONFIG_KEYS.orderVirtualCount]: '首页-虚拟订单数量',
   [CONFIG_KEYS.siteIndexDialogContent]: '首页-弹窗内容',
+  [CONFIG_KEYS.siteConfigEnableIndexDialog]: '首页-是否开启弹窗',
   [CONFIG_KEYS.siteEnableVoiceRoom]: '是否开启语音房',
   [CONFIG_KEYS.sitePrivacyContent]: '隐私协议内容',
   [CONFIG_KEYS.userRegistrationAgreement]: '用户注册协议',
@@ -74,6 +98,8 @@ const TITLE_MAP: Record<string, string> = {
   [CONFIG_KEYS.pickOrderAgreementContent]: '接单规则',
   [CONFIG_KEYS.recyclingRuleDetail]: '回收规则详情',
   [CONFIG_KEYS.recyclingQrCode]: '回收二维码',
+  [CONFIG_KEYS.siteConfigEnableAssessmentCode]: '是否开启考核码',
+  [CONFIG_KEYS.siteConfigAssessmentGroupQrCode]: '考核群二维码',
 }
 
 // 已存在配置的 map，便于 update
@@ -83,9 +109,13 @@ const existingMap = ref<Record<string, SystemConfig>>({})
 const form = reactive({
   siteLogoUrl: '' as string,
   siteName: '' as string,
+  siteConfigGlobalProductPlacementMap: '' as string,
+  siteConfigEnableAssessmentCode: false as boolean,
+  siteConfigAssessmentGroupQrCode: '' as string,
   siteEnableRecycle: false as boolean,
-  orderVirtualCount: 0 as number,
+  orderVirtualCount: '' as string,
   siteIndexDialogContent: '' as string,
+  siteConfigEnableIndexDialog: false as boolean,
   siteEnableVoiceRoom: false as boolean,
   sitePrivacyContent: '' as string,
   userRegistrationAgreement: '' as string,
@@ -105,7 +135,7 @@ const form = reactive({
 // 工具：字符串 => 布尔
 function toBool(val: any) {
   if (typeof val === 'boolean') return val
-  if (val === 1 || val === '1' || val === 'true' || val === 'TRUE') return true
+  if (val === 1 || val === 'true' || val === 'true' || val === 'TRUE') return true
   return false
 }
 
@@ -131,11 +161,22 @@ async function fetchAll() {
       form.siteEnableRecycle = toBool(map[CONFIG_KEYS.siteEnableRecycle].configValue)
     }
     if (map[CONFIG_KEYS.orderVirtualCount]) {
-      const v = Number(map[CONFIG_KEYS.orderVirtualCount].configValue)
-      form.orderVirtualCount = Number.isNaN(v) ? 0 : v
+      form.orderVirtualCount = map[CONFIG_KEYS.orderVirtualCount].configValue || ''
     }
     if (map[CONFIG_KEYS.siteIndexDialogContent]) {
       form.siteIndexDialogContent = map[CONFIG_KEYS.siteIndexDialogContent].configValue || ''
+    }
+    if (map[CONFIG_KEYS.siteConfigGlobalProductPlacementMap]) {
+      form.siteConfigGlobalProductPlacementMap = map[CONFIG_KEYS.siteConfigGlobalProductPlacementMap].configValue || ''
+    }
+    if (map[CONFIG_KEYS.siteConfigEnableAssessmentCode]) {
+      form.siteConfigEnableAssessmentCode = toBool(map[CONFIG_KEYS.siteConfigEnableAssessmentCode].configValue)
+    }
+    if (map[CONFIG_KEYS.siteConfigAssessmentGroupQrCode]) {
+      form.siteConfigAssessmentGroupQrCode = map[CONFIG_KEYS.siteConfigAssessmentGroupQrCode].configValue || ''
+    }
+    if (map[CONFIG_KEYS.siteConfigEnableIndexDialog]) {
+      form.siteConfigEnableIndexDialog = toBool(map[CONFIG_KEYS.siteConfigEnableIndexDialog].configValue)
     }
     if (map[CONFIG_KEYS.siteEnableVoiceRoom]) {
       form.siteEnableVoiceRoom = toBool(map[CONFIG_KEYS.siteEnableVoiceRoom].configValue)
@@ -194,6 +235,10 @@ function resolveGroupKey(configKey: string): string | undefined {
     || configKey === CONFIG_KEYS.userRegistrationAgreement
     || configKey === CONFIG_KEYS.protectionOfMinors
     || configKey === CONFIG_KEYS.siteIndexDialogContent
+    || configKey === CONFIG_KEYS.siteConfigEnableIndexDialog
+    || configKey === CONFIG_KEYS.siteConfigGlobalProductPlacementMap
+    || configKey === CONFIG_KEYS.siteConfigEnableAssessmentCode
+    || configKey === CONFIG_KEYS.siteConfigAssessmentGroupQrCode
     || configKey === CONFIG_KEYS.siteEnableRecycle
     || configKey === CONFIG_KEYS.siteEnableVoiceRoom
     || configKey === CONFIG_KEYS.siteCreateOrderContent
@@ -235,7 +280,7 @@ function buildConfigs(keys: string[]): Partial<SystemConfig>[] {
         value = form.protectionOfMinors || ''
         break
       case CONFIG_KEYS.siteEnableRecycle:
-        value = form.siteEnableRecycle ? '1' : '0'
+        value = form.siteEnableRecycle ? 'true' : 'false'
         break
       case CONFIG_KEYS.orderVirtualCount:
         value = String(form.orderVirtualCount ?? 0)
@@ -243,8 +288,20 @@ function buildConfigs(keys: string[]): Partial<SystemConfig>[] {
       case CONFIG_KEYS.siteIndexDialogContent:
         value = form.siteIndexDialogContent || ''
         break
+      case CONFIG_KEYS.siteConfigGlobalProductPlacementMap:
+        value = form.siteConfigGlobalProductPlacementMap || ''
+        break
+      case CONFIG_KEYS.siteConfigEnableAssessmentCode:
+        value = form.siteConfigEnableAssessmentCode ? 'true' : 'false'
+        break
+      case CONFIG_KEYS.siteConfigAssessmentGroupQrCode:
+        value = form.siteConfigAssessmentGroupQrCode || ''
+        break
+      case CONFIG_KEYS.siteConfigEnableIndexDialog:
+        value = form.siteConfigEnableIndexDialog ? 'true' : 'false'
+        break
       case CONFIG_KEYS.siteEnableVoiceRoom:
-        value = form.siteEnableVoiceRoom ? '1' : '0'
+        value = form.siteEnableVoiceRoom ? 'true' : 'false'
         break
       case CONFIG_KEYS.sitePrivacyContent:
         value = form.sitePrivacyContent || ''
@@ -353,6 +410,7 @@ const reload = () => fetchAll()
 
 onMounted(() => {
   fetchAll()
+  fetchAssessmentCode()
 })
 </script>
 
@@ -367,16 +425,36 @@ onMounted(() => {
           <el-form-item label="网站名称">
             <el-input v-model="form.siteName" placeholder="请输入网站名称" />
           </el-form-item>
+          <el-form-item label="商品全局底部图">
+            <UploadImg v-model="form.siteConfigGlobalProductPlacementMap" />
+          </el-form-item>
+          <el-form-item label="是否开启考核码">
+            <el-switch v-model="form.siteConfigEnableAssessmentCode" />
+          </el-form-item>
+          <el-form-item label="考核群二维码">
+            <UploadImg v-model="form.siteConfigAssessmentGroupQrCode" />
+          </el-form-item>
+          <el-form-item label="当前考核码">
+            <div class="w-full flex items-center gap-2">
+              <el-input v-model="assessmentCode" disabled />
+              <el-button size="small" @click="fetchAssessmentCode">
+                刷新
+              </el-button>
+            </div>
+          </el-form-item>
         </el-form>
       </el-tab-pane>
 
       <el-tab-pane label="首页配置" name="home">
         <el-form label-width="180px" class="max-w-[900px]">
-          <el-form-item label="虚拟订单数量">
-            <el-input-number v-model="form.orderVirtualCount" :min="0" class="!w-full" />
+          <el-form-item label="是否启用首页弹窗">
+            <el-switch v-model="form.siteConfigEnableIndexDialog" />
           </el-form-item>
-          <el-form-item label="首页弹窗内容">
-            <Editor v-model="form.siteIndexDialogContent" height="220px" />
+          <el-form-item label="首页弹窗图片">
+            <UploadImg v-model="form.siteIndexDialogContent" />
+          </el-form-item>
+          <el-form-item label="首页通知内容">
+            <Editor v-model="form.orderVirtualCount" height="250px" />
           </el-form-item>
         </el-form>
       </el-tab-pane>

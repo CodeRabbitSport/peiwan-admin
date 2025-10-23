@@ -100,4 +100,39 @@ export const ServiceOrderApi = {
   auditRefund: async (data: { orderId: number, auditStatus: 1 | 2, auditReason?: string }) => {
     return await request.post({ url: `/gamer/service-order/audit-refund`, data })
   },
+
+}
+
+/**
+ * 更新订单为已退款
+ * @param {object} params PayRefundNotifyReqDTO
+ * @param {string} params.merchantOrderId
+ * @param {string} params.merchantRefundId
+ * @param {number} params.payRefundId
+ * @returns
+ */
+export function ServiceOrder_updateOrderRefunded(data: any) {
+  return request.post({ url: `/gamer/service-order/refund-order`, data })
+}
+
+
+/** 
+ * 取消接单
+ * @param {object} params CancelAcceptOrderVO
+ * @param {number} params.orderId 订单编号
+ * @returns
+ */
+export function ServiceOrder_cancelAcceptOrder(data: any) {
+  return request.post({ url: `/gamer/service-order/cancel-accept-order`, data })
+}
+
+/** 
+ * 审核订单完成
+ * @param {object} params RestoreOrderReqVO
+ * @param {number} params.orderId 订单编号
+ * @param {boolean} params.retoreToUnComplete 是否恢复到打手未完成状态
+ * @returns
+ */
+export function ServiceOrder_auditOrderComplete(params: any) {
+  return request.post({ url: `/gamer/service-order/audit-order-complete`, data: params });
 }

@@ -78,14 +78,9 @@ watch(
 
 /** 添加/修改操作 */
 const formRef = ref()
-function openForm(type: string, id?: number) {
-  formRef.value.open(type, id)
-}
-
-// 状态开关：1=通过，2=不通过；0(待审核)显示标签提示
-function normalizedMomentStatus(status: number): number {
-  return status === 1 ? 1 : 2
-}
+// function openForm(type: string, id?: number) {
+//   formRef.value.open(type, id)
+// }
 
 async function handleToggleMomentStatus(row: UserMoment, val: number) {
   try {
@@ -109,25 +104,80 @@ const subViewMap = {
   redpacket: UserMomentRedPacket,
 } as const
 const activeComponent = computed(() => (activeView.value ? subViewMap[activeView.value] : null))
-const typeTitleMap: Record<SubViewKey, string> = {
-  content: '动态内容',
-  voice: '用户语音',
-  vote: '用户投票',
-  redpacket: '用户动态红包',
-}
-const momentTypeToKey = (mt: number): SubViewKey => (mt === 1 ? 'content' : mt === 2 ? 'voice' : mt === 3 ? 'vote' : 'redpacket')
-function openMomentSubView(row: UserMoment) {
-  const key = momentTypeToKey((row as any).momentType)
-  activeView.value = key
-  selectedMomentId.value = row.id
-  subViewTitle.value = `${typeTitleMap[key]} - 动态ID：${row.id}`
-  subViewDialogVisible.value = true
-}
+// const typeTitleMap: Record<SubViewKey, string> = {
+//   content: '动态内容',
+//   voice: '用户语音',
+//   vote: '用户投票',
+//   redpacket: '用户动态红包',
+// }
+
+// function openMomentSubView(_cmd: any, row: UserMoment) {
+//   activeView.value = _cmd
+//   selectedMomentId.value = row.id
+//   subViewTitle.value = `${typeTitleMap[_cmd]} - 动态ID：${row.id}`
+//   subViewDialogVisible.value = true
+// }
 
 // 处理下拉菜单的明细命令
-function onDetailCommand(_cmd: any, row: UserMoment) {
-  // 目前各菜单项按 momentType 条件显示，无需区分 cmd，直接打开对应子视图
-  openMomentSubView(row)
+// function onDetailCommand(_cmd: any, row: UserMoment) {
+//   // 目前各菜单项按 momentType 条件显示，无需区分 cmd，直接打开对应子视图
+//   openMomentSubView(_cmd, row)
+// }
+
+// ===== 媒体预览（图片/视频/音频） =====
+type PreviewType = 'image' | 'video' | 'audio' | ''
+const mediaPreview = reactive({
+  visible: false,
+  type: '' as PreviewType,
+  title: '预览',
+  images: [] as string[],
+  videoUrl: '',
+  audioUrl: '',
+})
+
+function normalizeImages(val: unknown): string[] {
+  if (!val) return []
+  if (Array.isArray(val)) return (val as any[]).map(String).filter(Boolean)
+  if (typeof val === 'string') {
+    const s = (val as string).trim()
+    if (!s) return []
+    try {
+      const parsed = JSON.parse(s)
+      if (Array.isArray(parsed)) return parsed.map(item => decodeURIComponent(item)).filter(Boolean)
+    }
+    catch {}
+    return s.split(',').map(v => v.trim()).filter(Boolean)
+  }
+  return []
+}
+
+function openImagePreview(row: any) {
+  mediaPreview.type = 'image'
+  mediaPreview.title = `图片预览 - 动态ID：${row.id}`
+  mediaPreview.images = normalizeImages(row.images)
+  mediaPreview.videoUrl = ''
+  mediaPreview.audioUrl = ''
+  mediaPreview.visible = true
+}
+
+function openVideoPreview(row: any) {
+  if (!row?.videoUrl) return
+  mediaPreview.type = 'video'
+  mediaPreview.title = `视频预览 - 动态ID：${row.id}`
+  mediaPreview.images = []
+  mediaPreview.videoUrl = row.videoUrl
+  mediaPreview.audioUrl = ''
+  mediaPreview.visible = true
+}
+
+function openAudioPreview(row: any) {
+  if (!row?.voiceUrl) return
+  mediaPreview.type = 'audio'
+  mediaPreview.title = `音频预览 - 动态ID：${row.id}`
+  mediaPreview.images = []
+  mediaPreview.videoUrl = ''
+  mediaPreview.audioUrl = row.voiceUrl
+  mediaPreview.visible = true
 }
 
 // 审核通过操作
@@ -212,7 +262,6 @@ onMounted(() => {
           placeholder="请输入用户ID"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
       <el-form-item label="动态类型" prop="momentType">
@@ -222,21 +271,19 @@ onMounted(() => {
           clearable
           class="!w-[240px]"
         >
-          <el-option label="文字/图片" :value="1" />
-          <el-option label="语音" :value="2" />
-          <el-option label="投票" :value="3" />
-          <el-option label="红包" :value="4" />
+          <el-option label="图文" :value="1" />
+          <el-option label="音频" :value="2" />
+          <el-option label="视频" :value="5" />
         </el-select>
       </el-form-item>
-      <el-form-item label="话题" prop="topic">
+      <!-- <el-form-item label="话题" prop="topic">
         <el-input
           v-model="queryParams.topic"
           placeholder="请输入话题"
           clearable
           class="!w-[240px]"
-          
         />
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="状态" prop="status">
         <el-select
           v-model="queryParams.status"
@@ -298,6 +345,29 @@ onMounted(() => {
     <component :is="activeComponent" v-if="activeComponent" :moment-id="selectedMomentId" />
   </el-dialog>
 
+  <!-- 媒体预览弹窗（图片/视频/音频） -->
+  <el-dialog
+    v-model="mediaPreview.visible"
+    :title="mediaPreview.title"
+    width="60%"
+    append-to-body
+    destroy-on-close
+  >
+    <template v-if="mediaPreview.type === 'image'">
+      <el-carousel height="400px" indicator-position="outside" :autoplay="false" arrow="hover">
+        <el-carousel-item v-for="(img, idx) in mediaPreview.images" :key="idx">
+          <el-image :src="img" fit="contain" class="w-full h-full" />
+        </el-carousel-item>
+      </el-carousel>
+    </template>
+    <template v-else-if="mediaPreview.type === 'video'">
+      <video v-if="mediaPreview.videoUrl" :src="mediaPreview.videoUrl" class="w-full" controls />
+    </template>
+    <template v-else-if="mediaPreview.type === 'audio'">
+      <audio v-if="mediaPreview.audioUrl" :src="mediaPreview.audioUrl" class="w-full" controls />
+    </template>
+  </el-dialog>
+
   <!-- 列表 -->
   <ContentWrap>
     <el-table
@@ -317,48 +387,105 @@ onMounted(() => {
             <el-tag
               v-for="v, k in scope?.row?.momentType?.split(',')"
               :key="k"
-              :type="v === 1 ? 'success' : v === 2 ? 'danger' : v === 3 ? 'info' : 'warning'"
+              :type="Number(v) === 1 ? 'success' : Number(v) === 2 ? 'danger' : Number(v) === 5 ? 'info' : 'warning'"
             >
-              {{ v === 1 ? '内容' : v === 2 ? '语音' : v === 3 ? '投票'
-                : '红包' }}
+              {{ Number(v) === 1 ? '图文' : Number(v) === 2 ? '音频' : Number(v) === 5 ? '视频'
+                : '未知' }}
             </el-tag>
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="话题" align="center" prop="topic" />
+
+      <!-- 图片 -->
+      <el-table-column label="图片" align="center" width="100">
+        <template #default="scope">
+          <template v-if="normalizeImages(scope.row.images).length">
+            <img
+              :src="normalizeImages(scope.row.images)[0]"
+              class="h-[40px] w-[40px] cursor-pointer rounded object-cover"
+              @click="openImagePreview(scope.row)"
+            >
+            <div v-if="normalizeImages(scope.row.images).length > 1" class="text-xs text-gray-500">
+              +{{ normalizeImages(scope.row.images).length - 1 }}
+            </div>
+          </template>
+          <span v-else class="text-xs text-gray-400">-</span>
+        </template>
+      </el-table-column>
+
+      <!-- 视频 -->
+      <el-table-column label="视频" align="center" width="80">
+        <template #default="scope">
+          <template v-if="scope.row.videoUrl">
+            <el-button size="small" type="primary" plain @click="openVideoPreview(scope.row)">
+              预览
+            </el-button>
+          </template>
+          <span v-else class="text-xs text-gray-400">-</span>
+        </template>
+      </el-table-column>
+
+      <!-- 音频 -->
+      <el-table-column label="音频" align="center" width="80">
+        <template #default="scope">
+          <template v-if="scope.row.voiceUrl">
+            <el-button size="small" type="success" plain @click="openAudioPreview(scope.row)">
+              预览
+            </el-button>
+          </template>
+          <span v-else class="text-xs text-gray-400">-</span>
+        </template>
+      </el-table-column>
+
+      <!-- <el-table-column label="话题" align="center" prop="topic" /> -->
       <el-table-column label="发布地点" align="center" prop="location" />
-      <el-table-column label="优先级" align="center" prop="priority">
+      <!-- <el-table-column label="优先级" align="center" prop="priority">
         <template #default="scope">
           <el-tag :type="scope.row.priority === 0 ? 'success' : 'danger'">
             {{ scope.row.priority === 0 ? '普通' : '置顶' }}
           </el-tag>
         </template>
-      </el-table-column>
+      </el-table-column> -->
 
       <el-table-column label="点赞数" align="center" prop="likeCount" />
-      <el-table-column label="浏览数" align="center" prop="browseCount" />
-      <el-table-column label="评论数" align="center" prop="commentCount" />
-      <el-table-column label="分享数" align="center" prop="shareCount" />
+      <!-- <el-table-column label="浏览数" align="center" prop="browseCount" /> -->
+      <!-- <el-table-column label="评论数" align="center" prop="commentCount" /> -->
+      <!-- <el-table-column label="分享数" align="center" prop="shareCount" /> -->
       <el-table-column label="状态" align="center" prop="status" width="160">
         <template #default="scope">
           <div class="flex flex-col items-center gap-1">
-            <el-switch
-              :model-value="normalizedMomentStatus(scope.row.status)"
-              :active-value="1"
-              :inactive-value="2"
-              active-text="通过"
-              inactive-text="不通过"
-              inline-prompt
-              @change="(val) => handleToggleMomentStatus(scope.row, Number(val))"
-            />
-            <el-tag v-if="scope.row.status === 0" type="info">
-              待审核
-            </el-tag>
+            <template v-if="scope.row.status === 0">
+              <el-button-group>
+                <el-button size="small" type="success" @click="handleToggleMomentStatus(scope.row, 1)">
+                  通过
+                </el-button>
+                <el-button size="small" type="danger" @click="handleToggleMomentStatus(scope.row, 2)">
+                  不通过
+                </el-button>
+              </el-button-group>
+              <el-tag type="info">
+                待审核
+              </el-tag>
+            </template>
+            <template v-else>
+              <!-- <el-switch
+                :model-value="normalizedMomentStatus(scope.row.status)"
+                :active-value="1"
+                :inactive-value="2"
+                active-text="通过"
+                inactive-text="不通过"
+                inline-prompt
+                @change="(val) => handleToggleMomentStatus(scope.row, Number(val))"
+              /> -->
+              <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
+                {{ scope.row.status === 1 ? '通过' : '不通过' }}
+              </el-tag>
+            </template>
           </div>
         </template>
       </el-table-column>
       <!-- <el-table-column label="审核时间" align="center" prop="auditTime" :formatter="dateFormatter" width="180px" /> -->
-      <el-table-column label="拒绝原因" align="center" prop="auditReason" />
+      <!-- <el-table-column label="拒绝原因" align="center" prop="auditReason" /> -->
 
       <el-table-column label="最后刷新时间" align="center" prop="lastRefreshTime" :formatter="dateFormatter" width="180px" />
       <el-table-column
@@ -384,7 +511,7 @@ onMounted(() => {
             </el-button-group> -->
 
             <!-- 内容明细下拉 -->
-            <el-dropdown trigger="hover" @command="(cmd) => onDetailCommand(cmd, scope.row)">
+            <!-- <el-dropdown trigger="hover" @command="(cmd) => onDetailCommand(cmd, scope.row)">
               <el-button size="small" text class="!text-[#67C23A]">
                 内容明细
                 <Icon icon="ep:arrow-down" class="ml-[4px]" />
@@ -392,28 +519,28 @@ onMounted(() => {
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item
-                    v-if="scope.row.momentType === 1"
+                    v-if="scope.row.momentType.includes('1')"
                     v-hasPermi="['gamer:user-moment-content:update']"
                     command="content"
                   >
                     内容明细
                   </el-dropdown-item>
                   <el-dropdown-item
-                    v-else-if="scope.row.momentType === 2"
+                    v-if="scope.row.momentType.includes('2')"
                     v-hasPermi="['gamer:user-moment-voice:update']"
                     command="voice"
                   >
                     语音明细
                   </el-dropdown-item>
                   <el-dropdown-item
-                    v-else-if="scope.row.momentType === 3"
+                    v-if="scope.row.momentType.includes('3')"
                     v-hasPermi="['gamer:user-moment-vote:update']"
                     command="vote"
                   >
                     投票明细
                   </el-dropdown-item>
                   <el-dropdown-item
-                    v-else-if="scope.row.momentType === 4"
+                    v-if="scope.row.momentType.includes('4')"
                     v-hasPermi="['gamer:user-moment-red-packet:update']"
                     command="redpacket"
                   >
@@ -421,14 +548,14 @@ onMounted(() => {
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
-            </el-dropdown>
+            </el-dropdown> -->
 
-            <el-button
+            <!-- <el-button
               v-hasPermi="['gamer:user-moment:update']" link size="small" type="primary"
               @click="openForm('update', scope.row.id)"
             >
               编辑
-            </el-button>
+            </el-button> -->
             <el-button
               v-hasPermi="['gamer:user-moment:delete']" link size="small" type="danger"
               @click="handleDelete(scope.row.id)"

@@ -132,7 +132,6 @@ defineExpose({ open })
             placeholder="请输入用户ID"
             clearable
             class="!w-[220px]"
-            
           />
         </el-form-item>
         <el-form-item label="手机号" prop="phone">
@@ -141,7 +140,6 @@ defineExpose({ open })
             placeholder="请输入手机号"
             clearable
             class="!w-[220px]"
-            
           />
         </el-form-item>
         <el-form-item>

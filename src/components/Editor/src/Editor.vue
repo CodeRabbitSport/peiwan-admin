@@ -1,15 +1,31 @@
 <script lang="ts" setup>
-import { PropType } from 'vue'
+import type { IDomEditor, IEditorConfig } from '@wangeditor/editor'
+import type { PropType } from 'vue'
+
+import { i18nChangeLanguage } from '@wangeditor/editor'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import { i18nChangeLanguage, IDomEditor, IEditorConfig } from '@wangeditor/editor'
-import { propTypes } from '@/utils/propTypes'
-import { isNumber } from '@/utils/is'
 import { ElMessage } from 'element-plus'
+
+import { getUploadUrl } from '@/components/UploadFile/src/useUpload'
 import { useLocaleStore } from '@/store/modules/locale'
 import { getRefreshToken, getTenantId } from '@/utils/auth'
-import { getUploadUrl } from '@/components/UploadFile/src/useUpload'
+import { isNumber } from '@/utils/is'
+import { propTypes } from '@/utils/propTypes'
 
 defineOptions({ name: 'Editor' })
+
+const props = defineProps({
+  editorId: propTypes.string.def('wangeEditor-1'),
+  height: propTypes.oneOfType([Number, String]).def('500px'),
+  editorConfig: {
+    type: Object as PropType<Partial<IEditorConfig>>,
+    default: () => undefined,
+  },
+  readonly: propTypes.bool.def(false),
+  modelValue: propTypes.string.def(''),
+})
+
+const emit = defineEmits(['change', 'update:modelValue'])
 
 type InsertFnType = (url: string, alt: string, href: string) => void
 
@@ -18,19 +34,6 @@ const localeStore = useLocaleStore()
 const currentLocale = computed(() => localeStore.getCurrentLocale)
 
 i18nChangeLanguage(unref(currentLocale).lang)
-
-const props = defineProps({
-  editorId: propTypes.string.def('wangeEditor-1'),
-  height: propTypes.oneOfType([Number, String]).def('500px'),
-  editorConfig: {
-    type: Object as PropType<Partial<IEditorConfig>>,
-    default: () => undefined
-  },
-  readonly: propTypes.bool.def(false),
-  modelValue: propTypes.string.def('')
-})
-
-const emit = defineEmits(['change', 'update:modelValue'])
 
 // 编辑器实例，必须用 shallowRef
 const editorRef = shallowRef<IDomEditor>()
@@ -47,8 +50,8 @@ watch(
     valueHtml.value = val
   },
   {
-    immediate: true
-  }
+    immediate: true,
+  },
 )
 
 // 监听
@@ -56,10 +59,10 @@ watch(
   () => valueHtml.value,
   (val: string) => {
     emit('update:modelValue', val)
-  }
+  },
 )
 
-const handleCreated = (editor: IDomEditor) => {
+function handleCreated(editor: IDomEditor) {
   editorRef.value = editor
 }
 
@@ -91,7 +94,7 @@ const editorConfig = computed((): IEditorConfig => {
       autoFocus: false,
       scroll: true,
       MENU_CONF: {
-        ['uploadImage']: {
+        uploadImage: {
           server: getUploadUrl(),
           // 单个文件的最大体积限制，默认为 2M
           maxFileSize: 5 * 1024 * 1024,
@@ -102,9 +105,9 @@ const editorConfig = computed((): IEditorConfig => {
 
           // 自定义增加 http  header
           headers: {
-            Accept: '*',
-            Authorization: 'Bearer ' + getRefreshToken(), // 使用 getRefreshToken() 方法，而不使用 getAccessToken() 方法的原因：Editor 无法方便的刷新访问令牌
-            'tenant-id': getTenantId()
+            'Accept': '*',
+            'Authorization': `Bearer ${getRefreshToken()}`, // 使用 getRefreshToken() 方法，而不使用 getAccessToken() 方法的原因：Editor 无法方便的刷新访问令牌
+            'tenant-id': getTenantId(),
           },
 
           // 超时时间，默认为 10 秒
@@ -137,12 +140,12 @@ const editorConfig = computed((): IEditorConfig => {
           // 自定义插入图片
           customInsert(res: any, insertFn: InsertFnType) {
             insertFn(res.data, 'image', res.data)
-          }
+          },
         },
-        ['uploadVideo']: {
+        uploadVideo: {
           server: getUploadUrl(),
           // 单个文件的最大体积限制，默认为 10M
-          maxFileSize: 10 * 1024 * 1024,
+          maxFileSize: 100 * 1024 * 1024,
           // 最多可上传几个文件，默认为 100
           maxNumberOfFiles: 10,
           // 选择文件时的类型限制，默认为 ['video/*'] 。如不想限制，则设置为 []
@@ -150,13 +153,13 @@ const editorConfig = computed((): IEditorConfig => {
 
           // 自定义增加 http  header
           headers: {
-            Accept: '*',
-            Authorization: 'Bearer ' + getRefreshToken(), // 使用 getRefreshToken() 方法，而不使用 getAccessToken() 方法的原因：Editor 无法方便的刷新访问令牌
-            'tenant-id': getTenantId()
+            'Accept': '*',
+            'Authorization': `Bearer ${getRefreshToken()}`, // 使用 getRefreshToken() 方法，而不使用 getAccessToken() 方法的原因：Editor 无法方便的刷新访问令牌
+            'tenant-id': getTenantId(),
           },
 
           // 超时时间，默认为 30 秒
-          timeout: 15 * 1000, // 15 秒
+          timeout: 150 * 1000, // 15 秒
 
           // form-data fieldName，后端接口参数名称，默认值wangeditor-uploaded-image
           fieldName: 'file',
@@ -185,23 +188,23 @@ const editorConfig = computed((): IEditorConfig => {
           // 自定义插入图片
           customInsert(res: any, insertFn: InsertFnType) {
             insertFn(res.data, 'mp4', res.data)
-          }
-        }
+          },
+        },
       },
-      uploadImgShowBase64: true
+      uploadImgShowBase64: true,
     },
-    props.editorConfig || {}
+    props.editorConfig || {},
   )
 })
 
 const editorStyle = computed(() => {
   return {
-    height: isNumber(props.height) ? `${props.height}px` : props.height
+    height: isNumber(props.height) ? `${props.height}px` : props.height,
   }
 })
 
 // 回调函数
-const handleChange = (editor: IDomEditor) => {
+function handleChange(editor: IDomEditor) {
   emit('change', editor)
 }
 
@@ -213,29 +216,29 @@ onBeforeUnmount(() => {
   editor?.destroy()
 })
 
-const getEditorRef = async (): Promise<IDomEditor> => {
+async function getEditorRef(): Promise<IDomEditor> {
   await nextTick()
   return unref(editorRef.value) as IDomEditor
 }
 
 defineExpose({
-  getEditorRef
+  getEditorRef,
 })
 </script>
 
 <template>
-  <div class="border-1 border-solid border-[var(--tags-view-border-color)] z-10">
+  <div class="z-10 border border-[var(--tags-view-border-color)] border-solid">
     <!-- 工具栏 -->
     <Toolbar
       :editor="editorRef"
-      :editorId="editorId"
-      class="border-0 b-b-1 border-solid border-[var(--tags-view-border-color)]"
+      :editor-id="editorId"
+      class="border-0 b-b-1 border-[var(--tags-view-border-color)] border-solid"
     />
     <!-- 编辑器 -->
     <Editor
       v-model="valueHtml"
-      :defaultConfig="editorConfig"
-      :editorId="editorId"
+      :default-config="editorConfig"
+      :editor-id="editorId"
       :style="editorStyle"
       @on-change="handleChange"
       @on-created="handleCreated"

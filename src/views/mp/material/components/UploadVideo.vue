@@ -1,5 +1,5 @@
 <template>
-  <el-dialog title="新建视频" v-model="showDialog" width="600px">
+  <el-dialog title="新建视频" v-model="showDialog" width="600px" v-loading="uploading">
     <el-upload
       :action="UPLOAD_URL"
       :headers="HEADERS"
@@ -7,9 +7,10 @@
       :limit="1"
       :file-list="fileList"
       :data="uploadData"
-      :before-upload="beforeVideoUpload"
+      :before-upload="localBeforeVideoUpload"
       :on-error="onUploadError"
       :on-success="onUploadSuccess"
+      :on-progress="onProgress"
       ref="uploadVideoRef"
       :auto-upload="false"
       class="mb-5"
@@ -60,6 +61,7 @@ import { HEADERS, UploadData, UPLOAD_URL, UploadType, beforeVideoUpload } from '
 const message = useMessage()
 
 const accountId = inject<number>('accountId')
+const uploading = ref(false)
 
 const uploadRules: FormRules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
@@ -98,6 +100,16 @@ const uploadData: UploadData = reactive({
 const uploadFormRef = ref<FormInstance | null>(null)
 const uploadVideoRef = ref<UploadInstance | null>(null)
 
+const localBeforeVideoUpload: UploadProps['beforeUpload'] = (file) => {
+  const ok = beforeVideoUpload(file)
+  if (ok !== false) uploading.value = true
+  return ok
+}
+
+const onProgress: UploadProps['onProgress'] = () => {
+  uploading.value = true
+}
+
 const submitVideo = () => {
   uploadFormRef.value?.validate((valid) => {
     if (!valid) {
@@ -109,6 +121,7 @@ const submitVideo = () => {
 
 /** 上传成功处理 */
 const onUploadSuccess: UploadProps['onSuccess'] = (res: any) => {
+  uploading.value = false
   if (res.code !== 0) {
     message.error('上传出错：' + res.msg)
     return false
@@ -125,5 +138,8 @@ const onUploadSuccess: UploadProps['onSuccess'] = (res: any) => {
 }
 
 /** 上传失败处理 */
-const onUploadError = (err: Error) => message.error(`上传失败: ${err.message}`)
+const onUploadError = (err: Error) => {
+  uploading.value = false
+  message.error(`上传失败: ${err.message}`)
+}
 </script>

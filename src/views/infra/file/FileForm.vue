@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model="dialogVisible" title="上传文件">
+  <Dialog v-model="dialogVisible" title="上传文件" v-loading="uploading">
     <el-upload
       ref="uploadRef"
       v-model:file-list="fileList"
@@ -13,6 +13,8 @@
       :on-exceed="handleExceed"
       :on-success="submitFormSuccess"
       :http-request="httpRequest"
+      :before-upload="onBeforeUpload"
+      :on-progress="onProgress"
       accept=".jpg, .png, .gif"
       drag
     >
@@ -31,6 +33,7 @@
   </Dialog>
 </template>
 <script lang="ts" setup>
+import type { UploadProps } from 'element-plus'
 import { useUpload } from '@/components/UploadFile/src/useUpload'
 
 defineOptions({ name: 'InfraFileForm' })
@@ -45,6 +48,8 @@ const data = ref({ path: '' })
 const uploadRef = ref()
 
 const { uploadUrl, httpRequest } = useUpload()
+
+const uploading = ref(false)
 
 /** 打开弹窗 */
 const open = async () => {
@@ -64,6 +69,7 @@ const submitFileForm = () => {
     message.error('请上传文件')
     return
   }
+  uploading.value = true
   unref(uploadRef)?.submit()
 }
 
@@ -77,10 +83,12 @@ const submitFormSuccess = () => {
   // 提示成功，并刷新
   message.success(t('common.createSuccess'))
   emit('success')
+  uploading.value = false
 }
 
 /** 上传错误提示 */
 const submitFormError = (): void => {
+  uploading.value = false
   message.error('上传失败，请您重新上传！')
   formLoading.value = false
 }
@@ -95,5 +103,14 @@ const resetForm = () => {
 /** 文件数超出提示 */
 const handleExceed = (): void => {
   message.error('最多只能上传一个文件！')
+}
+
+const onBeforeUpload: UploadProps['beforeUpload'] = () => {
+  uploading.value = true
+  return true
+}
+
+const onProgress: UploadProps['onProgress'] = () => {
+  uploading.value = true
 }
 </script>

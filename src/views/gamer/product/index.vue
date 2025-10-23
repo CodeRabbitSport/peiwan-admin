@@ -213,7 +213,6 @@ onMounted(() => {
           placeholder="请输入商品标题"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
       <el-form-item label="分类" prop="categoryId">
@@ -292,7 +291,7 @@ onMounted(() => {
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" width="80" />
       <el-table-column label="商品标题" align="center" prop="productTitle" />
-      <el-table-column label="描述" align="center" prop="productDesc" />
+      <!-- <el-table-column label="描述" align="center" prop="productDesc" /> -->
       <el-table-column label="库存" align="center" prop="productStock" />
       <el-table-column label="价格" align="center" prop="productPrice">
         <template #default="scope">

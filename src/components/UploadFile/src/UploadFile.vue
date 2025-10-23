@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!disabled" class="upload-file">
+  <div v-if="!disabled" class="upload-file" v-loading="uploading">
     <el-upload
       ref="uploadRef"
       v-model:file-list="fileList"
@@ -11,6 +11,7 @@
       :http-request="httpRequest"
       :limit="props.limit"
       :multiple="props.limit > 1"
+      :on-progress="onProgress"
       :on-error="excelUploadError"
       :on-exceed="handleExceed"
       :on-preview="handlePreview"
@@ -98,6 +99,8 @@ const uploadNumber = ref<number>(0)
 
 const { uploadUrl, httpRequest } = useUpload(props.directory)
 
+const uploading = ref(false)
+
 // 文件上传之前判断
 const beforeUpload: UploadProps['beforeUpload'] = (file: UploadRawFile) => {
   if (fileList.value.length >= props.limit) {
@@ -124,6 +127,7 @@ const beforeUpload: UploadProps['beforeUpload'] = (file: UploadRawFile) => {
   message.success('正在上传文件，请稍候...')
   // 只有在验证通过后才增加计数器
   uploadNumber.value++
+  uploading.value = true
   return true
 }
 // 处理上传的文件发生变化
@@ -132,6 +136,7 @@ const beforeUpload: UploadProps['beforeUpload'] = (file: UploadRawFile) => {
 // }
 // 文件上传成功
 const handleFileSuccess: UploadProps['onSuccess'] = (res: any): void => {
+  uploading.value = false
   message.success('上传成功')
   // 删除自身
   const index = fileList.value.findIndex((item) => item.response?.data === res.data)
@@ -150,6 +155,7 @@ const handleExceed: UploadProps['onExceed'] = (): void => {
 }
 // 上传错误提示
 const excelUploadError: UploadProps['onError'] = (): void => {
+  uploading.value = false
   message.error('导入数据失败，请您重新上传！')
   // 上传失败时减少计数器，避免后续上传被阻塞
   uploadNumber.value = Math.max(0, uploadNumber.value - 1)
@@ -164,6 +170,10 @@ const handleRemove = (file: UploadFile) => {
 }
 const handlePreview: UploadProps['onPreview'] = (uploadFile) => {
   console.log(uploadFile)
+}
+
+const onProgress: UploadProps['onProgress'] = () => {
+  uploading.value = true
 }
 
 // 监听模型绑定值变动

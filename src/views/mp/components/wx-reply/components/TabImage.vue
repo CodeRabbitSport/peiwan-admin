@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-loading="uploading">
     <!-- 情况一：已经选择好素材、或者上传好图片 -->
     <div class="select-item" v-if="reply.url">
       <img class="material-img" :src="reply.url" />
@@ -40,8 +40,10 @@
           :limit="1"
           :file-list="fileList"
           :data="uploadData"
-          :before-upload="beforeImageUpload"
+          :before-upload="localBeforeImageUpload"
           :on-success="onUploadSuccess"
+          :on-progress="onProgress"
+          :on-error="onUploadError"
         >
           <el-button type="primary">上传图片</el-button>
           <template #tip>
@@ -58,7 +60,7 @@
 <script lang="ts" setup>
 import WxMaterialSelect from '@/views/mp/components/wx-material-select'
 import { UploadType, useBeforeUpload } from '@/views/mp/hooks/useUpload'
-import type { UploadRawFile } from 'element-plus'
+import type { UploadProps, UploadRawFile } from 'element-plus'
 import { getAccessToken } from '@/utils/auth'
 import { Reply } from './types'
 const message = useMessage()
@@ -88,7 +90,19 @@ const uploadData = reactive({
 
 const beforeImageUpload = (rawFile: UploadRawFile) => useBeforeUpload(UploadType.Image, 2)(rawFile)
 
+const uploading = ref(false)
+const localBeforeImageUpload: UploadProps['beforeUpload'] = (rawFile) => {
+  const ok = beforeImageUpload(rawFile)
+  if (ok !== false) uploading.value = true
+  return ok
+}
+
+const onProgress: UploadProps['onProgress'] = () => {
+  uploading.value = true
+}
+
 const onUploadSuccess = (res: any) => {
+  uploading.value = false
   if (res.code !== 0) {
     message.error('上传出错：' + res.msg)
     return false
@@ -107,6 +121,11 @@ const onDelete = () => {
   reply.value.mediaId = null
   reply.value.url = null
   reply.value.name = null
+}
+
+const onUploadError = (err: Error) => {
+  uploading.value = false
+  message.error('上传失败: ' + err.message)
 }
 
 const selectMaterial = (item) => {

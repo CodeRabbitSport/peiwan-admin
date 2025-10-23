@@ -57,24 +57,22 @@ function openForm(type: string, id?: number) {
   formRef.value.open(type, id)
 }
 
-async function handleAuditSwitch(row: LevelApply, val: boolean) {
+async function handleToggleAuditStatus(row: LevelApply, status: number) {
   const originalStatus = row.auditStatus
-  if (val && originalStatus === 1) return
-  if (!val && originalStatus === 2) return
+  if (status === originalStatus) return
 
   try {
-    if (val) {
+    if (status === 1) {
       await LevelApplyApi.auditLevelApply({ id: row.id, auditStatus: 1 })
       row.auditStatus = 1
       row.rejectReason = ''
       message.success('审核通过')
     }
-    else {
+    else if (status === 2) {
       const { value } = await message.prompt('请输入拒绝原因', '审核拒绝')
       const reason = (value || '').trim()
       if (!reason) {
         message.warning('请填写拒绝原因')
-        row.auditStatus = originalStatus
         return
       }
       await LevelApplyApi.auditLevelApply({ id: row.id, auditStatus: 2, rejectReason: reason })
@@ -247,21 +245,27 @@ onMounted(() => {
         </template>
       </el-table-column>
       <el-table-column label="附件" align="center" prop="attachment" />
-      <el-table-column label="审核状态" align="center" prop="auditStatus" width="180px">
+      <el-table-column label="审核状态" align="center" prop="auditStatus" width="160">
         <template #default="scope">
           <div class="flex flex-col items-center gap-1">
-            <el-switch
-              :model-value="scope.row.auditStatus === 1"
-              :active-value="true"
-              :inactive-value="false"
-              inline-prompt
-              active-text="通过"
-              inactive-text="拒绝"
-              @change="(val) => handleAuditSwitch(scope.row, Boolean(val))"
-            />
-            <el-tag v-if="scope.row.auditStatus === 0" type="info">
-              待审核
-            </el-tag>
+            <template v-if="scope.row.auditStatus === 0">
+              <el-button-group>
+                <el-button size="small" type="success" @click="handleToggleAuditStatus(scope.row, 1)">
+                  通过
+                </el-button>
+                <el-button size="small" type="danger" @click="handleToggleAuditStatus(scope.row, 2)">
+                  不通过
+                </el-button>
+              </el-button-group>
+              <el-tag type="info">
+                待审核
+              </el-tag>
+            </template>
+            <template v-else>
+              <el-tag :type="scope.row.auditStatus === 1 ? 'success' : 'danger'">
+                {{ scope.row.auditStatus === 1 ? '审核通过' : '审核拒绝' }}
+              </el-tag>
+            </template>
           </div>
         </template>
       </el-table-column>

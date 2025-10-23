@@ -1,42 +1,14 @@
-<template>
-  <Dialog :title="dialogTitle" v-model="dialogVisible">
-    <el-form
-      ref="formRef"
-      :model="formData"
-      :rules="formRules"
-      label-width="100px"
-      v-loading="formLoading"
-    >
-      <el-form-item label="订单ID" prop="orderId">
-        <el-input v-model="formData.orderId" placeholder="请输入订单ID" />
-      </el-form-item>
-      <el-form-item label="用户ID" prop="userId">
-        <el-input v-model="formData.userId" placeholder="请输入用户ID" />
-      </el-form-item>
-      <el-form-item label="用户类型(1-会员,2-管理员)" prop="userType">
-        <el-radio-group v-model="formData.userType">
-          <el-radio value="1">请选择字典生成</el-radio>
-        </el-radio-group>
-      </el-form-item>
-      <el-form-item label="回复内容" prop="content">
-        <Editor v-model="formData.content" height="150px" />
-      </el-form-item>
-      <el-form-item label="图片列表" prop="images">
-        <el-input v-model="formData.images" placeholder="请输入图片列表" />
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <el-button @click="submitForm" type="primary" :disabled="formLoading">确 定</el-button>
-      <el-button @click="dialogVisible = false">取 消</el-button>
-    </template>
-  </Dialog>
-</template>
 <script setup lang="ts">
-import { ServiceOrderComplaintApi, ServiceOrderComplaint } from '@/api/gamer/serviceordercomplaint'
+import type { ServiceOrderComplaint } from '@/api/gamer/serviceordercomplaint'
+import { ServiceOrderComplaintApi } from '@/api/gamer/serviceordercomplaint'
 
 /** 订单投诉内容 表单 */
 defineOptions({ name: 'ServiceOrderComplaintForm' })
 
+// 提供 open 方法，用于打开弹窗
+
+/** 提交表单 */
+const emit = defineEmits(['success'])
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
 
@@ -50,18 +22,18 @@ const formData = ref({
   userId: undefined,
   userType: undefined,
   content: undefined,
-  images: undefined
+  images: undefined,
 })
 const formRules = reactive({
   orderId: [{ required: true, message: '订单ID不能为空', trigger: 'blur' }],
-  userType: [{ required: true, message: '用户类型(1-会员,2-管理员)不能为空', trigger: 'blur' }]
+  userType: [{ required: true, message: '用户类型(1-会员,2-管理员)不能为空', trigger: 'blur' }],
 })
 const formRef = ref() // 表单 Ref
 
 /** 打开弹窗 */
-const open = async (type: string, id?: number) => {
+async function open(type: string, id?: number) {
   dialogVisible.value = true
-  dialogTitle.value = t('action.' + type)
+  dialogTitle.value = t(`action.${type}`)
   formType.value = type
   resetForm()
   // 修改时，设置数据
@@ -69,16 +41,14 @@ const open = async (type: string, id?: number) => {
     formLoading.value = true
     try {
       formData.value = await ServiceOrderComplaintApi.getServiceOrderComplaint(id)
-    } finally {
+    }
+    finally {
       formLoading.value = false
     }
   }
 }
-defineExpose({ open }) // 提供 open 方法，用于打开弹窗
-
-/** 提交表单 */
-const emit = defineEmits(['success']) // 定义 success 事件，用于操作成功后的回调
-const submitForm = async () => {
+defineExpose({ open }) // 定义 success 事件，用于操作成功后的回调
+async function submitForm() {
   // 校验表单
   await formRef.value.validate()
   // 提交请求
@@ -88,28 +58,70 @@ const submitForm = async () => {
     if (formType.value === 'create') {
       await ServiceOrderComplaintApi.createServiceOrderComplaint(data)
       message.success(t('common.createSuccess'))
-    } else {
+    }
+    else {
       await ServiceOrderComplaintApi.updateServiceOrderComplaint(data)
       message.success(t('common.updateSuccess'))
     }
     dialogVisible.value = false
     // 发送操作成功的事件
     emit('success')
-  } finally {
+  }
+  finally {
     formLoading.value = false
   }
 }
 
 /** 重置表单 */
-const resetForm = () => {
+function resetForm() {
   formData.value = {
     id: undefined,
     orderId: undefined,
     userId: undefined,
     userType: undefined,
     content: undefined,
-    images: undefined
+    images: undefined,
   }
   formRef.value?.resetFields()
 }
 </script>
+
+<template>
+  <Dialog v-model="dialogVisible" :title="dialogTitle">
+    <el-form
+      ref="formRef"
+      v-loading="formLoading"
+      :model="formData"
+      :rules="formRules"
+      label-width="100px"
+    >
+      <el-form-item label="订单ID" prop="orderId">
+        <el-input v-model="formData.orderId" placeholder="请输入订单ID" />
+      </el-form-item>
+      <el-form-item label="用户ID" prop="userId">
+        <el-input v-model="formData.userId" placeholder="请输入用户ID" />
+      </el-form-item>
+      <el-form-item label="用户类型(1-会员,2-管理员)" prop="userType">
+        <el-radio-group v-model="formData.userType">
+          <el-radio value="1">
+            请选择字典生成
+          </el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="回复内容" prop="content">
+        <Editor v-model="formData.content" height="150px" />
+      </el-form-item>
+      <el-form-item label="图片列表" prop="images">
+        <el-input v-model="formData.images" placeholder="请输入图片列表" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button type="primary" :disabled="formLoading" @click="submitForm">
+        确 定
+      </el-button>
+      <el-button @click="dialogVisible = false">
+        取 消
+      </el-button>
+    </template>
+  </Dialog>
+</template>

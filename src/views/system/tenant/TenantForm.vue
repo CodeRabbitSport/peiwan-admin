@@ -22,8 +22,8 @@ const formData = ref({
   packageId: undefined,
   contactName: undefined,
   contactMobile: undefined,
-  accountCount: undefined,
-  expireTime: new Date(2099, 12, 31),
+  accountCount: 9999,
+  expireTime: new Date(2099, 12, 31).getTime(),
   websites: [],
   status: CommonStatusEnum.ENABLE,
   // 新增专属
@@ -77,7 +77,14 @@ async function submitForm() {
   formLoading.value = true
   try {
     const data = formData.value as unknown as TenantApi.TenantVO
-    data.websites = data.websites.map(website => website + nowHost.value)
+    data.websites = data.websites.map((website) => {
+      if (website.includes(nowHost.value)) {
+        return website
+      }
+      else {
+        return `${website}.${nowHost.value}`
+      }
+    })
     if (formType.value === 'create') {
       await TenantApi.createTenant(data)
       message.success(t('common.createSuccess'))
@@ -103,8 +110,8 @@ function resetForm() {
     packageId: undefined,
     contactName: undefined,
     contactMobile: undefined,
-    accountCount: undefined,
-    expireTime: new Date(2099, 12, 31),
+    accountCount: 9999,
+    expireTime: new Date(2099, 12, 31).getTime(),
     websites: [],
     status: CommonStatusEnum.ENABLE,
     username: undefined,

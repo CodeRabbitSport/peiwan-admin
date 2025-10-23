@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DepositTransfer } from '@/api/gamer/deposittransfer'
-import { DepositTransferApi } from '@/api/gamer/deposittransfer'
+import { DepositTransfer_approveDepositTransfer, DepositTransfer_executeDepositTransfer, DepositTransferApi } from '@/api/gamer/deposittransfer'
+import { fenToYuan } from '@/utils'
 import download from '@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
@@ -61,22 +62,6 @@ function openForm(type: string, id?: number) {
 }
 
 const checkedIds = ref<number[]>([])
-const currentRow = ref<Partial<DepositTransfer>>({})
-
-/** 删除按钮操作 */
-async function handleDelete(id: number) {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await DepositTransferApi.deleteDepositTransfer(id)
-    message.success(t('common.delSuccess'))
-    currentRow.value = {}
-    // 刷新列表
-    await getList()
-  }
-  catch {}
-}
 
 /** 批量删除保证金转入余额订单 */
 async function handleDeleteBatch() {
@@ -92,6 +77,37 @@ async function handleDeleteBatch() {
 }
 function handleRowCheckboxChange(records: DepositTransfer[]) {
   checkedIds.value = records.map(item => item.id!)
+}
+
+async function handleToggleDepositStatus(row: DepositTransfer, val: number) {
+  try {
+    if (val === 2) {
+      const data = await message.prompt('请输入拒绝原因', t('common.reminder'))
+      if (!data || (data as any).action !== 'confirm') return
+      const reason = (data as any).value ? String((data as any).value).trim() : ''
+      if (!reason) {
+        message.warning('请输入拒绝原因')
+        return
+      }
+      await DepositTransfer_approveDepositTransfer({ id: row.id, status: val, remark: reason })
+    }
+    else {
+      await DepositTransfer_approveDepositTransfer({ id: row.id, status: val })
+    }
+    message.success('状态已更新')
+    await getList()
+  }
+  catch {}
+}
+
+async function handleExecuteTransfer(row: DepositTransfer) {
+  try {
+    await message.confirm('确认执行该转账吗？')
+    await DepositTransfer_executeDepositTransfer({ id: row.id, isManual: true, remark: '' })
+    message.success('转账已执行')
+    await getList()
+  }
+  catch {}
 }
 
 /** 导出按钮操作 */
@@ -127,25 +143,23 @@ onMounted(() => {
       :inline="true"
       label-width="68px"
     >
-      <el-form-item label="流水号" prop="transactionNo">
+      <el-form-item label="流水" prop="transactionNo">
         <el-input
           v-model="queryParams.transactionNo"
           placeholder="请输入流水号"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
-      <el-form-item label="用户ID" prop="userId">
+      <el-form-item label="用户" prop="userId">
         <el-input
           v-model="queryParams.userId"
           placeholder="请输入用户ID"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
-      <el-form-item label="人工退款" prop="isManualTransferred">
+      <el-form-item label="人工" prop="isManualTransferred">
         <el-select
           v-model="queryParams.isManualTransferred"
           placeholder="请选择人工退款"
@@ -179,7 +193,7 @@ onMounted(() => {
           <el-option label="已转账" :value="1" />
         </el-select>
       </el-form-item>
-      <el-form-item label="创建时间" prop="createTime">
+      <el-form-item label="创建" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
           value-format="YYYY-MM-DD HH:mm:ss"
@@ -234,55 +248,46 @@ onMounted(() => {
       row-key="id"
       :data="list"
       :stripe="true"
-      :show-overflow-tooltip="true"
       @selection-change="handleRowCheckboxChange"
     >
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" />
-      <el-table-column label="流水号" align="center" prop="transactionNo" />
+      <!-- <el-table-column label="流水号" align="center" prop="transactionNo" /> -->
       <el-table-column label="用户ID" align="center" prop="userId" />
-      <el-table-column
-        label="退款时间"
-        align="center"
-        prop="transferredAt"
-        :formatter="dateFormatter"
-        width="180px"
-      />
-      <el-table-column label="退款金额(分)" align="center" prop="transactionAmount" />
-      <el-table-column
-        label="自动退款时间"
-        align="center"
-        prop="autoTransferredAt"
-        :formatter="dateFormatter"
-        width="180px"
-      />
-      <el-table-column label="人工退款" align="center" prop="isManualTransferred">
-        <template #default="{ row }">
-          <el-tag v-if="row.isManualTransferred === 1" type="success" effect="light">
-            是
-          </el-tag>
-          <el-tag v-else-if="row.isManualTransferred === 0" type="info" effect="light">
-            否
-          </el-tag>
-          <el-tag v-else type="warning" effect="light">
-            未知
-          </el-tag>
+      <el-table-column label="申请金额" align="center" prop="transactionAmount">
+        <template #default="scope">
+          {{ fenToYuan(scope.row.transactionAmount) }}
         </template>
       </el-table-column>
-      <el-table-column label="状态" align="center" prop="status">
-        <template #default="{ row }">
-          <el-tag v-if="row.status === 0" type="warning" effect="light">
-            待审核
-          </el-tag>
-          <el-tag v-else-if="row.status === 1" type="success" effect="light">
-            已通过
-          </el-tag>
-          <el-tag v-else-if="row.status === 2" type="danger" effect="light">
-            已拒绝
-          </el-tag>
-          <el-tag v-else type="info" effect="light">
-            未知
-          </el-tag>
+
+      <el-table-column label="状态" align="center" prop="status" width="160">
+        <template #default="scope">
+          <div class="flex flex-col items-center gap-1">
+            <template v-if="scope.row.status === 0">
+              <el-button-group>
+                <el-button size="small" type="success" @click="handleToggleDepositStatus(scope.row, 1)">
+                  通过
+                </el-button>
+                <el-button size="small" type="danger" @click="handleToggleDepositStatus(scope.row, 2)">
+                  不通过
+                </el-button>
+              </el-button-group>
+              <el-tag type="info">
+                待审核
+              </el-tag>
+            </template>
+            <template v-else>
+              <el-tag v-if="scope.row.status === 1" type="success" effect="light">
+                已通过
+              </el-tag>
+              <el-tag v-else-if="scope.row.status === 2" type="danger" effect="light">
+                已拒绝
+              </el-tag>
+              <el-tag v-else type="info" effect="light">
+                未知
+              </el-tag>
+            </template>
+          </div>
         </template>
       </el-table-column>
       <el-table-column
@@ -292,21 +297,41 @@ onMounted(() => {
         :formatter="dateFormatter"
         width="180px"
       />
+      <el-table-column
+        label="自动到账时间"
+        align="center"
+        prop="autoTransferredAt"
+        :formatter="dateFormatter"
+        width="180px"
+      />
+      <el-table-column
+        label="是否人工退款" align="center" prop="isManualTransferred" width="
+      120px"
+      >
+        <template #default="{ row }">
+          <el-tag v-if="row.isManualTransferred" type="success" effect="light">
+            是
+          </el-tag>
+          <el-tag v-else type="info" effect="light">
+            否
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="等待天数" align="center" prop="waitDays" />
-      <el-table-column label="转账" align="center" prop="transferStatus">
+      <el-table-column label="是否到账" align="center" prop="transferStatus">
         <template #default="{ row }">
           <el-tag v-if="row.transferStatus === 1" type="success" effect="light">
-            已转账
+            已到账
           </el-tag>
           <el-tag v-else-if="row.transferStatus === 0" type="info" effect="light">
-            未转账
+            未到账
           </el-tag>
           <el-tag v-else type="warning" effect="light">
             未知
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="备注" align="center" prop="remark" />
+      <!-- <el-table-column label="备注" align="center" prop="remark" /> -->
       <el-table-column
         label="创建时间"
         align="center"
@@ -320,18 +345,19 @@ onMounted(() => {
             v-hasPermi="['gamer:deposit-transfer:update']"
             link
             type="primary"
-            @click="openForm('update', scope.row.id)"
+            :disabled="scope.row.status !== 1 || scope.row.transferStatus !== 0"
+            @click="handleExecuteTransfer(scope.row)"
           >
-            编辑
+            立即转账
           </el-button>
-          <el-button
+          <!-- <el-button
             v-hasPermi="['gamer:deposit-transfer:delete']"
             link
             type="danger"
             @click="handleDelete(scope.row.id)"
           >
             删除
-          </el-button>
+          </el-button> -->
         </template>
       </el-table-column>
     </el-table>
