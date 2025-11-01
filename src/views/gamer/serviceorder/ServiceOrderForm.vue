@@ -174,20 +174,20 @@ function resetForm() {
       label-width="84px"
     >
       <el-form-item label="订单号" prop="orderNo">
-        <el-input v-model="formData.orderNo" readonly placeholder="请输入订单号" />
+        <el-input v-model="formData.orderNo" disabled placeholder="请输入订单号" />
       </el-form-item>
 
       <!-- <el-form-item label="接单人" prop="acceptorId">
         <UserSelectInput v-model="formData.acceptorId" readonly placeholder="请选择接单人" />
       </el-form-item> -->
       <el-form-item label="商品" prop="productName">
-        <el-input v-model="formData.productName" readonly placeholder="请输入商品名称" />
+        <el-input v-model="formData.productName" disabled placeholder="请输入商品名称" />
       </el-form-item>
       <el-form-item label="价格" prop="productPrice">
-        <el-input v-model="formData.productPrice" readonly placeholder="请输入商品价格" />
+        <el-input v-model="formData.productPrice" disabled placeholder="请输入商品价格" />
       </el-form-item>
       <el-form-item label="订单状态" prop="orderStatus">
-        <el-select v-model="formData.orderStatus" placeholder="请选择订单状态" clearable class="!w-[240px]">
+        <el-select v-model="formData.orderStatus" disabled placeholder="请选择订单状态" clearable class="!w-[240px]">
           <el-option label="待支付" :value="0" />
           <el-option label="进行中" :value="1" />
           <el-option label="已完成" :value="2" />
@@ -197,17 +197,17 @@ function resetForm() {
         </el-select>
       </el-form-item>
       <el-form-item label="支付状态" prop="payStatus">
-        <el-select v-model="formData.payStatus" placeholder="请选择支付状态" clearable class="!w-[240px]">
+        <el-select v-model="formData.payStatus" disabled placeholder="请选择支付状态" clearable class="!w-[240px]">
           <el-option label="未支付" :value="0" />
           <el-option label="已支付" :value="1" />
           <el-option label="已退款" :value="2" />
         </el-select>
       </el-form-item>
       <el-form-item label="订单备注" prop="orderRemark">
-        <el-input v-model="formData.orderRemark" type="textarea" placeholder="请输入取消原因" />
+        <el-input v-model="formData.orderRemark" disabled type="textarea" placeholder="请输入取消原因" />
       </el-form-item>
       <el-form-item label="退款原因" prop="refundApplyReason">
-        <el-input v-model="formData.refundApplyReason" type="textarea" placeholder="请输入取消原因" />
+        <el-input v-model="formData.refundApplyReason" disabled type="textarea" placeholder="请输入取消原因" />
       </el-form-item>
     </el-form>
     <template #footer>

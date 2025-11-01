@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-loading="uploading">
     <p>封面:</p>
     <div class="thumb-div">
       <el-image
@@ -22,9 +22,10 @@
           :limit="1"
           :file-list="fileList"
           :data="uploadData"
-          :before-upload="onBeforeUpload"
+          :before-upload="localBeforeUpload"
           :on-error="onUploadError"
           :on-success="onUploadSuccess"
+          :on-progress="onProgress"
         >
           <template #trigger>
             <el-button size="small" type="primary">本地上传</el-button>
@@ -110,7 +111,15 @@ const onMaterialSelected = (item: any) => {
 const onBeforeUpload: UploadProps['beforeUpload'] = (rawFile: UploadRawFile) =>
   useBeforeUpload(UploadType.Image, 2)(rawFile)
 
+const uploading = ref(false)
+const localBeforeUpload: UploadProps['beforeUpload'] = (file) => {
+  const ok = onBeforeUpload(file)
+  if (ok !== false) uploading.value = true
+  return ok
+}
+
 const onUploadSuccess: UploadProps['onSuccess'] = (res: any) => {
+  uploading.value = false
   if (res.code !== 0) {
     message.error('上传出错：' + res.msg)
     return false
@@ -125,7 +134,12 @@ const onUploadSuccess: UploadProps['onSuccess'] = (res: any) => {
 }
 
 const onUploadError = (err: Error) => {
+  uploading.value = false
   message.error('上传失败: ' + err.message)
+}
+
+const onProgress: UploadProps['onProgress'] = () => {
+  uploading.value = true
 }
 </script>
 

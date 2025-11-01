@@ -36,10 +36,59 @@
   }
 }
 
-// 手机模式下隐藏el-pagination__sizes
+// 手机端适配
 @media screen and (max-width: 768px) {
-  .el-pagination__sizes{
+  /* 分页尺寸选择隐藏 */
+  .el-pagination__sizes {
     display: none !important;
+  }
+
+  /* 表单：一列展示，控件占满 */
+  .el-form--inline .el-form-item {
+    display: block;
+    margin-right: 0 !important;
+    width: 100%;
+  }
+  .el-form-item .el-input,
+  .el-form-item .el-select,
+  .el-form-item .el-date-editor,
+  .el-form-item .el-input-number,
+  .el-form-item .el-cascader {
+    width: 100% !important;
+  }
+
+  /* Dialog/Drawer 宽度自适应 */
+  .el-dialog {
+    width: 95vw !important;
+    max-width: 95vw !important;
+  }
+  .el-drawer {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+
+  /* 表格：容器可横向滚动，单元格自动换行 */
+  .el-table {
+    width: 100% !important;
+  }
+  .el-table__body-wrapper {
+    overflow-x: auto !important;
+  }
+  .el-table .cell {
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  /* 上传：图片卡片更小 */
+  .el-upload--picture-card {
+    width: 90px;
+    height: 90px;
+    line-height: 90px;
+  }
+
+  /* 按钮间距适配 */
+  .el-button + .el-button {
+    margin-left: 6px;
   }
 }
 

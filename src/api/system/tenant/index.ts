@@ -71,3 +71,11 @@ export function deleteTenantList(ids: number[]) {
 export function exportTenant(params: TenantExportReqVO) {
   return request.download({ url: '/system/tenant/export-excel', params })
 }
+
+/**
+ * 获得考核码
+ * @returns
+ */
+export function TenantNew_getAssessmentCode(params) {
+  return request.get({ url: `/system/tenant-new/get-assessment-code`, params })
+}

@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { ElMessageBox } from 'element-plus'
+
 import { ProductApi } from '@/api/gamer/product'
 import type { ServiceOrder } from '@/api/gamer/serviceorder'
-import { acceptOrder, ServiceOrderApi } from '@/api/gamer/serviceorder'
+import { acceptOrder, ServiceOrder_auditOrderComplete, ServiceOrder_cancelAcceptOrder, ServiceOrder_updateOrderRefunded, ServiceOrderApi } from '@/api/gamer/serviceorder'
 import UserSelectInput from '@/components/UserSelectInput/index.vue'
 import UserInfoPickerDialog from '@/components/UserSelectInput/UserInfoPickerDialog.vue'
+import { fenToYuan } from '@/utils'
 import download from '@/utils/download'
 import { formatDate } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
@@ -119,18 +122,18 @@ function openForm(type: string, id?: number) {
 }
 
 /** 删除按钮操作 */
-async function handleDelete(id: number) {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await ServiceOrderApi.deleteServiceOrder(id)
-    message.success(t('common.delSuccess'))
-    // 刷新列表
-    await getList()
-  }
-  catch { }
-}
+// async function handleDelete(id: number) {
+//   try {
+//     // 删除的二次确认
+//     await message.delConfirm()
+//     // 发起删除
+//     await ServiceOrderApi.deleteServiceOrder(id)
+//     message.success(t('common.delSuccess'))
+//     // 刷新列表
+//     await getList()
+//   }
+//   catch { }
+// }
 const checkedIds = ref<number[]>([])
 
 /** 批量删除用户订单 */
@@ -309,6 +312,17 @@ async function handleAssignConfirm(user: any) {
 // 结单证明预览
 const voucherPreviewVisible = ref(false)
 const voucherPreviewUrl = ref('')
+const voucherPreviewList = computed<string[]>(() => {
+  try {
+    const val = voucherPreviewUrl.value
+    if (!val) return []
+    const parsed = JSON.parse(val)
+    return Array.isArray(parsed) ? parsed : (typeof parsed === 'string' ? [parsed] : [])
+  }
+  catch {
+    return voucherPreviewUrl.value ? [voucherPreviewUrl.value] : []
+  }
+})
 function openVoucherPreview(row: any) {
   const url = row?.completeVoucher
   if (!url) {
@@ -316,6 +330,48 @@ function openVoucherPreview(row: any) {
   }
   voucherPreviewUrl.value = url
   voucherPreviewVisible.value = true
+}
+async function handleImmediateRefund(row: any) {
+  try {
+    const { value } = await ElMessageBox.prompt('请输入退款原因', '提示', {
+      inputPlaceholder: '请填写退款原因',
+      inputValidator: (v: string) => !!v || '请填写退款原因',
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    const data: any = {}
+    if (row?.id) data.orderId = row.id
+    data.refundRemark = value
+    await ServiceOrder_updateOrderRefunded(data)
+    message.success('操作成功')
+    await getList()
+  }
+  catch {}
+}
+async function handleCancelOrder(row: any) {
+  try {
+    await message.confirm('确认取消该订单？')
+    const data: any = {}
+    if (row?.id) data.orderId = row.id
+    await ServiceOrder_cancelAcceptOrder(data)
+    message.success('操作成功')
+    await getList()
+  }
+  catch {}
+}
+async function handleAuditOrderComplete(row: any) {
+  try {
+    await message.confirm('确认完成该订单？')
+    const params: any = {
+      retoreToUnComplete: false,
+    }
+    if (row?.id) params.orderId = row.id
+    await ServiceOrder_auditOrderComplete(params)
+    message.success('操作成功')
+    await getList()
+  }
+  catch {}
 }
 </script>
 
@@ -335,7 +391,6 @@ function openVoucherPreview(row: any) {
           placeholder="请输入订单号"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
       <el-form-item label="用户ID" prop="userId">
@@ -345,9 +400,9 @@ function openVoucherPreview(row: any) {
           @change="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="接单人ID" prop="acceptorId">
+      <el-form-item label="接单人ID" prop="captainId">
         <UserSelectInput
-          v-model="queryParams.acceptorId"
+          v-model="queryParams.captainId"
           placeholder="请选择接单人"
           @change="handleQuery"
         />
@@ -512,11 +567,11 @@ function openVoucherPreview(row: any) {
                 style="width: 60px; height: 60px"
               />
             </div>
-            <div>订单金额：{{ scope.row.totalAmount != null ? (scope.row.totalAmount / 100) : '无' }}</div>
-            <div>支付金额：{{ scope.row.actualAmount != null ? (scope.row.actualAmount / 100) : '无' }}</div>
+            <div>订单金额：{{ scope.row.totalAmount != null ? fenToYuan(scope.row.totalAmount) : '无' }}</div>
+            <div>支付金额：{{ scope.row.actualAmount != null ? fenToYuan(scope.row.actualAmount) : '无' }}</div>
 
             <div v-if="scope.row.refundAmount > 0">
-              退款金额：{{ scope.row.refundAmount != null ? scope.row.refundAmount : '无' }}
+              退款金额：{{ scope.row.refundAmount != null ? fenToYuan(scope.row.refundAmount) : '无' }}
             </div>
           </div>
         </template>
@@ -562,11 +617,19 @@ function openVoucherPreview(row: any) {
               {{ getOrderStatusTag(scope.row).text }}
             </el-tag>
             <el-tag
+              v-if="scope.row.completeTime && !scope.row.confirmTime"
+              type="warning"
+              effect="plain"
+            >
+              打手已完成
+            </el-tag>
+            <el-tag
               :type="formatPayStatus(scope.row.payStatus).color"
               effect="plain"
             >
               {{ formatPayStatus(scope.row.payStatus).text }}
             </el-tag>
+
             <p v-if="scope.row.refundApplyReason">
               退款原因：{{ scope.row.refundApplyReason }}
             </p>
@@ -645,6 +708,14 @@ function openVoucherPreview(row: any) {
                 >
                   查看
                 </el-dropdown-item>
+                <!-- 完成订单 -->
+                <el-dropdown-item
+                  v-if="scope.row.completeTime"
+                  v-hasPermi="['gamer:service-order:update']"
+                  @click="handleAuditOrderComplete(scope.row)"
+                >
+                  完成订单
+                </el-dropdown-item>
                 <el-dropdown-item
                   v-if="scope.row.orderStatus === 4"
                   v-hasPermi="['gamer:service-order:update']"
@@ -652,15 +723,29 @@ function openVoucherPreview(row: any) {
                 >
                   退款审核
                 </el-dropdown-item>
+                <el-dropdown-item
+                  v-if="scope.row.payStatus === 1 && (!Array.isArray(scope.row.acceptorList) || scope.row.acceptorList.length === 0)"
+                  v-hasPermi="['gamer:service-order:refund']"
+                  @click="handleImmediateRefund(scope.row)"
+                >
+                  立即退款
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-if="scope.row.orderStatus === 1"
+                  v-hasPermi="['gamer:service-order:cancel-accept']"
+                  @click="handleCancelOrder(scope.row)"
+                >
+                  取消订单
+                </el-dropdown-item>
                 <el-dropdown-item @click="openVoucherPreview(scope.row)">
                   查看结单证明
                 </el-dropdown-item>
-                <el-dropdown-item
+                <!-- <el-dropdown-item
                   v-hasPermi="['gamer:service-order:delete']"
                   @click="handleDelete(scope.row.id)"
                 >
                   删除
-                </el-dropdown-item>
+                </el-dropdown-item> -->
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -714,14 +799,21 @@ function openVoucherPreview(row: any) {
   <!-- 结单证明预览 -->
   <Dialog v-model="voucherPreviewVisible" title="结单证明" align-center width="80vw">
     <div class="flex items-center justify-center">
-      <el-image
-        v-if="voucherPreviewUrl"
-        :src="voucherPreviewUrl"
-        :preview-src-list="[voucherPreviewUrl]"
-        :initial-index="0"
-        fit="contain"
-        style="max-width: 100%; max-height: 70vh"
-      />
+      <div v-if="voucherPreviewList.length" class="relative w-full">
+        <div class="absolute right-2 top-2 z-1000 rounded px-2 py-1 text-xs text-white" style="background: rgba(0,0,0,.5)">
+          共 {{ voucherPreviewList.length }} 张
+        </div>
+        <el-carousel height="70vh" indicator-position="outside" arrow="hover" :autoplay="false">
+          <el-carousel-item v-for="(img, idx) in voucherPreviewList" :key="idx">
+            <div class="h-full flex items-center justify-center">
+              <el-image
+                :src="img" :preview-src-list="voucherPreviewList" :initial-index="idx" fit="contain" class="h-full"
+                preview-teleported
+              />
+            </div>
+          </el-carousel-item>
+        </el-carousel>
+      </div>
     </div>
   </Dialog>
 </template>

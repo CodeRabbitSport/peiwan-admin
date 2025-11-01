@@ -283,7 +283,7 @@ onMounted(() => {
       <el-table-column label="退款单号" align="center" prop="payRefundId" />
       <el-table-column label="退款金额(总额/实付/赠送)" align="center" min-width="160">
         <template #default="{ row }">
-          {{ row.refundTotalPrice ?? '-' }} / {{ row.refundPayPrice ?? '-' }} / {{ row.refundBonusPrice ?? '-' }}
+          {{ fenToYuan(row.refundTotalPrice) }} / {{ fenToYuan(row.refundPayPrice) }} / {{ fenToYuan(row.refundBonusPrice) }}
         </template>
       </el-table-column>
       <el-table-column label="退款状态" align="center">

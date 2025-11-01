@@ -1,21 +1,115 @@
+<script lang="ts" setup>
+import type { UploadProps } from 'element-plus'
+
+import { createImageViewer } from '@/components/ImageViewer'
+import { useUpload } from '@/components/UploadFile/src/useUpload'
+import { generateUUID } from '@/utils'
+import { propTypes } from '@/utils/propTypes'
+
+defineOptions({ name: 'UploadImg' })
+
+// 接受父组件参数
+const props = defineProps({
+  modelValue: propTypes.string.def(''),
+  drag: propTypes.bool.def(true), // 是否支持拖拽上传 ==> 非必传（默认为 true）
+  disabled: propTypes.bool.def(false), // 是否禁用上传组件 ==> 非必传（默认为 false）
+  fileSize: propTypes.number.def(50), // 图片大小限制 ==> 非必传（默认为 5M）
+  fileType: propTypes.array.def(['image/jpeg', 'image/png', 'image/gif']), // 图片类型限制 ==> 非必传（默认为 ["image/jpeg", "image/png", "image/gif"]）
+  height: propTypes.string.def('150px'), // 组件高度 ==> 非必传（默认为 150px）
+  width: propTypes.string.def('150px'), // 组件宽度 ==> 非必传（默认为 150px）
+  borderradius: propTypes.string.def('8px'), // 组件边框圆角 ==> 非必传（默认为 8px）
+  showDelete: propTypes.bool.def(true), // 是否显示删除按钮
+  showBtnText: propTypes.bool.def(true), // 是否显示按钮文字
+  directory: propTypes.string.def(undefined), // 上传目录 ==> 非必传（默认为 undefined）
+})
+
+const emit = defineEmits(['update:modelValue'])
+
+type FileTypes
+  = | 'image/apng'
+    | 'image/bmp'
+    | 'image/gif'
+    | 'image/jpeg'
+    | 'image/pjpeg'
+    | 'image/png'
+    | 'image/svg+xml'
+    | 'image/tiff'
+    | 'image/webp'
+    | 'image/x-icon'
+
+const { t } = useI18n() // 国际化
+const message = useMessage() // 消息弹窗
+// 生成组件唯一id
+const uuid = ref(`id-${generateUUID()}`)
+// 查看图片
+function imagePreview(imgUrl: string) {
+  createImageViewer({
+    zIndex: 9999999,
+    urlList: [imgUrl],
+  })
+}
+
+function deleteImg() {
+  emit('update:modelValue', '')
+}
+
+const { uploadUrl, httpRequest } = useUpload(props.directory)
+
+function editImg() {
+  const dom = document.querySelector(`#${uuid.value} .el-upload__input`)
+  dom && dom.dispatchEvent(new MouseEvent('click'))
+}
+
+const uploading = ref(false)
+
+const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
+  const imgSize = rawFile.size / 1024 / 1024 < props.fileSize
+  const imgType = props.fileType
+  if (!imgType.includes(rawFile.type as FileTypes))
+    message.notifyWarning('上传图片不符合所需的格式！')
+  if (!imgSize) message.notifyWarning(`上传图片大小不能超过 ${props.fileSize}M！`)
+  const isValid = imgType.includes(rawFile.type as FileTypes) && imgSize
+  if (isValid) uploading.value = true
+  return isValid
+}
+
+// 图片上传成功提示
+const uploadSuccess: UploadProps['onSuccess'] = (res: any): void => {
+  uploading.value = false
+  message.success('上传成功')
+  emit('update:modelValue', res.data)
+}
+
+// 图片上传错误提示
+function uploadError() {
+  uploading.value = false
+  message.notifyError('图片上传失败，请您重新上传！')
+}
+
+const onProgress: UploadProps['onProgress'] = () => {
+  uploading.value = true
+}
+</script>
+
 <template>
   <div class="upload-box">
     <el-upload
+      v-loading="uploading"
       :id="uuid"
-      :accept="fileType.join(',')"
       :action="uploadUrl"
       :before-upload="beforeUpload"
-      :class="['upload', drag ? 'no-border' : '']"
+      class="upload" :class="[drag ? 'no-border' : '']"
       :disabled="disabled"
       :drag="drag"
       :http-request="httpRequest"
       :multiple="false"
+      :on-progress="onProgress"
       :on-error="uploadError"
       :on-success="uploadSuccess"
       :show-file-list="false"
     >
       <template v-if="modelValue">
-        <img :src="modelValue" class="upload-image" />
+        <img :src="modelValue" class="upload-image">
         <div class="upload-handle" @click.stop>
           <div v-if="!disabled" class="handle-icon" @click="editImg">
             <Icon icon="ep:edit" />
@@ -41,92 +135,11 @@
       </template>
     </el-upload>
     <div class="el-upload__tip">
-      <slot name="tip"></slot>
+      <slot name="tip" />
     </div>
   </div>
 </template>
 
-<script lang="ts" setup>
-import type { UploadProps } from 'element-plus'
-
-import { generateUUID } from '@/utils'
-import { propTypes } from '@/utils/propTypes'
-import { createImageViewer } from '@/components/ImageViewer'
-import { useUpload } from '@/components/UploadFile/src/useUpload'
-
-defineOptions({ name: 'UploadImg' })
-
-type FileTypes =
-  | 'image/apng'
-  | 'image/bmp'
-  | 'image/gif'
-  | 'image/jpeg'
-  | 'image/pjpeg'
-  | 'image/png'
-  | 'image/svg+xml'
-  | 'image/tiff'
-  | 'image/webp'
-  | 'image/x-icon'
-
-// 接受父组件参数
-const props = defineProps({
-  modelValue: propTypes.string.def(''),
-  drag: propTypes.bool.def(true), // 是否支持拖拽上传 ==> 非必传（默认为 true）
-  disabled: propTypes.bool.def(false), // 是否禁用上传组件 ==> 非必传（默认为 false）
-  fileSize: propTypes.number.def(5), // 图片大小限制 ==> 非必传（默认为 5M）
-  fileType: propTypes.array.def(['image/jpeg', 'image/png', 'image/gif']), // 图片类型限制 ==> 非必传（默认为 ["image/jpeg", "image/png", "image/gif"]）
-  height: propTypes.string.def('150px'), // 组件高度 ==> 非必传（默认为 150px）
-  width: propTypes.string.def('150px'), // 组件宽度 ==> 非必传（默认为 150px）
-  borderradius: propTypes.string.def('8px'), // 组件边框圆角 ==> 非必传（默认为 8px）
-  showDelete: propTypes.bool.def(true), // 是否显示删除按钮
-  showBtnText: propTypes.bool.def(true), // 是否显示按钮文字
-  directory: propTypes.string.def(undefined) // 上传目录 ==> 非必传（默认为 undefined）
-})
-const { t } = useI18n() // 国际化
-const message = useMessage() // 消息弹窗
-// 生成组件唯一id
-const uuid = ref('id-' + generateUUID())
-// 查看图片
-const imagePreview = (imgUrl: string) => {
-  createImageViewer({
-    zIndex: 9999999,
-    urlList: [imgUrl]
-  })
-}
-
-const emit = defineEmits(['update:modelValue'])
-
-const deleteImg = () => {
-  emit('update:modelValue', '')
-}
-
-const { uploadUrl, httpRequest } = useUpload(props.directory)
-
-const editImg = () => {
-  const dom = document.querySelector(`#${uuid.value} .el-upload__input`)
-  dom && dom.dispatchEvent(new MouseEvent('click'))
-}
-
-const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
-  const imgSize = rawFile.size / 1024 / 1024 < props.fileSize
-  const imgType = props.fileType
-  if (!imgType.includes(rawFile.type as FileTypes))
-    message.notifyWarning('上传图片不符合所需的格式！')
-  if (!imgSize) message.notifyWarning(`上传图片大小不能超过 ${props.fileSize}M！`)
-  return imgType.includes(rawFile.type as FileTypes) && imgSize
-}
-
-// 图片上传成功提示
-const uploadSuccess: UploadProps['onSuccess'] = (res: any): void => {
-  message.success('上传成功')
-  emit('update:modelValue', res.data)
-}
-
-// 图片上传错误提示
-const uploadError = () => {
-  message.notifyError('图片上传失败，请您重新上传！')
-}
-</script>
 <style lang="scss" scoped>
 .is-error {
   .upload {

@@ -172,7 +172,6 @@ onMounted(() => {
           placeholder="请输入用户唯一编号"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
       <el-form-item label="手机号" prop="phone">
@@ -181,7 +180,6 @@ onMounted(() => {
           placeholder="请输入手机号"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
       <el-form-item label="用户昵称" prop="nickname">
@@ -190,7 +188,6 @@ onMounted(() => {
           placeholder="请输入用户昵称"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
 
@@ -200,7 +197,6 @@ onMounted(() => {
           placeholder="请输入城市"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
       <!-- <el-form-item label="语音审核状态" prop="voiceAuditStatus">
@@ -290,10 +286,10 @@ onMounted(() => {
               </el-tag>
               <div>保证金：{{ fenToYuan(scope.row.depositBalance) ?? 0 }}</div>
               <div>打手评分：{{ scope.row.contributePoint ?? 0 }}</div>
-              <div>打手上班状态：{{ scope.row.authStatus ? '已上班' : '已下班' }}</div>
-              <div v-if="scope.row.levelApply.contact">
+              <!--  <div>打手上班状态：{{ scope.row.authStatus ? '已上班' : '已下班' }}</div>
+             <div v-if="scope.row.levelApply.contact">
                 联系手机号：{{ scope.row.levelApply.contact }}
-              </div>
+              </div> -->
             </template>
             <template v-else>
               <el-tag>普通用户</el-tag>

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Delete as ElIconDelete, Plus as ElIconPlus } from '@element-plus/icons-vue'
+
 import type { LevelConfig } from '@/api/gamer/levelconfig'
 import { LevelConfigApi } from '@/api/gamer/levelconfig'
 import type { PrizeGroup } from '@/api/gamer/prizegroup'
@@ -74,12 +76,18 @@ const formData = ref<any>({
   virtualPrice: undefined,
   estimateAccompanyTime: undefined,
   saleStatus: undefined,
+  // 接单大区（从分类移入商品：保持字段与交互不变）
+  orderReceivingStatus: undefined,
+  orderReceivingRegion: '',
 })
 const formRules = reactive({
   productTitle: [{ required: true, message: '商品标题不能为空', trigger: 'blur' }],
   commissionRate: [{ required: true, message: '抽成比例(陪玩到手比例)不能为空', trigger: 'blur' }],
 })
 const formRef = ref() // 表单 Ref
+
+// 接单大区动态表单字段（从分类移入：保持字段与交互不变）
+const orderReceivingRegionFields = ref([{ region: '', price: 0 }])
 
 /** 打开弹窗 */
 async function open(type: string, id?: number) {
@@ -110,6 +118,8 @@ async function open(type: string, id?: number) {
       if (formData.value.virtualPrice) {
         formData.value.virtualPrice = fenToYuan(formData.value.virtualPrice)
       }
+      // 初始化接单大区字段
+      initOrderReceivingRegionFields()
       // 编辑时将等级字符串解析为数组，便于多选
       if (formData.value.productLevel && typeof formData.value.productLevel === 'string') {
         const arr = (formData.value.productLevel as unknown as string)
@@ -119,6 +129,10 @@ async function open(type: string, id?: number) {
         formData.value.productLevel = arr as any
       }
       await loadLevelOptions()
+      // 确保有默认的接单大区字段行
+      if (!orderReceivingRegionFields.value || orderReceivingRegionFields.value.length === 0) {
+        orderReceivingRegionFields.value = [{ region: '', price: 0 }]
+      }
     }
     finally {
       formLoading.value = false
@@ -142,6 +156,27 @@ async function submitForm() {
     }
     formData.value.productPrice = formData.value.productPrice ? formData.value.productPrice * 100 : 0
     formData.value.virtualPrice = formData.value.virtualPrice ? formData.value.virtualPrice * 100 : 0
+    // 同步接单大区序列化数据
+    updateOrderReceivingRegionData()
+    // 重复校验：接单大区名称不得重复（只在启用时校验）
+    if (formData.value.orderReceivingStatus === true) {
+      const regions = orderReceivingRegionFields.value
+        .map(it => (it.region || '').trim())
+        .filter((n: string) => n !== '')
+      const seen = new Set<string>()
+      let dupName: string | null = null
+      for (const n of regions) {
+        if (seen.has(n)) {
+          dupName = n
+          break
+        }
+        seen.add(n)
+      }
+      if (dupName) {
+        message.error(`接单大区存在重复的大区名称：${dupName}`)
+        return
+      }
+    }
     // 创建提交数据，排除级联选择器字段
     const { categoryTypeValue, ...submitData } = formData.value
     const data = submitData as unknown as Product
@@ -213,8 +248,52 @@ function resetForm() {
     virtualPrice: undefined,
     estimateAccompanyTime: undefined,
     saleStatus: undefined,
+    // 接单大区（从分类移入商品：保持字段与交互不变）
+    orderReceivingStatus: undefined,
+    orderReceivingRegion: '',
   }
   formRef.value?.resetFields()
+}
+
+function addOrderReceivingRegionField() {
+  orderReceivingRegionFields.value.push({ region: '', price: 0 })
+  updateOrderReceivingRegionData()
+}
+
+function removeOrderReceivingRegionField(index: number) {
+  if (orderReceivingRegionFields.value.length > 1) {
+    orderReceivingRegionFields.value.splice(index, 1)
+    updateOrderReceivingRegionData()
+  }
+}
+
+function updateOrderReceivingRegionData() {
+  const filtered = orderReceivingRegionFields.value
+    .map(it => ({ region: (it.region || '').trim(), price: Number(it.price ?? 0) }))
+    .filter(it => it.region !== '' || it.price > 0)
+  formData.value.orderReceivingRegion = filtered.length > 0 ? JSON.stringify(filtered) : ''
+}
+
+function initOrderReceivingRegionFields() {
+  const value = formData.value.orderReceivingRegion as unknown as string
+  if (value) {
+    try {
+      const parsed = JSON.parse(value)
+      const parsedList = Array.isArray(parsed) ? parsed : []
+      const mapped = parsedList.map((it: any) => ({
+        region: it?.region ?? '',
+        price: Number(it?.price ?? 0),
+      }))
+      if (mapped.length > 0) {
+        orderReceivingRegionFields.value = mapped
+        return
+      }
+    }
+    catch {
+      // ignore json parse error
+    }
+  }
+  orderReceivingRegionFields.value = [{ region: '', price: 0 }]
 }
 </script>
 
@@ -334,6 +413,50 @@ function resetForm() {
           </el-form-item>
         </el-col>
       </el-row>
+
+      <!-- 接单大区（从分类移入商品：保持字段与交互不变） -->
+      <el-form-item label="接单大区" prop="orderReceivingStatus">
+        <el-radio-group v-model="formData.orderReceivingStatus">
+          <el-radio :value="false">
+            不启用
+          </el-radio>
+          <el-radio :value="true">
+            启用
+          </el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="接单大区" prop="orderReceivingRegion">
+        <div class="dynamic-form w-full">
+          <div v-for="(item, index) in orderReceivingRegionFields" :key="index" class="mb-2">
+            <div class="flex gap-x-2">
+              <div :span="2">
+                大区名称
+              </div>
+              <div :span="3">
+                <el-input v-model="item.region" placeholder="请输入大区名称" @input="updateOrderReceivingRegionData" />
+              </div>
+              <div :span="2" class="mx-2">
+                涨幅价格
+              </div>
+              <div :span="2">
+                <el-input-number v-model="item.price" :min="0" :step="1" @change="updateOrderReceivingRegionData" />
+              </div>
+              <div :span="1">
+                <el-button
+                  type="danger"
+                  :icon="ElIconDelete"
+                  size="small"
+                  :disabled="orderReceivingRegionFields.length <= 1"
+                  @click="removeOrderReceivingRegionField(index)"
+                />
+              </div>
+            </div>
+          </div>
+          <el-button type="primary" :icon="ElIconPlus" size="small" class="mt-2 !w-[400px]" @click="addOrderReceivingRegionField">
+            添加大区
+          </el-button>
+        </div>
+      </el-form-item>
 
       <el-row>
         <!-- <el-col :xs="24" :sm="12">

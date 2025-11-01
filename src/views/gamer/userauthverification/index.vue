@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { UserAuthVerification_auditUserAuthVerification, UserAuthVerificationApi } from '@/api/gamer/userauthverification'
 import type { UserAuthVerification } from '@/api/gamer/userauthverification'
-import { UserAuthVerificationApi } from '@/api/gamer/userauthverification'
 import download from '@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
@@ -59,6 +59,36 @@ function resetQuery() {
 const formRef = ref()
 function openForm(type: string, id?: number) {
   formRef.value.open(type, id)
+}
+
+async function handleToggleUserAuthStatus(row: UserAuthVerification, status: number) {
+  const originalStatus = row.status
+  if (status === originalStatus) return
+
+  try {
+    if (status === 1) {
+      await UserAuthVerification_auditUserAuthVerification({ id: row.id, status: 1 })
+      row.status = 1
+      row.rejectReason = ''
+      message.success('审核通过')
+    }
+    else if (status === 2) {
+      const { value } = await message.prompt('请输入拒绝原因', '审核拒绝')
+      const reason = (value || '').trim()
+      if (!reason) {
+        message.warning('请填写拒绝原因')
+        return
+      }
+      await UserAuthVerification_auditUserAuthVerification({ id: row.id, status: 2, rejectReason: reason })
+      row.status = 2
+      row.rejectReason = reason
+      message.success('已拒绝')
+    }
+    await getList()
+  }
+  catch {
+    row.status = originalStatus
+  }
 }
 
 /** 删除按钮操作 */
@@ -131,7 +161,6 @@ onMounted(() => {
           placeholder="请输入用户ID"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
       <el-form-item label="真实姓名" prop="realName">
@@ -140,7 +169,6 @@ onMounted(() => {
           placeholder="请输入真实姓名"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
       <!-- <el-form-item label="身份证号码" label-width="100px" prop="idCardNo">
@@ -149,7 +177,7 @@ onMounted(() => {
           placeholder="请输入身份证号码"
           clearable
           class="!w-[240px]"
-          
+
         />
       </el-form-item> -->
       <el-form-item label="审核状态" prop="status">
@@ -170,7 +198,7 @@ onMounted(() => {
           placeholder="请输入审核人ID"
           clearable
           class="!w-[240px]"
-          
+
         />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
@@ -229,14 +257,31 @@ onMounted(() => {
       <el-table-column label="身份证号码" align="center" prop="idCardNo" />
       <el-table-column label="身份证正面图片" align="center" prop="frontImageUrl">
         <template #default="scope">
-          <el-image :src="scope.row.frontImageUrl" :preview-src-list="[scope.row.frontImageUrl]" fit="cover" preview-teleported/>
+          <el-image :src="scope.row.frontImageUrl" :preview-src-list="[scope.row.frontImageUrl]" fit="cover" preview-teleported />
         </template>
       </el-table-column>
-      <el-table-column label="审核状态" align="center" prop="status">
+      <el-table-column label="审核状态" align="center" prop="status" width="160">
         <template #default="scope">
-          <el-tag :type="scope.row.status === 0 ? 'warning' : scope.row.status === 1 ? 'success' : 'danger'">
-            {{ scope.row.status === 0 ? '待审核' : scope.row.status === 1 ? '审核通过' : '审核拒绝' }}
-          </el-tag>
+          <div class="flex flex-col items-center gap-1">
+            <template v-if="scope.row.status === 0">
+              <el-button-group>
+                <el-button size="small" type="success" @click="handleToggleUserAuthStatus(scope.row, 1)">
+                  通过
+                </el-button>
+                <el-button size="small" type="danger" @click="handleToggleUserAuthStatus(scope.row, 2)">
+                  不通过
+                </el-button>
+              </el-button-group>
+              <el-tag type="info">
+                待审核
+              </el-tag>
+            </template>
+            <template v-else>
+              <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
+                {{ scope.row.status === 1 ? '审核通过' : '审核拒绝' }}
+              </el-tag>
+            </template>
+          </div>
         </template>
       </el-table-column>
       <el-table-column label="拒绝原因" align="center" prop="rejectReason" />
@@ -255,7 +300,7 @@ onMounted(() => {
         :formatter="dateFormatter"
         width="180px"
       />
-      <el-table-column label="操作" align="center" min-width="120px">
+      <!-- <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
           <el-button
             v-hasPermi="['gamer:user-auth-verification:update']"
@@ -274,7 +319,7 @@ onMounted(() => {
             删除
           </el-button>
         </template>
-      </el-table-column>
+      </el-table-column> -->
     </el-table>
     <!-- 分页 -->
     <Pagination

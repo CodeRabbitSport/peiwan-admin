@@ -3,6 +3,7 @@ import { ServiceOrderApi } from '@/api/gamer/serviceorder'
 import type { ServiceOrderComplaint } from '@/api/gamer/serviceordercomplaint'
 import { ServiceOrderComplaintApi } from '@/api/gamer/serviceordercomplaint'
 import { useUserStore } from '@/store/modules/user'
+import { fenToYuan } from '@/utils'
 import download from '@/utils/download'
 import { dateFormatter, formatDate } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
@@ -75,6 +76,12 @@ async function openComplaintDialog(row: any) {
     complaintLoading.value = false
   }
 }
+
+watch(complaintDialogVisible, (val) => {
+  if (!val) {
+    complaintList.value = []
+  }
+})
 
 // 完成投诉处理弹窗
 const completeDialogVisible = ref(false)
@@ -285,7 +292,6 @@ onMounted(() => {
           placeholder="订单ID"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
       <el-form-item label="用户ID" prop="userId">
@@ -294,7 +300,6 @@ onMounted(() => {
           placeholder="用户ID"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
       <el-form-item label="投诉状态" prop="userType">
@@ -504,13 +509,13 @@ onMounted(() => {
       <el-table-column label="金额" align="center" width="180">
         <template #default="scope">
           <div class="text-left">
-            <div>价格：{{ scope.row.productPrice != null ? (scope.row.productPrice / 100) : '-' }}</div>
-            <div>订单总金额：{{ scope.row.totalAmount != null ? (scope.row.totalAmount / 100) : '-' }}</div>
-            <div>实际支付金额：{{ scope.row.actualAmount != null ? (scope.row.actualAmount / 100) : '-' }}</div>
-            <div>平台手续费：{{ scope.row.platformFee != null ? (scope.row.platformFee / 100) : '-' }}</div>
-            <div>接单人获得金额：{{ scope.row.acceptorAmount != null ? (scope.row.acceptorAmount / 100) : '-' }}</div>
+            <div>价格：{{ scope.row.productPrice != null ? fenToYuan(scope.row.productPrice) : '-' }}</div>
+            <div>订单总金额：{{ scope.row.totalAmount != null ? fenToYuan(scope.row.totalAmount) : '-' }}</div>
+            <div>实际支付金额：{{ scope.row.actualAmount != null ? fenToYuan(scope.row.actualAmount) : '-' }}</div>
+            <div>平台手续费：{{ scope.row.platformFee != null ? fenToYuan(scope.row.platformFee) : '-' }}</div>
+            <div>接单人获得金额：{{ scope.row.acceptorAmount != null ? fenToYuan(scope.row.acceptorAmount) : '-' }}</div>
             <div v-if="scope.row.refundAmount > 0">
-              退款金额：{{ scope.row.refundAmount != null ? scope.row.refundAmount : '-' }}
+              退款金额：{{ scope.row.refundAmount != null ? fenToYuan(scope.row.refundAmount) : '-' }}
             </div>
           </div>
         </template>
@@ -546,7 +551,7 @@ onMounted(() => {
   </Dialog>
 
   <!-- 投诉列表弹窗 -->
-  <Dialog v-model="complaintDialogVisible" title="投诉内容" width="80vw" align-center>
+  <Dialog v-if="complaintDialogVisible" v-model="complaintDialogVisible" title="投诉内容" width="80vw" align-center>
     <div class="mb-3">
       <el-button type="primary" class="mr-2" @click="replyDialogVisible = true">
         回复
@@ -575,7 +580,7 @@ onMounted(() => {
       <el-table-column label="图片" align="center" prop="images">
         <template #default="scope">
           <div class="flex flex-wrap gap-2">
-            <el-image v-if="scope.row?.images || scope.row?.images !== ''" :src="JSON.parse(scope.row?.images || '[]')?.[0]" fit="cover" style="width: 60px; height: 60px" :preview-src-list="JSON.parse(scope.row?.images || '[]')" preview-teleported/>
+            <el-image v-if="scope.row?.images || scope.row?.images !== ''" :src="scope.row?.images.startsWith('[') ? JSON.parse(scope.row?.images || '[]')?.[0] : scope.row?.images" fit="cover" style="width: 60px; height: 60px" :preview-src-list="scope.row?.images.startsWith('[') ? JSON.parse(scope.row?.images || '[]') : [scope.row?.images]" preview-teleported />
             <span v-else>-</span>
           </div>
         </template>

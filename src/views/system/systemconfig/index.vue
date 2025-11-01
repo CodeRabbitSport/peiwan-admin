@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { SystemConfigApi } from '@/api/gamer/systemconfig'
 
-import HotTopicListEditor from './components/HotTopicListEditor.vue'
 import ProductSelectorDialog from './components/ProductSelectorDialog.vue'
 
 defineOptions({ name: 'SystemConfig' })
@@ -43,6 +42,8 @@ const KEYS = {
   GIFT_COMMISSION_RATE: 'itemShopConfigGiftCommissionRate',
   TOP_CARD_PRICE: 'itemShopConfigTopCardPrice',
   REFRESH_CARD_PRICE: 'itemShopConfigRefreshCardPrice',
+  ENABLE_PICK_ORDER_SMS_NOTICE: 'orderNoticeConfigEnablePickOrderSmsNotice',
+  ENABLE_FIGHTER_COMPLETE_ORDER_SMS_NOTICE: 'orderNoticeConfigEnableFighterCompleteOrderSmsNotice',
 } as const
 
 type KeyName = typeof KEYS[keyof typeof KEYS]
@@ -79,13 +80,15 @@ const formData = reactive<any>({
   giftCommissionRate: 0,
   topCardPrice: 0,
   refreshCardPrice: 0,
+  orderNoticeConfigEnablePickOrderSmsNotice: false,
+  orderNoticeConfigEnableFighterCompleteOrderSmsNotice: false,
 })
 
 // 当前已有配置映射（key -> id）
 const existingIdMap = ref<Record<string, number>>({})
 
 const loadingAll = ref(false)
-const activeGroups = ref<string[]>(['topic', 'order', 'service', 'point', 'itemShop'])
+const activeGroups = ref<string[]>(['topic', 'order', 'service', 'point', 'itemShop', 'sms'])
 
 // 工具：字符串转布尔
 function toBool(v: string | null | undefined) {
@@ -143,6 +146,12 @@ async function loadAll() {
           break
         case KEYS.WITHDRAW_ACCOUNT_CONFIG_ENABLE_WX_FAST_REFUND:
           formData.withdrawAccountConfigEnableWxFastRefund = toBool(item.configValue)
+          break
+        case KEYS.ENABLE_PICK_ORDER_SMS_NOTICE:
+          formData.orderNoticeConfigEnablePickOrderSmsNotice = toBool(item.configValue)
+          break
+        case KEYS.ENABLE_FIGHTER_COMPLETE_ORDER_SMS_NOTICE:
+          formData.orderNoticeConfigEnableFighterCompleteOrderSmsNotice = toBool(item.configValue)
           break
         case KEYS.CAN_CANCEL_ORDER:
           formData.canCancelOrder = toBool(item.configValue)
@@ -465,7 +474,7 @@ onMounted(() => {
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="允许充值保证金">
+              <el-form-item label="允许订单抵扣保证金">
                 <el-switch
                   v-model="formData.allowRechargeDeposit"
                   @change="(val: any) => handleSave(KEYS.ALLOW_RECHARGE_DEPOSIT, 'boolean', val)"
@@ -521,8 +530,29 @@ onMounted(() => {
           </el-row>
         </el-collapse-item>
 
+        <!-- 短信配置 -->
+        <el-collapse-item name="sms" title="短信配置">
+          <el-row :gutter="16">
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="开启接单短信提醒">
+                <el-switch
+                  v-model="formData.orderNoticeConfigEnablePickOrderSmsNotice"
+                  @change="(val: any) => handleSave(KEYS.ENABLE_PICK_ORDER_SMS_NOTICE, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="开启打手完成订单短信提醒">
+                <el-switch
+                  v-model="formData.orderNoticeConfigEnableFighterCompleteOrderSmsNotice"
+                  @change="(val: any) => handleSave(KEYS.ENABLE_FIGHTER_COMPLETE_ORDER_SMS_NOTICE, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-collapse-item>
         <!-- 话题配置 -->
-        <el-collapse-item name="topic" title="话题配置">
+        <!-- <el-collapse-item name="topic" title="话题配置">
           <el-form-item label="热门话题列表">
             <HotTopicListEditor
               v-model="formData.hotTopicList"
@@ -530,7 +560,6 @@ onMounted(() => {
             />
           </el-form-item>
         </el-collapse-item>
-        <!-- 礼物/商店配置 -->
         <el-collapse-item name="itemShop" title="礼物/商店配置">
           <el-row :gutter="16">
             <el-col :xs="24" :sm="12" :md="8" :lg="8">
@@ -565,7 +594,7 @@ onMounted(() => {
               </el-form-item>
             </el-col>
           </el-row>
-        </el-collapse-item>
+        </el-collapse-item> -->
       </el-collapse>
     </el-form>
   </ContentWrap>

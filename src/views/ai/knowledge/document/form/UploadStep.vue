@@ -1,7 +1,7 @@
 <template>
   <el-form ref="formRef" :model="modelData" label-width="0" class="mt-20px">
     <el-form-item class="mb-20px">
-      <div class="w-full">
+      <div class="w-full" v-loading="overlayLoading">
         <div
           class="w-full border-2 border-dashed border-[#dcdfe6] rounded-md p-20px text-center hover:border-[#3b82f6]"
         >
@@ -90,6 +90,9 @@ const { uploadUrl, httpRequest } = useUpload() // 使用上传组件的钩子
 const message = useMessage() // 消息弹窗
 const fileList = ref([]) // 文件列表
 const uploadingCount = ref(0) // 上传中的文件数量
+
+// 遮罩加载：有上传中文件时显示
+const overlayLoading = computed(() => uploadingCount.value > 0)
 
 // 支持的文件类型和大小限制
 const supportedFileTypes = [

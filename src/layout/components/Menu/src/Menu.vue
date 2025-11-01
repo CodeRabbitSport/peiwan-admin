@@ -53,6 +53,11 @@ export default defineComponent({
 
     const uniqueOpened = computed(() => appStore.getUniqueOpened)
 
+    const menuVNode = computed(() => {
+      const { renderMenuItem } = useRenderMenuItem()
+      return renderMenuItem(unref(routers))
+    })
+
     const activeMenu = computed(() => {
       const { meta, path } = unref(currentRoute)
       // if set path, the sidebar will highlight the path you set
@@ -92,22 +97,24 @@ export default defineComponent({
           collapse={
             unref(layout) === 'top' || unref(layout) === 'cutMenu' ? false : unref(collapse)
           }
+          collapseTransition={false}
           uniqueOpened={unref(layout) === 'top' ? false : unref(uniqueOpened)}
           backgroundColor="var(--left-menu-bg-color)"
           textColor="var(--left-menu-text-color)"
           activeTextColor="var(--left-menu-text-active-color)"
-          popperClass={
+          popperClass={[
             unref(menuMode) === 'vertical'
               ? `${prefixCls}-popper--vertical`
-              : `${prefixCls}-popper--horizontal`
-          }
+              : `${prefixCls}-popper--horizontal`,
+            // 标记折叠态，便于 popper 内样式判断
+            (unref(menuMode) === 'vertical' && (unref(layout) !== 'top' && unref(layout) !== 'cutMenu') && unref(collapse))
+              ? 'is-collapse'
+              : 'not-collapse',
+          ].join(' ')}
           onSelect={menuSelect}
         >
           {{
-            default: () => {
-              const { renderMenuItem } = useRenderMenuItem(unref(menuMode))
-              return renderMenuItem(unref(routers))
-            },
+            default: () => unref(menuVNode),
           }}
         </ElMenu>
       )
@@ -143,11 +150,13 @@ $prefix-cls: #{$namespace}-menu;
     width: 100% !important;
     border-right: none;
 
-    // 设置选中时子标题的颜色
-    .is-active {
-      & > .#{$elNamespace}-sub-menu__title {
-        // background-color: #3b82f633 !important;
-        color: var(--left-menu-bg-active-color) !important;
+    // 设置选中时子标题的颜色（仅非折叠态）
+    &:not(.#{$elNamespace}-menu--collapse) {
+      .is-active {
+        & > .#{$elNamespace}-sub-menu__title {
+          // background-color: #3b82f633 !important;
+          color: var(--left-menu-bg-active-color) !important;
+        }
       }
     }
 
@@ -251,9 +260,11 @@ $prefix-cls: #{$namespace}-menu-popper;
 .#{$prefix-cls}--vertical,
 .#{$prefix-cls}--horizontal {
   // 设置选中时子标题的颜色
-  .is-active {
-    & > .el-sub-menu__title {
-      color: var(--left-menu-text-active-color) !important;
+  &:not(.is-collapse) {
+    .is-active {
+      & > .el-sub-menu__title {
+        color: var(--left-menu-text-active-color) !important;
+      }
     }
   }
 

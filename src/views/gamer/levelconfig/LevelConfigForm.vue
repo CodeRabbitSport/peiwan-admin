@@ -27,7 +27,7 @@ const formData = ref<Partial<LevelConfig>>({
   upgradeDays: undefined,
   isDefault: undefined,
   canUpgrade: undefined,
-  depositFee:undefined,
+  depositFee: undefined,
   dailyOrderLimit: undefined,
   newOrderDelaySeconds: undefined,
   withdrawalFeeRate: undefined,
@@ -296,6 +296,9 @@ function clearSelectedProducts() {
             </template>
           </el-input>
         </el-form-item>
+        <el-form-item label="允许订单抵扣保证金" prop="allowDepositRecharge">
+          <el-switch v-model="formData.allowDepositRecharge" active-text="允许" inactive-text="不允许" />
+        </el-form-item>
         <el-form-item label="每日接单数" prop="dailyOrderLimit">
           <el-input v-model="formData.dailyOrderLimit" placeholder="请输入每日接单数，0 表示不限制">
             <template #append>
@@ -304,11 +307,11 @@ function clearSelectedProducts() {
           </el-input>
         </el-form-item>
         <el-form-item label="新待接订单延迟接单时间" prop="newOrderDelaySeconds">
-          <el-input v-model="formData.newOrderDelaySeconds" placeholder="请输入延迟接单时间">
+          <el-input-number v-model="formData.newOrderDelaySeconds" placeholder="请输入延迟接单时间">
             <template #append>
               秒
             </template>
-          </el-input>
+          </el-input-number>
         </el-form-item>
         <el-form-item label="提现手续费" prop="withdrawalFeeRate">
           <el-input v-model="formData.withdrawalFeeRate" placeholder="请输入提现手续费">
@@ -400,9 +403,7 @@ function clearSelectedProducts() {
         <el-form-item label="限制升级人数名额" prop="upgradeSlotLimit">
           <el-input v-model="formData.upgradeSlotLimit" placeholder="请输入名额，0 表示不限制" />
         </el-form-item>
-        <el-form-item label="允许充值保证金" prop="allowDepositRecharge">
-          <el-switch v-model="formData.allowDepositRecharge" active-text="允许" inactive-text="不允许" />
-        </el-form-item>
+
         <el-form-item label="备注" prop="remark">
           <el-input v-model="formData.remark" placeholder="请输入备注" />
         </el-form-item>

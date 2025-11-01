@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { fenToYuan } from '@/utils';
 import { formatDate } from '@/utils/formatTime'
 
 type TagType = 'success' | 'warning' | 'info' | 'primary' | 'danger'
@@ -199,13 +200,13 @@ function handleSelectionChange(rows: any[]) {
     <el-table-column label="金额" align="center" width="180">
       <template #default="scope">
         <div class="text-left">
-          <div>价格：{{ scope.row.productPrice != null ? (scope.row.productPrice / 100) : '-' }}</div>
-          <div>订单总金额：{{ scope.row.totalAmount != null ? (scope.row.totalAmount / 100) : '-' }}</div>
-          <div>实际支付金额：{{ scope.row.actualAmount != null ? (scope.row.actualAmount / 100) : '-' }}</div>
-          <div>平台手续费：{{ scope.row.platformFee != null ? (scope.row.platformFee / 100) : '-' }}</div>
-          <div>接单人获得金额：{{ scope.row.acceptorAmount != null ? (scope.row.acceptorAmount / 100) : '-' }}</div>
+          <div>价格：{{ scope.row.productPrice != null ? fenToYuan(scope.row.productPrice) : '-' }}</div>
+          <div>订单总金额：{{ scope.row.totalAmount != null ? fenToYuan(scope.row.totalAmount) : '-' }}</div>
+          <div>实际支付金额：{{ scope.row.actualAmount != null ? fenToYuan(scope.row.actualAmount) : '-' }}</div>
+          <div>平台手续费：{{ scope.row.platformFee != null ? fenToYuan(scope.row.platformFee) : '-' }}</div>
+          <div>接单人获得金额：{{ scope.row.acceptorAmount != null ? fenToYuan(scope.row.acceptorAmount) : '-' }}</div>
           <div v-if="scope.row.refundAmount > 0">
-            退款金额：{{ scope.row.refundAmount != null ? scope.row.refundAmount : '-' }}
+            退款金额：{{ scope.row.refundAmount != null ? fenToYuan(scope.row.refundAmount) : '-' }}
           </div>
         </div>
       </template>
