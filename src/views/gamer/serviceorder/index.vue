@@ -394,8 +394,9 @@ async function handleAuditOrderComplete(row: any) {
         />
       </el-form-item>
       <el-form-item label="用户ID" prop="userId">
-        <UserSelectInput
+        <UserMultiSelectInput
           v-model="queryParams.userId"
+          :multiple="false"
           placeholder="请选择用户"
           @change="handleQuery"
         />

@@ -23,7 +23,7 @@ const formData = ref({
   giftImage: undefined,
   giftRate: undefined,
   price: undefined,
-  status: undefined,
+  status: true,
 })
 const formRules = reactive({
   giftName: [{ required: true, message: '礼物名称不能为空', trigger: 'blur' }],
@@ -108,10 +108,10 @@ function resetForm() {
         <UploadImg v-model="formData.giftImage" />
       </el-form-item>
       <el-form-item label="平台抽成" prop="giftRate">
-        <el-input v-model="formData.giftRate" placeholder="请输入平台抽成比例" />
+        <el-input v-model="formData.giftRate" placeholder="请输入平台抽成比例%" />
       </el-form-item>
       <el-form-item label="礼物价格" prop="price">
-        <el-input v-model="formData.price" placeholder="请输入礼物价格(分)" />
+        <el-input v-model="formData.price" placeholder="请输入礼物价格" />
       </el-form-item>
       <el-form-item label="状态:" prop="status">
         <el-switch

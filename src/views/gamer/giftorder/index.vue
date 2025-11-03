@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Gift } from '@/api/gamer/gift'
+import { GiftApi } from '@/api/gamer/gift'
 import type { GiftOrder } from '@/api/gamer/giftorder'
 import { GiftOrderApi } from '@/api/gamer/giftorder'
 import { fenToYuan } from '@/utils'
@@ -15,6 +17,7 @@ defineOptions({ name: 'GiftOrder' })
 const loading = ref(true) // 列表的加载中
 const list = ref<GiftOrder[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
+const giftList = ref<Gift[]>([]) // 礼物列表
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
@@ -32,6 +35,17 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 // const exportLoading = ref(false) // 导出的加载中
+
+/** 获取礼物列表 */
+async function getGiftList() {
+  try {
+    const data = await GiftApi.getGiftPage({ pageNo: 1, pageSize: 100, status: true })
+    giftList.value = data.list
+  }
+  catch {
+    giftList.value = []
+  }
+}
 
 /** 查询列表 */
 async function getList() {
@@ -115,6 +129,7 @@ function handleRowCheckboxChange(records: GiftOrder[]) {
 
 /** 初始化 */
 onMounted(() => {
+  getGiftList()
   getList()
 })
 </script>
@@ -129,28 +144,34 @@ onMounted(() => {
       :inline="true"
       label-width="68px"
     >
-      <el-form-item label="赠送人ID" prop="senderId">
-        <UserSelectInput
+      <el-form-item label="赠送人" prop="senderId">
+        <UserMultiSelectInput
           v-model="queryParams.senderId"
           placeholder="请选择用户"
           @change="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="被赠送人ID" prop="receiverId" label-width="100px">
-        <UserSelectInput
+      <el-form-item label="被赠送人" prop="receiverId" label-width="100px">
+        <UserMultiSelectInput
           v-model="queryParams.receiverId"
           placeholder="请选择用户"
           @change="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="礼物ID" prop="giftId">
-        <el-input
+      <el-form-item label="礼物" prop="giftId">
+        <el-select
           v-model="queryParams.giftId"
-          placeholder="请输入礼物ID"
+          placeholder="请选择礼物"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
-        />
+        >
+          <el-option
+            v-for="gift in giftList"
+            :key="gift.id"
+            :label="gift.giftName"
+            :value="gift.id"
+          />
+        </el-select>
       </el-form-item>
 
       <el-form-item>
@@ -178,8 +199,10 @@ onMounted(() => {
       <el-table-column label="ID" align="center" prop="id" />
       <el-table-column label="订单编号" align="center" prop="orderNo" />
       <el-table-column label="赠送人ID" align="center" prop="senderId" />
+      <el-table-column label="赠送人昵称" align="center" prop="senderNickname" width="120px" />
       <el-table-column label="被赠送人ID" align="center" prop="receiverId" width="120px" />
-      <el-table-column label="礼物ID" align="center" prop="giftId" />
+      <el-table-column label="被赠送人昵称" align="center" prop="receiverNickname" width="120px" />
+      <!-- <el-table-column label="礼物ID" align="center" prop="giftId" /> -->
       <el-table-column label="礼物名称" align="center" prop="giftName" />
       <el-table-column label="礼物图片" align="center" prop="giftImage">
         <template #default="scope">

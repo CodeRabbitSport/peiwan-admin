@@ -134,12 +134,12 @@ onMounted(() => {
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="用户ID" prop="userId">
-        <el-input
+      <el-form-item label="用户" prop="userId">
+        <UserMultiSelectInput
           v-model="queryParams.userId"
-          placeholder="请输入用户ID"
-          clearable
-          class="!w-[240px]"
+          :multiple="false"
+          placeholder="请选择用户"
+          @change="handleQuery"
         />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
@@ -204,6 +204,8 @@ onMounted(() => {
       <el-table-column label="ID" align="center" prop="id" />
       <el-table-column label="游戏分类" align="center" prop="categoryName" />
       <el-table-column label="用户ID" align="center" prop="userId" />
+      <el-table-column label="用户昵称" align="center" prop="userNickname" width="120" />
+
       <el-table-column label="名片信息" align="center" prop="cardInfo">
         <template #default="scope">
           <div v-for="item, index of JSON.parse(scope.row.cardInfo || '{}')" :key="index">

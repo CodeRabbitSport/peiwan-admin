@@ -141,6 +141,23 @@ onMounted(() => {
           @keyup.enter="handleQuery"
         />
       </el-form-item>
+      <!-- 客户ID -->
+      <el-form-item label="客户ID" prop="customerId">
+        <UserMultiSelectInput
+          v-model="queryParams.customerId"
+          :multiple="false"
+          placeholder="请选择客户"
+          @change="handleQuery"
+        />
+      </el-form-item>
+      <!-- 接单人ID -->
+      <el-form-item label="接单人ID" prop="sellerId">
+        <UserSelectInput
+          v-model="queryParams.sellerId"
+          placeholder="请选择接单人"
+          @change="handleQuery"
+        />
+      </el-form-item>
 
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
@@ -204,7 +221,9 @@ onMounted(() => {
       <el-table-column label="会话编号" align="center" prop="id" />
       <el-table-column label="订单ID" align="center" prop="orderId" />
       <el-table-column label="客户ID" align="center" prop="customerId" />
+      <el-table-column label="客户昵称" align="center" prop="customerNickname" />
       <el-table-column label="接单人ID" align="center" prop="sellerId" />
+      <el-table-column label="接单人昵称" align="center" prop="sellerNickname" />
       <!-- <el-table-column label="最新消息ID" align="center" prop="lastMessageId" /> -->
       <el-table-column
         label="最新消息时间"

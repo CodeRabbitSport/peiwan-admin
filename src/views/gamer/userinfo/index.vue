@@ -10,6 +10,7 @@ import UserMomentBrowse from '../usermomentbrowse/index.vue'
 import UserMomentComment from '../usermomentcomment/index.vue'
 import UserMomentLike from '../usermomentlike/index.vue'
 import UserInfoForm from './UserInfoForm.vue'
+import UserStatDialog from './UserStatDialog.vue'
 
 /** 用户信息 列表 */
 defineOptions({ name: 'UserInfo' })
@@ -26,8 +27,8 @@ const queryParams = reactive({
   openid: undefined,
   mpOpenid: undefined,
   unionid: undefined,
-  userCode: undefined,
-  phone: undefined,
+  id: undefined,
+  mobile: undefined,
   nickname: undefined,
   avatar: undefined,
   trueHead: undefined,
@@ -93,13 +94,14 @@ async function handleToggleUserStatus(row: any) {
 const userViewDialogVisible = ref(false)
 const selectedUserId = ref<number | undefined>(undefined)
 const userViewTitle = ref('')
-const activeView = ref<'usermoment' | 'usermomentbrowse' | 'usermomentcomment' | 'usermomentlike' | 'userincome' | ''>('')
+const activeView = ref<'usermoment' | 'usermomentbrowse' | 'usermomentcomment' | 'usermomentlike' | 'userincome' | 'userstat' | ''>('')
 const viewMap = {
   usermoment: UserMoment,
   usermomentbrowse: UserMomentBrowse,
   usermomentcomment: UserMomentComment,
   usermomentlike: UserMomentLike,
   userincome: UserIncomeExpenseDetail,
+  userstat: UserStatDialog,
 } as const
 const activeComponent = computed(() => (activeView.value ? viewMap[activeView.value] : null))
 const titleMap: Record<string, string> = {
@@ -108,6 +110,7 @@ const titleMap: Record<string, string> = {
   usermomentcomment: '用户评论记录',
   usermomentlike: '用户点赞记录',
   userincome: '用户收入支出记录',
+  userstat: '下级用户统计',
 }
 function onUserMenuCommand(cmd: keyof typeof viewMap, row: UserInfo) {
   selectedUserId.value = row.id
@@ -166,17 +169,17 @@ onMounted(() => {
       :inline="true"
       label-width="68px"
     >
-      <el-form-item label="用户ID" prop="userCode">
+      <el-form-item label="用户ID" prop="id">
         <el-input
-          v-model="queryParams.userCode"
+          v-model="queryParams.id"
           placeholder="请输入用户唯一编号"
           clearable
           class="!w-[240px]"
         />
       </el-form-item>
-      <el-form-item label="手机号" prop="phone">
+      <el-form-item label="手机号" prop="mobile">
         <el-input
-          v-model="queryParams.phone"
+          v-model="queryParams.mobile"
           placeholder="请输入手机号"
           clearable
           class="!w-[240px]"
@@ -191,7 +194,7 @@ onMounted(() => {
         />
       </el-form-item>
 
-      <el-form-item label="城市" prop="city">
+      <!--  <el-form-item label="城市" prop="city">
         <el-input
           v-model="queryParams.city"
           placeholder="请输入城市"
@@ -199,7 +202,7 @@ onMounted(() => {
           class="!w-[240px]"
         />
       </el-form-item>
-      <!-- <el-form-item label="语音审核状态" prop="voiceAuditStatus">
+      <el-form-item label="语音审核状态" prop="voiceAuditStatus">
         <el-select
           v-model="queryParams.voiceAuditStatus"
           placeholder="请选择语音审核状态"
@@ -218,14 +221,14 @@ onMounted(() => {
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
         </el-button>
-        <el-button
+        <!-- <el-button
           v-hasPermi="['gamer:user-info:create']"
           type="primary"
           plain
           @click="openForm('create')"
         >
           <Icon icon="ep:plus" class="mr-[5px]" /> 新增
-        </el-button>
+        </el-button> -->
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -336,7 +339,7 @@ onMounted(() => {
             @click="openForm('update', scope.row.id)"
           >
             编辑
-          </el-button> -->
+          </el-button>
           <el-button
             v-hasPermi="['gamer:user-info:delete']"
             link
@@ -344,7 +347,7 @@ onMounted(() => {
             @click="handleDelete(scope.row.id)"
           >
             删除
-          </el-button>
+          </el-button> -->
 
           <el-popover placement="bottom-start" trigger="click" :width="240" popper-class="!p-0">
             <template #reference>
@@ -353,6 +356,14 @@ onMounted(() => {
               </el-button>
             </template>
             <el-menu class="border-none" mode="vertical">
+              <!-- 查看下级用户 -->
+              <el-menu-item
+                index="userstat"
+                @click="onUserMenuCommand('userstat', scope.row)"
+              >
+                查看下级用户
+              </el-menu-item>
+              
               <el-menu-item
                 v-hasPermi="['pay:wallet:update-balance']"
                 index="balance"

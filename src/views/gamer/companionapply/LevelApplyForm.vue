@@ -2,8 +2,8 @@
 import { LevelApplyApi } from '@/api/gamer/levelapply'
 import { ProductCategoryApi } from '@/api/gamer/productcategory'
 
-/** 打手/陪玩等级申请 表单 */
-defineOptions({ name: 'LevelApplyForm' })
+/** 陪玩等级申请 表单 */
+defineOptions({ name: 'CompanionLevelApplyForm' })
 
 // 提供 open 方法，用于打开弹窗
 
@@ -21,7 +21,7 @@ const formData = ref({
   id: undefined,
   userId: undefined,
   productCategoryId: undefined,
-  levelType: 2, // 默认打手
+  levelType: 1, // 默认陪玩
   level: undefined,
   personalIntroduction: undefined,
   rejectReason: undefined,
@@ -33,7 +33,7 @@ const formData = ref({
 const formRules = reactive({
   userId: [{ required: true, message: '用户ID不能为空', trigger: 'blur' }],
   productCategoryId: [{ required: true, message: '所属商品分类不能为空', trigger: 'change' }],
-  levelType: [{ required: true, message: '等级类型(1打手2陪玩)不能为空', trigger: 'change' }],
+  levelType: [{ required: true, message: '等级类型(1陪玩2打手)不能为空', trigger: 'change' }],
   level: [{ required: true, message: '级别不能为空', trigger: 'blur' }],
 })
 const formRef = ref() // 表单 Ref
@@ -85,7 +85,7 @@ async function submitForm() {
     data.imageAttachment = Array.isArray(data.imageAttachment)
       ? data.imageAttachment.join(',')
       : data.imageAttachment
-    data.levelType = 2 // 强制设置为打手类型
+    data.levelType = 1 // 强制设置为陪玩类型
     if (formType.value === 'create') {
       await LevelApplyApi.createLevelApply(data)
       message.success(t('common.createSuccess'))
@@ -109,7 +109,7 @@ function resetForm() {
     id: undefined,
     userId: undefined,
     productCategoryId: undefined,
-    levelType: 2, // 打手
+    levelType: 1, // 陪玩
     level: undefined,
     personalIntroduction: undefined,
     rejectReason: undefined,
@@ -199,8 +199,8 @@ function stringifyContactEntries() {
         </el-select>
       </el-form-item>
       <el-form-item label="等级类型" prop="levelType">
-        <el-tag type="warning">
-          打手
+        <el-tag type="success">
+          陪玩
         </el-tag>
       </el-form-item>
       <el-form-item label="级别" prop="level">

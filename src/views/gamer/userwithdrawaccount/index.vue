@@ -105,12 +105,11 @@ onMounted(() => {
       label-width="68px"
     >
       <el-form-item label="用户ID" prop="userId">
-        <el-input
+        <UserMultiSelectInput
           v-model="queryParams.userId"
-          placeholder="请输入用户ID"
-          clearable
-          class="!w-[240px]"
-          
+          :multiple="false"
+          placeholder="请选择用户"
+          @change="handleQuery"
         />
       </el-form-item>
       <el-form-item label="提现渠道" prop="channel">
@@ -132,7 +131,6 @@ onMounted(() => {
           placeholder="请输入手机号"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
       <el-form-item label="账号" prop="accountNo">
@@ -141,7 +139,6 @@ onMounted(() => {
           placeholder="请输入账号"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
       <el-form-item>
@@ -185,6 +182,7 @@ onMounted(() => {
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" />
       <el-table-column label="用户ID" align="center" prop="userId" />
+      <el-table-column label="用户昵称" align="center" prop="userNickname" />
       <el-table-column label="提现渠道" align="center" prop="channel">
         <template #default="scope">
           <el-tag :type="scope.row.channel === 1 ? 'success' : scope.row.channel === 2 ? 'warning' : scope.row.channel === 3 ? 'danger' : 'info'">
@@ -201,13 +199,13 @@ onMounted(() => {
           <el-image :src="scope.row.qrCodeUrl" :preview-src-list="[scope.row.qrCodeUrl]" fit="cover" preview-teleported />
         </template>
       </el-table-column>
-      <el-table-column label="是否默认账户" align="center" prop="isDefault">
+      <!-- <el-table-column label="是否默认账户" align="center" prop="isDefault">
         <template #default="scope">
           <el-tag :type="scope.row.isDefault === 1 ? 'success' : 'danger'">
             {{ scope.row.isDefault === 1 ? '是' : '否' }}
           </el-tag>
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column
         label="创建时间"
         align="center"

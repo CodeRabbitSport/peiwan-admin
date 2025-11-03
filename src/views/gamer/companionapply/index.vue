@@ -8,8 +8,8 @@ import { isEmpty } from '@/utils/is'
 
 import LevelApplyForm from './LevelApplyForm.vue'
 
-/** 打手/陪玩等级申请 列表 */
-defineOptions({ name: 'LevelApply' })
+/** 陪玩等级申请 列表 */
+defineOptions({ name: 'CompanionLevelApply' })
 
 const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
@@ -95,7 +95,7 @@ const queryParams = reactive({
   userNickname: undefined,
   userId: undefined,
   productCategoryId: undefined,
-  levelType: 2, // 打手类型
+  levelType: 1, // 陪玩类型
   level: undefined,
   createTime: [],
 })
@@ -177,7 +177,7 @@ async function handleDelete(id: number) {
 }
 const checkedIds = ref<number[]>([])
 
-/** 批量删除打手/陪玩等级申请 */
+/** 批量删除陪玩等级申请 */
 async function handleDeleteBatch() {
   try {
     // 删除的二次确认
@@ -232,25 +232,6 @@ onMounted(() => {
           class="!w-[240px]"
         />
       </el-form-item>
-      <!-- <el-form-item label="等级类型" prop="levelType">
-        <el-select
-          v-model="queryParams.levelType"
-          placeholder="请选择等级类型"
-          clearable
-          class="!w-[240px]"
-        >
-          <el-option label="打手" :value="1" />
-          <el-option label="陪玩" :value="2" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="级别" prop="level">
-        <el-input
-          v-model="queryParams.level"
-          placeholder="请输入级别"
-          clearable
-          class="!w-[240px]"
-        />
-      </el-form-item> -->
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
@@ -333,8 +314,8 @@ onMounted(() => {
       </el-table-column>
       <el-table-column label="等级类型" align="center" prop="levelType">
         <template #default>
-          <el-tag type="warning">
-            打手
+          <el-tag type="success">
+            陪玩
           </el-tag>
         </template>
       </el-table-column>

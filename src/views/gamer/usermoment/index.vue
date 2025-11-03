@@ -257,11 +257,11 @@ onMounted(() => {
       label-width="68px"
     >
       <el-form-item label="用户ID" prop="userId">
-        <el-input
+        <UserMultiSelectInput
           v-model="queryParams.userId"
-          placeholder="请输入用户ID"
-          clearable
-          class="!w-[240px]"
+          :multiple="false"
+          placeholder="请选择用户"
+          @change="handleQuery"
         />
       </el-form-item>
       <el-form-item label="动态类型" prop="momentType">
@@ -356,7 +356,7 @@ onMounted(() => {
     <template v-if="mediaPreview.type === 'image'">
       <el-carousel height="400px" indicator-position="outside" :autoplay="false" arrow="hover">
         <el-carousel-item v-for="(img, idx) in mediaPreview.images" :key="idx">
-          <el-image :src="img" fit="contain" class="w-full h-full" />
+          <el-image :src="img" fit="contain" class="h-full w-full" />
         </el-carousel-item>
       </el-carousel>
     </template>
@@ -381,6 +381,7 @@ onMounted(() => {
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" />
       <el-table-column label="用户ID" align="center" prop="userId" />
+      <el-table-column label="用户昵称" align="center" prop="nickname" />
       <el-table-column label="类型" align="center" prop="momentType" width="80px">
         <template #default="scope">
           <div class="flex flex-col gap-y-1">

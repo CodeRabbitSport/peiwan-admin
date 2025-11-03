@@ -7,8 +7,8 @@ import { isEmpty } from '@/utils/is'
 
 import LevelConfigForm from './LevelConfigForm.vue'
 
-/** 打手等级配置 列表 */
-defineOptions({ name: 'LevelConfig' })
+/** 陪玩等级配置 列表 */
+defineOptions({ name: 'CompanionLevelConfig' })
 
 const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
@@ -19,7 +19,7 @@ const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
-  categoryType: 2, // 打手类型
+  categoryType: 1, // 陪玩类型
   levelName: undefined,
   levelNumber: undefined,
   isDefault: undefined,
@@ -41,7 +41,7 @@ function toBool(val: any) {
   if (val === 1 || val === '1') return true
   return false
 }
-// 将布尔类字段显示为 “有/无” 文案
+// 将布尔类字段显示为 "有/无" 文案
 const permissionText = (val: number | string | boolean) => (toBool(val) ? '有' : '无')
 // 验证类型文案
 function verifyTypeText(val: number | undefined) {
@@ -100,7 +100,7 @@ async function handleDelete(id: number) {
 
 const checkedIds = ref<number[]>([])
 
-/** 批量删除打手等级配置 */
+/** 批量删除陪玩等级配置 */
 async function handleDeleteBatch() {
   try {
     // 删除的二次确认
@@ -192,7 +192,26 @@ onMounted(() => {
       <el-table-column label="ID" align="center" prop="id" width="80" />
       <el-table-column label="等级名称" align="center" prop="levelName" width="150" />
       <el-table-column label="级别号" align="center" prop="levelNumber" width="100" />
-      
+      <el-table-column label="陪玩费用" align="center" prop="unitPrice" width="180">
+        <template #default="{ row }">
+          {{ row.unitPrice ? fenToYuan(row.unitPrice) : '--' }}元/小时
+        </template>
+      </el-table-column>
+      <!-- <el-table-column label="自助升级天数" align="center" prop="upgradeDays" width="120" /> -->
+      <!-- <el-table-column label="默认等级" align="center" prop="isDefault" width="100">
+        <template #default="{ row }">
+          <el-tag :type="toBool(row.isDefault) ? 'success' : 'info'" size="small">
+            {{ toBool(row.isDefault) ? '是' : '否' }}
+          </el-tag>
+        </template>
+      </el-table-column> -->
+      <!-- <el-table-column label="是否可升级" align="center" prop="canUpgrade" width="110">
+        <template #default="{ row }">
+          <el-tag :type="toBool(row.canUpgrade) ? 'success' : 'info'" size="small">
+            {{ toBool(row.canUpgrade) ? '是' : '否' }}
+          </el-tag>
+        </template>
+      </el-table-column> -->
       <el-table-column label="功能限制" min-width="360" align="center">
         <template #default="{ row }">
           <div class="feature-list">
@@ -207,6 +226,9 @@ onMounted(() => {
             </div>
             <div class="feature-item">
               提现手续费：{{ row.withdrawalFeeRate }}%
+            </div>
+            <div class="feature-item">
+              抽成比例：{{ row.commission_rate }}%
             </div>
             <div class="feature-item">
               订单服务费解冻时间：{{ row.orderFeeUnfreezeSeconds }}秒

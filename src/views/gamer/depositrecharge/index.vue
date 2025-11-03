@@ -128,22 +128,12 @@ onMounted(() => {
       :inline="true"
       label-width="120px"
     >
-      <el-form-item label="流水号" prop="no">
-        <el-input
-          v-model="queryParams.no"
-          placeholder="请输入流水号"
-          clearable
-          class="!w-[240px]"
-          
-        />
-      </el-form-item>
-      <el-form-item label="用户编号" prop="userId">
-        <el-input
+      <el-form-item label="用户" prop="userId">
+        <UserMultiSelectInput
           v-model="queryParams.userId"
-          placeholder="请输入用户编号"
-          clearable
-          class="!w-[240px]"
-          
+          :multiple="false"
+          placeholder="请选择用户"
+          @change="handleQuery"
         />
       </el-form-item>
       <el-form-item label="支付状态" prop="payStatus">
@@ -153,7 +143,8 @@ onMounted(() => {
           clearable
           class="!w-[240px]"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option label="已支付" :value="1" />
+          <el-option label="未支付" :value="0" />
         </el-select>
       </el-form-item>
       <el-form-item label="支付订单编号" prop="payOrderId">
@@ -162,25 +153,22 @@ onMounted(() => {
           placeholder="请输入支付订单编号"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
-      <el-form-item label="支付渠道" prop="payChannelCode">
+      <!--   <el-form-item label="支付渠道" prop="payChannelCode">
         <el-input
           v-model="queryParams.payChannelCode"
           placeholder="请输入支付渠道"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
-      <el-form-item label="退款单号" prop="payRefundId">
+     <el-form-item label="退款单号" prop="payRefundId">
         <el-input
           v-model="queryParams.payRefundId"
           placeholder="请输入退款单号"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
       <el-form-item label="退款状态" prop="refundStatus">
@@ -190,9 +178,10 @@ onMounted(() => {
           clearable
           class="!w-[240px]"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option label="已退款" :value="1" />
+          <el-option label="未退款" :value="0" />
         </el-select>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
@@ -253,8 +242,9 @@ onMounted(() => {
     >
       <el-table-column type="selection" width="55" />
       <el-table-column label="编号" align="center" prop="id" />
-      <el-table-column label="流水号" align="center" prop="no" />
+      <el-table-column label="订单号" align="center" prop="payOrderId" />
       <el-table-column label="用户编号" align="center" prop="userId" />
+      <el-table-column label="用户昵称" align="center" prop="userNickname" />
       <el-table-column label="金额" align="center">
         <template #default="{ row }">
           {{ fenToYuan(row.totalPrice) }}
@@ -273,17 +263,19 @@ onMounted(() => {
           <div>渠道: {{ row.payChannelCode || '-' }}</div>
         </template>
       </el-table-column>
-      <el-table-column label="时间(支付/退款/创建)" align="center" min-width="220">
+      <el-table-column label="时间" align="center" min-width="220">
         <template #default="{ row }">
-          <div>支付: {{ row.payTime ? formatDate(row.payTime) : '-' }}</div>
-          <div>退款: {{ row.refundTime ? formatDate(row.refundTime) : '-' }}</div>
-          <div>创建: {{ row.createTime ? formatDate(row.createTime) : '-' }}</div>
+          <div>支付时间: {{ row.payTime ? formatDate(row.payTime) : '-' }}</div>
+          <!-- <div>退款时间: {{ row.refundTime ? formatDate(row.refundTime) : '-' }}</div> -->
+          <div>创建时间: {{ row.createTime ? formatDate(row.createTime) : '-' }}</div>
         </template>
       </el-table-column>
-      <el-table-column label="退款单号" align="center" prop="payRefundId" />
-      <el-table-column label="退款金额(总额/实付/赠送)" align="center" min-width="160">
+      <!-- <el-table-column label="退款单号" align="center" prop="payRefundId" />
+      <el-table-column label="退款金额" align="center" min-width="160">
         <template #default="{ row }">
-          {{ fenToYuan(row.refundTotalPrice) }} / {{ fenToYuan(row.refundPayPrice) }} / {{ fenToYuan(row.refundBonusPrice) }}
+          <div>总额: {{ fenToYuan(row.refundTotalPrice) }}</div>
+          <div>实付: {{ fenToYuan(row.refundPayPrice) }}</div>
+          <div>赠送: {{ fenToYuan(row.refundBonusPrice) }}</div>
         </template>
       </el-table-column>
       <el-table-column label="退款状态" align="center">
@@ -292,17 +284,17 @@ onMounted(() => {
             {{ row.refundStatus === 1 ? '退款成功' : '未退款' }}
           </el-tag>
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
-          <el-button
+          <!-- <el-button
             v-hasPermi="['gamer:deposit-recharge:update']"
             link
             type="primary"
             @click="openForm('update', scope.row.id)"
           >
             编辑
-          </el-button>
+          </el-button> -->
           <el-button
             v-hasPermi="['gamer:deposit-recharge:delete']"
             link

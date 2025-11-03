@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { SystemConfigApi } from '@/api/gamer/systemconfig'
+import UploadImg from '@/components/UploadFile/src/UploadImg.vue'
 
 import ProductSelectorDialog from './components/ProductSelectorDialog.vue'
 
@@ -44,6 +45,11 @@ const KEYS = {
   REFRESH_CARD_PRICE: 'itemShopConfigRefreshCardPrice',
   ENABLE_PICK_ORDER_SMS_NOTICE: 'orderNoticeConfigEnablePickOrderSmsNotice',
   ENABLE_FIGHTER_COMPLETE_ORDER_SMS_NOTICE: 'orderNoticeConfigEnableFighterCompleteOrderSmsNotice',
+  // 分佣配置
+  COMMISSION_RATE: 'commissionConfigCommissionRate',
+  // 应用配置
+  ENABLE_INVITATION_MODE: 'appConfigEnableInvitationMode',
+  INVITATION_POSTER: 'appConfigInvitePoster',
 } as const
 
 type KeyName = typeof KEYS[keyof typeof KEYS]
@@ -82,13 +88,18 @@ const formData = reactive<any>({
   refreshCardPrice: 0,
   orderNoticeConfigEnablePickOrderSmsNotice: false,
   orderNoticeConfigEnableFighterCompleteOrderSmsNotice: false,
+  // 分佣配置
+  commissionRate: 0,
+  // 应用配置
+  enableInvitationMode: false,
+  invitationPoster: '',
 })
 
 // 当前已有配置映射（key -> id）
 const existingIdMap = ref<Record<string, number>>({})
 
 const loadingAll = ref(false)
-const activeGroups = ref<string[]>(['topic', 'order', 'service', 'point', 'itemShop', 'sms'])
+const activeGroups = ref<string[]>(['topic', 'order', 'service', 'point', 'itemShop', 'sms', 'commission', 'app'])
 
 // 工具：字符串转布尔
 function toBool(v: string | null | undefined) {
@@ -212,6 +223,15 @@ async function loadAll() {
         case KEYS.REFRESH_CARD_PRICE:
           formData.refreshCardPrice = Number(item.configValue || 0)
           break
+        case KEYS.COMMISSION_RATE:
+          formData.commissionRate = Number(item.configValue || 0)
+          break
+        case KEYS.ENABLE_INVITATION_MODE:
+          formData.enableInvitationMode = toBool(item.configValue)
+          break
+        case KEYS.INVITATION_POSTER:
+          formData.invitationPoster = String(item.configValue || '')
+          break
       }
     })
     existingIdMap.value = idMap
@@ -298,6 +318,13 @@ function clearSelectedProducts() {
   selectedProductIds.value = []
   handleSave(KEYS.RESTRICT_PRODUCT_IDS, 'productIds', [])
 }
+
+// 监听邀请海报变化自动保存
+watch(() => formData.invitationPoster, (newVal, oldVal) => {
+  if (oldVal !== undefined && newVal !== oldVal) {
+    handleSave(KEYS.INVITATION_POSTER, 'number', newVal)
+  }
+})
 
 onMounted(() => {
   loadAll()
@@ -490,7 +517,7 @@ onMounted(() => {
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="是否开启微信急速退款">
+              <el-form-item label="是否开启微信急速提现">
                 <el-switch
                   v-model="formData.withdrawAccountConfigEnableWxFastRefund"
                   @change="(val: any) => handleSave(KEYS.WITHDRAW_ACCOUNT_CONFIG_ENABLE_WX_FAST_REFUND, 'boolean', val)"
@@ -551,6 +578,44 @@ onMounted(() => {
             </el-col>
           </el-row>
         </el-collapse-item>
+
+        <!-- 邀请配置 -->
+        <el-collapse-item name="app" title="应用配置">
+          <el-row :gutter="16">
+            <el-col :xs="24" :sm="12" :md="8" :lg="6">
+              <el-form-item label="是否开启邀请模式">
+                <el-switch
+                  v-model="formData.enableInvitationMode"
+                  @change="(val: any) => handleSave(KEYS.ENABLE_INVITATION_MODE, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="6">
+              <el-form-item label="分佣比例(%)">
+                <el-input-number
+                  v-model="formData.commissionRate"
+                  :min="0"
+                  :max="100"
+                  :step="1"
+                  @change="(val: any) => handleSave(KEYS.COMMISSION_RATE, 'number', val)"
+                />
+                <div style="font-size: 12px; color: #909399; margin-top: 4px;" class="ml-2">
+                  纯利润反给上级的比例
+                </div>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="6" :lg="6">
+              <el-form-item label="邀请海报">
+                <UploadImg
+                  v-model="formData.invitationPoster"
+                  height="200px"
+                  width="150px"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-collapse-item>
+
         <!-- 话题配置 -->
         <!-- <el-collapse-item name="topic" title="话题配置">
           <el-form-item label="热门话题列表">

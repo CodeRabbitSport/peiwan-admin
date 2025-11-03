@@ -83,7 +83,6 @@ async function handleToggleDepositStatus(row: DepositTransfer, val: number) {
   try {
     if (val === 2) {
       const data = await message.prompt('请输入拒绝原因', t('common.reminder'))
-      if (!data || (data as any).action !== 'confirm') return
       const reason = (data as any).value ? String((data as any).value).trim() : ''
       if (!reason) {
         message.warning('请输入拒绝原因')
@@ -143,32 +142,13 @@ onMounted(() => {
       :inline="true"
       label-width="68px"
     >
-      <el-form-item label="流水" prop="transactionNo">
-        <el-input
-          v-model="queryParams.transactionNo"
-          placeholder="请输入流水号"
-          clearable
-          class="!w-[240px]"
-        />
-      </el-form-item>
       <el-form-item label="用户" prop="userId">
-        <el-input
+        <UserMultiSelectInput
           v-model="queryParams.userId"
-          placeholder="请输入用户ID"
-          clearable
-          class="!w-[240px]"
+          :multiple="false"
+          placeholder="请选择用户"
+          @change="handleQuery"
         />
-      </el-form-item>
-      <el-form-item label="人工" prop="isManualTransferred">
-        <el-select
-          v-model="queryParams.isManualTransferred"
-          placeholder="请选择人工退款"
-          clearable
-          class="!w-[240px]"
-        >
-          <el-option label="否" :value="0" />
-          <el-option label="是" :value="1" />
-        </el-select>
       </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-select
@@ -182,7 +162,7 @@ onMounted(() => {
           <el-option label="已拒绝" :value="2" />
         </el-select>
       </el-form-item>
-      <el-form-item label="转账" prop="transferStatus">
+      <el-form-item label="转账状态" prop="transferStatus">
         <el-select
           v-model="queryParams.transferStatus"
           placeholder="请选择转账"
@@ -193,7 +173,7 @@ onMounted(() => {
           <el-option label="已转账" :value="1" />
         </el-select>
       </el-form-item>
-      <el-form-item label="创建" prop="createTime">
+      <el-form-item label="日期" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
           value-format="YYYY-MM-DD HH:mm:ss"
@@ -254,6 +234,7 @@ onMounted(() => {
       <el-table-column label="ID" align="center" prop="id" />
       <!-- <el-table-column label="流水号" align="center" prop="transactionNo" /> -->
       <el-table-column label="用户ID" align="center" prop="userId" />
+      <el-table-column label="用户昵称" align="center" prop="userNickname" />
       <el-table-column label="申请金额" align="center" prop="transactionAmount">
         <template #default="scope">
           {{ fenToYuan(scope.row.transactionAmount) }}

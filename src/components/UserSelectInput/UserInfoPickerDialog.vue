@@ -134,6 +134,15 @@ defineExpose({ open })
             class="!w-[220px]"
           />
         </el-form-item>
+        <!-- 昵称 -->
+        <el-form-item label="昵称" prop="nickname">
+          <el-input
+            v-model="queryParams.nickname"
+            placeholder="请输入昵称"
+            clearable
+            class="!w-[220px]"
+          />
+        </el-form-item>
         <el-form-item label="手机号" prop="phone">
           <el-input
             v-model="queryParams.phone"

@@ -177,11 +177,11 @@ onMounted(() => {
         />
       </el-form-item>
       <el-form-item label="用户ID" prop="userId">
-        <el-input
+        <UserMultiSelectInput
           v-model="queryParams.userId"
-          placeholder="请输入用户ID"
-          clearable
-          class="!w-[240px]"
+          :multiple="false"
+          placeholder="请选择用户"
+          @change="handleQuery"
         />
       </el-form-item>
       <el-form-item label="提现渠道" prop="channel">
@@ -194,16 +194,8 @@ onMounted(() => {
           <el-option label="微信收款" :value="1" />
           <el-option label="支付宝收款" :value="2" />
           <el-option label="银行卡收款" :value="3" />
-          <el-option label="支付宝账号收款" :value="4" />
+          <!-- <el-option label="支付宝账号收款" :value="4" /> -->
         </el-select>
-      </el-form-item>
-      <el-form-item label="手机号" prop="phone">
-        <el-input
-          v-model="queryParams.phone"
-          placeholder="请输入手机号"
-          clearable
-          class="!w-[240px]"
-        />
       </el-form-item>
 
       <el-form-item label="账号" prop="accountNo">
@@ -263,6 +255,7 @@ onMounted(() => {
       <el-table-column label="ID" align="center" prop="id" />
       <el-table-column label="提现订单号" align="center" prop="no" width="180px" />
       <el-table-column label="用户ID" align="center" prop="userId" />
+      <el-table-column label="用户昵称" align="center" prop="userNickname" />
       <el-table-column label="提现信息" align="center" min-width="220px">
         <template #default="scope">
           <div class="flex flex-col items-center gap-1">

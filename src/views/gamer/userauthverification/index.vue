@@ -155,12 +155,12 @@ onMounted(() => {
       :inline="true"
       label-width="68px"
     >
-      <el-form-item label="用户ID" prop="userId">
-        <el-input
+      <el-form-item label="用户" prop="userId">
+        <UserMultiSelectInput
           v-model="queryParams.userId"
-          placeholder="请输入用户ID"
-          clearable
-          class="!w-[240px]"
+          :multiple="false"
+          placeholder="请选择用户"
+          @change="handleQuery"
         />
       </el-form-item>
       <el-form-item label="真实姓名" prop="realName">
@@ -247,14 +247,14 @@ onMounted(() => {
       row-key="id"
       :data="list"
       :stripe="true"
-      :show-overflow-tooltip="true"
       @selection-change="handleRowCheckboxChange"
     >
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" />
       <el-table-column label="用户ID" align="center" prop="userId" />
+      <el-table-column label="用户昵称" align="center" prop="userNickName" width="120" />
       <el-table-column label="真实姓名" align="center" prop="realName" />
-      <el-table-column label="身份证号码" align="center" prop="idCardNo" />
+      <el-table-column label="身份证号码" align="center" prop="idCardNo" width="200" />
       <el-table-column label="身份证正面图片" align="center" prop="frontImageUrl">
         <template #default="scope">
           <el-image :src="scope.row.frontImageUrl" :preview-src-list="[scope.row.frontImageUrl]" fit="cover" preview-teleported />

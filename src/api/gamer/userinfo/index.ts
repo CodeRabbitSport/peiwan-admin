@@ -68,3 +68,47 @@ export const UserInfoApi = {
     return request.put({ url: `/gamer/user-info/toggle-status`, data })
   },
 }
+
+/**
+ * 获得用户统计信息
+ * @param {string} id 用户编号
+ * @param {string} nickname 昵称
+ * @param {string} parentId 上级编号
+ * @param {string} parentNickname 上级昵称
+ * @param {string} pageNo 页码，从 1 开始
+ * @param {string} pageSize 每页条数，最大值为 100
+ * @returns
+ * {
+    /*总量 */
+  //   total: number;
+
+  //   /*数据 */
+  //   list: {
+  //     /*用户编号 */
+  //     id: number;
+
+  //     /*昵称 */
+  //     nickname: string;
+
+  //     /*头像 */
+  //     avatar: string;
+
+  //     /*上级编号 */
+  //     parentId: number;
+
+  //     /*上级昵称 */
+  //     parentNickname: string;
+
+  //     /*上级头像 */
+  //     parentAvatar: string;
+
+  //     /*下单量 */
+  //     totalOrderCount: number;
+
+  //     /*下单金额 */
+  //     totalOrderAmount: number;
+  //   }[];
+  // };
+export function getUserStatPage(params) {
+  return request.get({ url: `/gamer/user-info/get-user-stat`, params })
+}

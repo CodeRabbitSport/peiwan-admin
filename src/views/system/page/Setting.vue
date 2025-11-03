@@ -39,6 +39,7 @@ const CONFIG_KEYS = {
   siteConfigGlobalProductPlacementMap: 'siteConfigGlobalProductPlacementMap',
   siteConfigEnableAssessmentCode: 'siteConfigEnableAssessmentCode',
   siteConfigAssessmentGroupQrCode: 'siteConfigAssessmentGroupQrCode',
+  siteConfigBlindBoxAnnouncement: 'siteConfigBlindBoxAnnouncement',
 } as const
 
 // 每个 Tab 对应需要保存的 Key（按语义细分分组）
@@ -50,7 +51,7 @@ const TAB_KEYS: Record<string, string[]> = {
     CONFIG_KEYS.siteConfigEnableAssessmentCode,
     CONFIG_KEYS.siteConfigAssessmentGroupQrCode,
   ],
-  home: [CONFIG_KEYS.orderVirtualCount, CONFIG_KEYS.siteIndexDialogContent, CONFIG_KEYS.siteConfigEnableIndexDialog],
+  home: [CONFIG_KEYS.orderVirtualCount, CONFIG_KEYS.siteIndexDialogContent, CONFIG_KEYS.siteConfigEnableIndexDialog, CONFIG_KEYS.siteConfigBlindBoxAnnouncement],
   mine: [CONFIG_KEYS.siteEnableVoiceRoom],
   // 页面内容细分
   orderPages: [CONFIG_KEYS.siteCreateOrderContent, CONFIG_KEYS.siteOrderDetailContent],
@@ -100,6 +101,7 @@ const TITLE_MAP: Record<string, string> = {
   [CONFIG_KEYS.recyclingQrCode]: '回收二维码',
   [CONFIG_KEYS.siteConfigEnableAssessmentCode]: '是否开启考核码',
   [CONFIG_KEYS.siteConfigAssessmentGroupQrCode]: '考核群二维码',
+  [CONFIG_KEYS.siteConfigBlindBoxAnnouncement]: '盲盒公告',
 }
 
 // 已存在配置的 map，便于 update
@@ -130,6 +132,7 @@ const form = reactive({
   pickOrderAgreementContent: '' as string,
   recyclingRuleDetail: '' as string,
   recyclingQrCode: '' as string,
+  siteConfigBlindBoxAnnouncement: '' as string,
 })
 
 // 工具：字符串 => 布尔
@@ -220,6 +223,9 @@ async function fetchAll() {
     if (map[CONFIG_KEYS.recyclingQrCode]) {
       form.recyclingQrCode = map[CONFIG_KEYS.recyclingQrCode].configValue || ''
     }
+    if (map[CONFIG_KEYS.siteConfigBlindBoxAnnouncement]) {
+      form.siteConfigBlindBoxAnnouncement = map[CONFIG_KEYS.siteConfigBlindBoxAnnouncement].configValue || ''
+    }
   }
   catch (err) {
     console.error('加载配置失败:', err)
@@ -249,6 +255,7 @@ function resolveGroupKey(configKey: string): string | undefined {
     || configKey === CONFIG_KEYS.aboutUsContent
     || configKey === CONFIG_KEYS.employmentAgreementContent
     || configKey === CONFIG_KEYS.pickOrderAgreementContent
+    || configKey === CONFIG_KEYS.siteConfigBlindBoxAnnouncement
   ) {
     return 'siteConfig'
   }
@@ -335,6 +342,9 @@ function buildConfigs(keys: string[]): Partial<SystemConfig>[] {
         break
       case CONFIG_KEYS.recyclingQrCode:
         value = form.recyclingQrCode || ''
+        break
+      case CONFIG_KEYS.siteConfigBlindBoxAnnouncement:
+        value = form.siteConfigBlindBoxAnnouncement || ''
         break
     }
 
@@ -455,6 +465,10 @@ onMounted(() => {
           </el-form-item>
           <el-form-item label="首页通知内容">
             <Editor v-model="form.orderVirtualCount" height="250px" />
+          </el-form-item>
+          <!-- 抽奖公告 -->
+          <el-form-item label="盲盒公告">
+            <Editor v-model="form.siteConfigBlindBoxAnnouncement" height="250px" />
           </el-form-item>
         </el-form>
       </el-tab-pane>

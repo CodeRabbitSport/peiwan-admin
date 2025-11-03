@@ -256,6 +256,7 @@ onMounted(() => {
       <el-table-column label="消息ID" align="center" prop="id" />
       <el-table-column label="会话ID" align="center" prop="conversationId" />
       <el-table-column label="发送人ID" align="center" prop="senderId" />
+      <el-table-column label="发送人昵称" align="center" prop="senderNickname" />
       <el-table-column label="发送人" align="center" prop="senderType">
         <template #default="{ row }">
           <el-tag :type="row.senderType === 1 ? 'info' : row.senderType === 2 ? 'primary' : 'info'">

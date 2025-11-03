@@ -39,7 +39,7 @@ const formData = ref({
 // 游戏名片动态表单字段
 const gameCardFields = ref([{ type: 'text', label: '', value: '' }])
 // 接单大区动态表单字段
-const orderReceivingRegionFields = ref([{ region: '', price: 0 }])
+const orderReceivingRegionFields = ref([''])
 const formRules = reactive({
   // categoryType: [{ required: true, message: '类型不能为空', trigger: 'blur' }]
 })
@@ -76,24 +76,22 @@ async function submitForm() {
     // 提交前确保数据与表单项同步（尤其兼容旧格式/未触发输入变更的情况）
     updateGameCardData()
     updateOrderReceivingRegionData()
-    // 重复校验：接单大区名称不得重复（只在启用时校验）
-    if (formData.value.orderReceivingStatus === true) {
-      const regions = orderReceivingRegionFields.value
-        .map(it => (it.region || '').trim())
-        .filter(n => n !== '')
-      const seen = new Set<string>()
-      let dupName: string | null = null
-      for (const n of regions) {
-        if (seen.has(n)) {
-          dupName = n
-          break
-        }
-        seen.add(n)
+    // 重复校验：接单大区名称不得重复
+    const regions = orderReceivingRegionFields.value
+      .map(it => (it || '').trim())
+      .filter(n => n !== '')
+    const seen = new Set<string>()
+    let dupName: string | null = null
+    for (const n of regions) {
+      if (seen.has(n)) {
+        dupName = n
+        break
       }
-      if (dupName) {
-        message.error(`接单大区存在重复的大区名称：${dupName}`)
-        return
-      }
+      seen.add(n)
+    }
+    if (dupName) {
+      message.error(`接单大区存在重复的大区名称：${dupName}`)
+      return
     }
     const data = formData.value as unknown as ProductCategory
     if (formType.value === 'create') {
@@ -155,7 +153,7 @@ function initGameCardFields() {
 
 // 添加接单大区字段
 function addOrderReceivingRegionField() {
-  orderReceivingRegionFields.value.push({ region: '', price: 0 })
+  orderReceivingRegionFields.value.push('')
   updateOrderReceivingRegionData()
 }
 
@@ -169,12 +167,32 @@ function removeOrderReceivingRegionField(index: number) {
 
 // （按需求）不再提供清空全部按钮，仅支持逐项删除
 
+// 检查接单大区是否重复
+function checkDuplicateRegion(currentValue: string, currentIndex: number): boolean {
+  if (!currentValue || currentValue.trim() === '') {
+    return false
+  }
+  const trimmedValue = currentValue.trim()
+  return orderReceivingRegionFields.value.some((region, index) => {
+    return index !== currentIndex && (region || '').trim() === trimmedValue
+  })
+}
+
+// 处理接单大区输入变化
+function handleRegionInput(index: number) {
+  const currentValue = orderReceivingRegionFields.value[index]
+  if (checkDuplicateRegion(currentValue, index)) {
+    message.warning(`大区名称 "${currentValue.trim()}" 已存在，不能重复`)
+  }
+  updateOrderReceivingRegionData()
+}
+
 // 更新接单大区数据
 function updateOrderReceivingRegionData() {
   const filtered = orderReceivingRegionFields.value
-    .map(it => ({ region: (it.region || '').trim(), price: Number(it.price ?? 0) }))
-    .filter(it => it.region !== '' || it.price > 0)
-  formData.value.orderReceivingRegion = filtered.length > 0 ? JSON.stringify(filtered) : ''
+    .map(it => (it || '').trim())
+    .filter(it => it !== '')
+  formData.value.orderReceivingRegion = filtered.join(',')
 }
 
 // 初始化接单大区字段
@@ -182,26 +200,22 @@ function initOrderReceivingRegionFields() {
   const value = formData.value.orderReceivingRegion as unknown as string
   if (value) {
     try {
+      // 先尝试解析旧的 JSON 格式
       const parsed = JSON.parse(value)
       if (Array.isArray(parsed) && parsed.length > 0) {
-        orderReceivingRegionFields.value = parsed.map((it: any) => ({
-          region: it?.region ?? '',
-          price: Number(it?.price ?? 0),
-        }))
+        orderReceivingRegionFields.value = parsed.map((it: any) => it?.region ?? '')
         return
       }
     }
     catch (e) {
-      // ignore json parse error and try legacy format
+      // 不是 JSON 格式，按逗号分隔解析
     }
-    // 兼容旧格式：使用 @ 分割的大区名称串
-    const names = String(value).split('@').filter(Boolean)
-    orderReceivingRegionFields.value = names.length
-      ? names.map((n: string) => ({ region: n, price: 0 }))
-      : [{ region: '', price: 0 }]
+    // 逗号分隔格式
+    const names = String(value).split(',').map(n => n.trim()).filter(Boolean)
+    orderReceivingRegionFields.value = names.length ? names : ['']
   }
   else {
-    orderReceivingRegionFields.value = [{ region: '', price: 0 }]
+    orderReceivingRegionFields.value = ['']
   }
 }
 
@@ -224,7 +238,7 @@ function resetForm() {
     gameType: undefined,
   }
   gameCardFields.value = [{ type: 'text', label: '', value: '' }]
-  orderReceivingRegionFields.value = [{ region: '', price: 0 }]
+  orderReceivingRegionFields.value = ['']
   formRef.value?.resetFields()
   // 同步序列化默认值，避免未操作时为 undefined
   updateGameCardData()
@@ -316,11 +330,11 @@ function resetForm() {
           </el-radio>
         </el-radio-group>
 
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="接单大区" prop="orderReceivingRegion">
         <div class="dynamic-form w-full">
           <div
-            v-for="(item, index) in orderReceivingRegionFields"
+            v-for="(_, index) in orderReceivingRegionFields"
             :key="index"
             class="mb-2"
           >
@@ -330,20 +344,9 @@ function resetForm() {
               </div>
               <div :span="3">
                 <el-input
-                  v-model="item.region"
+                  v-model="orderReceivingRegionFields[index]"
                   placeholder="请输入大区名称"
-                  @input="updateOrderReceivingRegionData"
-                />
-              </div>
-              <div :span="2" class="mx-2">
-                涨幅价格
-              </div>
-              <div :span="2">
-                <el-input-number
-                  v-model="item.price"
-                  :min="0"
-                  :step="1"
-                  @change="updateOrderReceivingRegionData"
+                  @input="handleRegionInput(index)"
                 />
               </div>
               <div :span="1">
@@ -367,7 +370,7 @@ function resetForm() {
             添加大区
           </el-button>
         </div>
-      </el-form-item> -->
+      </el-form-item>
       <!-- <el-form-item label="擅长位置" prop="skilledPositionStatus">
         <el-radio-group v-model="formData.skilledPositionStatus">
           <el-radio :value="false">不启用</el-radio>

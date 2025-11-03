@@ -127,7 +127,24 @@ onMounted(() => {
           placeholder="请输入订单ID"
           clearable
           class="!w-[240px]"
-          
+        />
+      </el-form-item>
+      <!-- 用户ID -->
+      <el-form-item label="用户ID" prop="userId">
+        <UserMultiSelectInput
+          v-model="queryParams.userId"
+          :multiple="false"
+          placeholder="请选择用户"
+          @change="handleQuery"
+        />
+      </el-form-item>
+      <!-- 接单人ID -->
+      <el-form-item label="接单人ID" prop="acceptorId">
+        <UserSelectInput
+          v-model="queryParams.acceptorId"
+
+          placeholder="请选择接单人"
+          @change="handleQuery"
         />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
@@ -180,10 +197,12 @@ onMounted(() => {
       @selection-change="handleRowCheckboxChange"
     >
       <el-table-column type="selection" width="55" />
-      <el-table-column label="主键ID" align="center" prop="id" />
+      <el-table-column label="ID" align="center" prop="id" />
       <el-table-column label="订单ID" align="center" prop="orderId" />
       <el-table-column label="评价人ID" align="center" prop="userId" />
+      <el-table-column label="评价人昵称" align="center" prop="userNickname" />
       <el-table-column label="接单人ID" align="center" prop="acceptorId" />
+      <el-table-column label="接单人昵称" align="center" prop="acceptorNickname" />
       <el-table-column label="星级评分" align="center" prop="star">
         <template #default="scope">
           <el-tag type="primary">

@@ -4,40 +4,78 @@
       ref="formRef"
       :model="formData"
       :rules="formRules"
-      label-width="100px"
+      label-width="80px"
       v-loading="formLoading"
     >
-      <el-form-item label="用户优惠券ID" prop="userCouponId">
-        <el-input v-model="formData.userCouponId" placeholder="请输入用户优惠券ID" />
+      <el-form-item label="用户券ID" prop="userCouponId">
+        <el-input v-model="formData.userCouponId" placeholder="请输入用户券ID" />
       </el-form-item>
       <el-form-item label="用户ID" prop="userId">
         <el-input v-model="formData.userId" placeholder="请输入用户ID" />
       </el-form-item>
-      <el-form-item label="优惠券ID" prop="couponId">
-        <el-input v-model="formData.couponId" placeholder="请输入优惠券ID" />
+      <el-form-item label="券ID" prop="couponId">
+        <el-input v-model="formData.couponId" placeholder="请输入券ID" />
       </el-form-item>
-      <el-form-item label="优惠券名称" prop="couponName">
-        <el-input v-model="formData.couponName" placeholder="请输入优惠券名称" />
+      <el-form-item label="券名称" prop="couponName">
+        <el-input v-model="formData.couponName" placeholder="请输入券名称" />
       </el-form-item>
-      <el-form-item label="优惠券类型" prop="couponType">
-        <el-select v-model="formData.couponType" placeholder="请选择优惠券类型">
-          <el-option label="请选择字典生成" value="" />
+      <el-form-item label="券类型" prop="couponType">
+        <el-select v-model="formData.couponType" placeholder="请选择券类型">
+          <el-option label="满减券" :value="1" />
+          <el-option label="折扣券" :value="2" />
+          <el-option label="无门槛券" :value="3" />
         </el-select>
       </el-form-item>
-      <el-form-item label="优惠金额/折扣比例" prop="couponAmount">
-        <el-input v-model="formData.couponAmount" placeholder="请输入优惠金额/折扣比例" />
+      <el-form-item label="金额/折扣" prop="couponAmount">
+        <el-select v-model="formData.couponAmount" placeholder="请选择金额或折扣">
+          <el-option label="5元" :value="5" />
+          <el-option label="10元" :value="10" />
+          <el-option label="20元" :value="20" />
+          <el-option label="30元" :value="30" />
+          <el-option label="50元" :value="50" />
+          <el-option label="100元" :value="100" />
+          <el-option label="9.5折" :value="0.95" />
+          <el-option label="9折" :value="0.9" />
+          <el-option label="8.5折" :value="0.85" />
+          <el-option label="8折" :value="0.8" />
+          <el-option label="7.5折" :value="0.75" />
+          <el-option label="7折" :value="0.7" />
+        </el-select>
       </el-form-item>
-      <el-form-item label="最低订单金额要求" prop="couponMinOrderAmount">
-        <el-input v-model="formData.couponMinOrderAmount" placeholder="请输入最低订单金额要求" />
+      <el-form-item label="最低金额" prop="couponMinOrderAmount">
+        <el-select v-model="formData.couponMinOrderAmount" placeholder="请选择最低金额">
+          <el-option label="无门槛" :value="0" />
+          <el-option label="满50" :value="50" />
+          <el-option label="满100" :value="100" />
+          <el-option label="满200" :value="200" />
+          <el-option label="满300" :value="300" />
+          <el-option label="满500" :value="500" />
+          <el-option label="满1000" :value="1000" />
+        </el-select>
       </el-form-item>
       <el-form-item label="业务ID" prop="bizId">
         <el-input v-model="formData.bizId" placeholder="请输入业务ID" />
       </el-form-item>
       <el-form-item label="业务金额" prop="bizAmount">
-        <el-input v-model="formData.bizAmount" placeholder="请输入业务金额" />
+        <el-select v-model="formData.bizAmount" placeholder="请选择业务金额">
+          <el-option label="50元" :value="50" />
+          <el-option label="100元" :value="100" />
+          <el-option label="200元" :value="200" />
+          <el-option label="300元" :value="300" />
+          <el-option label="500元" :value="500" />
+          <el-option label="1000元" :value="1000" />
+          <el-option label="2000元" :value="2000" />
+        </el-select>
       </el-form-item>
       <el-form-item label="优惠金额" prop="discountAmount">
-        <el-input v-model="formData.discountAmount" placeholder="请输入优惠金额" />
+        <el-select v-model="formData.discountAmount" placeholder="请选择优惠金额">
+          <el-option label="5元" :value="5" />
+          <el-option label="10元" :value="10" />
+          <el-option label="20元" :value="20" />
+          <el-option label="30元" :value="30" />
+          <el-option label="50元" :value="50" />
+          <el-option label="100元" :value="100" />
+        </el-select>
       </el-form-item>
       <el-form-item label="使用时间" prop="usedAt">
         <el-date-picker
@@ -82,15 +120,15 @@ const formData = ref({
   usedAt: undefined
 })
 const formRules = reactive({
-  userCouponId: [{ required: true, message: '用户优惠券ID不能为空', trigger: 'blur' }],
+  userCouponId: [{ required: true, message: '用户券ID不能为空', trigger: 'blur' }],
   userId: [{ required: true, message: '用户ID不能为空', trigger: 'blur' }],
-  couponId: [{ required: true, message: '优惠券ID不能为空', trigger: 'blur' }],
-  couponName: [{ required: true, message: '优惠券名称不能为空', trigger: 'blur' }],
-  couponType: [{ required: true, message: '优惠券类型不能为空', trigger: 'change' }],
-  couponAmount: [{ required: true, message: '优惠金额/折扣比例不能为空', trigger: 'blur' }],
+  couponId: [{ required: true, message: '券ID不能为空', trigger: 'blur' }],
+  couponName: [{ required: true, message: '券名称不能为空', trigger: 'blur' }],
+  couponType: [{ required: true, message: '券类型不能为空', trigger: 'change' }],
+  couponAmount: [{ required: true, message: '金额/折扣不能为空', trigger: 'change' }],
   bizId: [{ required: true, message: '业务ID不能为空', trigger: 'blur' }],
-  bizAmount: [{ required: true, message: '业务金额不能为空', trigger: 'blur' }],
-  discountAmount: [{ required: true, message: '优惠金额不能为空', trigger: 'blur' }],
+  bizAmount: [{ required: true, message: '业务金额不能为空', trigger: 'change' }],
+  discountAmount: [{ required: true, message: '优惠金额不能为空', trigger: 'change' }],
   usedAt: [{ required: true, message: '使用时间不能为空', trigger: 'blur' }]
 })
 const formRef = ref() // 表单 Ref

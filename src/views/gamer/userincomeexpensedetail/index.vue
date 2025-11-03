@@ -97,6 +97,40 @@ watch(
 
 const checkedIds = ref<number[]>([])
 
+/** 获取分类信息 */
+function getCategoryInfo(category: number) {
+  const categoryMap = {
+    1: { label: '充值', type: 'success' },
+    2: { label: '提现', type: 'danger' },
+    3: { label: '订单收入', type: 'warning' },
+    4: { label: '支付', type: 'info' },
+    5: { label: '订单保证金收入', type: 'success' },
+    6: { label: '提现退款', type: 'warning' },
+    7: { label: '保证金充值', type: 'primary' },
+    8: { label: '保证金提现(充值到余额)', type: 'info' },
+    9: { label: '保证金退款(审核失败)', type: 'danger' },
+    15: { label: '评论红包收入', type: 'success' },
+    16: { label: '评论红包支出', type: 'danger' },
+    25: { label: '后台充值/扣减余额', type: 'warning' },
+    35: { label: '支付退款', type: 'info' },
+    46: { label: '收到礼物收入', type: 'success' },
+  }
+  return categoryMap[category] || { label: '未知', type: 'info' }
+}
+
+/** 计算变动前余额 */
+function calculateBalanceBefore(balanceAfter: number, amount: number, type: number) {
+  // type: 1-收入, 2-支出
+  if (type === 1) {
+    // 收入：变动前 = 变动后 - 金额
+    return balanceAfter - amount
+  }
+  else {
+    // 支出：变动前 = 变动后 + 金额
+    return balanceAfter + amount
+  }
+}
+
 /** 批量删除收入支出明细 */
 async function handleDeleteBatch() {
   try {
@@ -145,14 +179,13 @@ onMounted(() => {
       :inline="true"
       label-width="68px"
     >
-      <el-form-item label="用户ID" prop="userId">
-        <el-input
+      <el-form-item label="用户" prop="userId">
+        <UserMultiSelectInput
           v-model="queryParams.userId"
           :disabled="props?.userId !== undefined && props?.userId !== null"
-          placeholder="请输入用户ID"
-          clearable
-          class="!w-[240px]"
-          
+          :multiple="false"
+          placeholder="请选择用户"
+          @change="handleQuery"
         />
       </el-form-item>
 
@@ -162,7 +195,6 @@ onMounted(() => {
           placeholder="请输入订单号"
           clearable
           class="!w-[240px]"
-          
         />
       </el-form-item>
       <el-form-item label="类型" prop="type">
@@ -230,6 +262,8 @@ onMounted(() => {
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" />
       <el-table-column label="用户ID" align="center" prop="userId" />
+      <el-table-column label="用户昵称" align="center" prop="userNickName" width="120" />
+
       <el-table-column label="订单号" align="center" prop="orderNo" />
 
       <el-table-column label="类型" align="center" prop="type">
@@ -241,17 +275,8 @@ onMounted(() => {
       </el-table-column>
       <el-table-column label="分类" align="center" prop="category">
         <template #default="scope">
-          <el-tag v-if="scope.row.category === 1" type="success">
-            充值
-          </el-tag>
-          <el-tag v-else-if="scope.row.category === 2" type="danger">
-            提现
-          </el-tag>
-          <el-tag v-else-if="scope.row.category === 3" type="warning">
-            订单收入
-          </el-tag>
-          <el-tag v-else-if="scope.row.category === 4" type="info">
-            支付
+          <el-tag :type="getCategoryInfo(scope.row.category).type">
+            {{ getCategoryInfo(scope.row.category).label }}
           </el-tag>
         </template>
       </el-table-column>
@@ -262,7 +287,7 @@ onMounted(() => {
       </el-table-column>
       <el-table-column label="变动前余额" align="center" prop="balanceBefore">
         <template #default="scope">
-          {{ fenToYuan(scope.row.balanceBefore) }} 元
+          {{ fenToYuan(calculateBalanceBefore(scope.row.balanceAfter, scope.row.amount, scope.row.type)) }} 元
         </template>
       </el-table-column>
       <el-table-column label="变动后余额" align="center" prop="balanceAfter">

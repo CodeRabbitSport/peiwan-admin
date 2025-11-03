@@ -129,22 +129,20 @@ onMounted(() => {
       :inline="true"
       label-width="68px"
     >
-      <el-form-item label="用户1ID" prop="user1Id">
-        <el-input
+      <el-form-item label="用户1" prop="user1Id">
+        <UserMultiSelectInput
           v-model="queryParams.user1Id"
-          placeholder="请输入用户1ID"
-          clearable
-          class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          :multiple="false"
+          placeholder="请选择用户1"
+          @change="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="用户2ID" prop="user2Id">
-        <el-input
+      <el-form-item label="用户2" prop="user2Id">
+        <UserMultiSelectInput
           v-model="queryParams.user2Id"
-          placeholder="请输入用户2ID"
-          clearable
-          class="!w-[240px]"
-          @keyup.enter="handleQuery"
+          :multiple="false"
+          placeholder="请选择用户2"
+          @change="handleQuery"
         />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
@@ -208,7 +206,9 @@ onMounted(() => {
       <el-table-column type="selection" width="55" />
       <el-table-column label="会话编号" align="center" prop="id" />
       <el-table-column label="用户1 ID" align="center" prop="user1Id" />
+      <el-table-column label="用户1 昵称" align="center" prop="user1Nickname" />
       <el-table-column label="用户2 ID" align="center" prop="user2Id" />
+      <el-table-column label="用户2 昵称" align="center" prop="user2Nickname" />
       <!-- <el-table-column label="最新消息ID" align="center" prop="lastMessageId" /> -->
       <el-table-column
         label="最新消息时间"

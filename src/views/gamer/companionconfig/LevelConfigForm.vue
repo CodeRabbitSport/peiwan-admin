@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import LevelConfigForm from '@/components/LevelConfig/LevelConfigForm.vue'
 
-/** 打手等级配置表单包装器 */
-defineOptions({ name: 'FighterLevelConfigForm' })
+/** 陪玩等级配置表单包装器 */
+defineOptions({ name: 'CompanionLevelConfigForm' })
 
 const emit = defineEmits(['success'])
 const formRef = ref()
@@ -17,9 +17,9 @@ defineExpose({ open })
 <template>
   <LevelConfigForm
     ref="formRef"
-    :category-type="2"
-    category-label="打手"
-    category-tag-type="warning"
+    :category-type="1"
+    category-label="陪玩"
+    category-tag-type="success"
     @success="emit('success')"
   />
 </template>
