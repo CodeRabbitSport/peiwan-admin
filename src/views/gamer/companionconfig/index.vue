@@ -228,7 +228,7 @@ onMounted(() => {
               提现手续费：{{ row.withdrawalFeeRate }}%
             </div>
             <div class="feature-item">
-              抽成比例：{{ row.commission_rate }}%
+              陪玩到手比例：{{ row.commissionRate }}%
             </div>
             <div class="feature-item">
               订单服务费解冻时间：{{ row.orderFeeUnfreezeSeconds }}秒

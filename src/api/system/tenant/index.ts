@@ -79,3 +79,7 @@ export function exportTenant(params: TenantExportReqVO) {
 export function TenantNew_getAssessmentCode(params) {
   return request.get({ url: `/system/tenant-new/get-assessment-code`, params })
 }
+
+export function TenantNew_refreshAssessmentCode(params) {
+  return request.get({ url: `/system/tenant-new/refresh-assessment-code`, params })
+}

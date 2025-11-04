@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { SystemConfig } from '@/api/gamer/systemconfig'
 import { SystemConfigApi } from '@/api/gamer/systemconfig'
-import { TenantNew_getAssessmentCode } from '@/api/system/tenant'
+import { TenantNew_getAssessmentCode, TenantNew_refreshAssessmentCode } from '@/api/system/tenant'
 
 const message = useMessage()
 
@@ -68,6 +68,7 @@ const TAB_KEYS: Record<string, string[]> = {
 // 获取当前考核码
 async function fetchAssessmentCode() {
   try {
+    await TenantNew_refreshAssessmentCode({})
     assessmentCode.value = await TenantNew_getAssessmentCode({})
   }
   catch (err) {

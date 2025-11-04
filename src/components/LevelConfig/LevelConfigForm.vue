@@ -340,8 +340,8 @@ function clearSelectedProducts() {
             </template>
           </el-input>
         </el-form-item>
-        <el-form-item v-if="props.categoryType === 1" label="佣金抽成比率" prop="commissionRate">
-          <el-input v-model="formData.commissionRate" placeholder="请输入佣金抽成比率" type="number">
+        <el-form-item v-if="props.categoryType === 1" label="陪玩到手比例" prop="commissionRate">
+          <el-input v-model="formData.commissionRate" placeholder="请输入陪玩到手比例" type="number">
             <template #append>
               %
             </template>

@@ -4,11 +4,11 @@ import { getUserStatPage } from '@/api/gamer/userinfo'
 /** 下级用户统计组件 */
 defineOptions({ name: 'UserStatDialog' })
 
+const props = defineProps<Props>()
+
 interface Props {
   userId?: number
 }
-
-const props = defineProps<Props>()
 
 const loading = ref(false)
 const list = ref<any[]>([])
@@ -35,7 +35,7 @@ const queryFormRef = ref()
 /** 查询列表 */
 async function getList() {
   if (!props.userId) return
-  
+
   loading.value = true
   try {
     const data = await getUserStatPage(queryParams)
@@ -100,14 +100,6 @@ watch(() => props.userId, (newUserId) => {
             class="!w-[200px]"
           />
         </el-form-item>
-        <el-form-item label="上级昵称" prop="parentNickname">
-          <el-input
-            v-model="queryParams.parentNickname"
-            placeholder="请输入上级昵称"
-            clearable
-            class="!w-[200px]"
-          />
-        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleQuery">
             <Icon icon="ep:search" class="mr-[5px]" /> 搜索
@@ -147,6 +139,11 @@ watch(() => props.userId, (newUserId) => {
         <el-table-column label="下单金额" align="center" prop="totalOrderAmount" width="120px">
           <template #default="scope">
             ¥{{ (scope.row.totalOrderAmount / 100).toFixed(2) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="总计利润" align="center" prop="totalParentFee" width="120px">
+          <template #default="scope">
+            ¥{{ (scope.row.totalParentFee / 100).toFixed(2) }}
           </template>
         </el-table-column>
       </el-table>

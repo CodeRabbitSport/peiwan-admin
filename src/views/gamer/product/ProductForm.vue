@@ -561,7 +561,7 @@ function initOrderReceivingRegionFields() {
 
       <el-row>
         <el-col :xs="24" :sm="12">
-          <el-form-item label="抽成比例" prop="commissionRate">
+          <el-form-item label="打手到手比例" prop="commissionRate" label-width="120">
             <el-input-number
               v-model="formData.commissionRate" placeholder="请输入抽成比例" :min="0" :max="100" :precision="2"
               class="!w-full"
