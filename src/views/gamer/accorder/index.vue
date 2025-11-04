@@ -142,10 +142,6 @@ function handleOrderStatusFilterChange(value: string | number | undefined) {
     queryParams.orderStatus = 1
     queryParams.acceptorStatus = 0
   }
-  else if (value === 'inProgress') {
-    queryParams.orderStatus = 2
-    queryParams.acceptorStatus = 1
-  }
   else {
     queryParams.orderStatus = value as number | undefined
     queryParams.acceptorStatus = undefined
@@ -176,7 +172,8 @@ const acceptorStatusMap: Record<number, { text: string, color: string }> = {
 
 function getOrderStatusTag(row: AccOrder): any {
   const { orderStatus, acceptorStatus } = row as any
-  if ((orderStatus === 1 || orderStatus === 2) && acceptorStatus !== undefined && acceptorStatus !== null) {
+  // 进行中状态时，显示派单中或已确认接单
+  if (orderStatus === 1 && acceptorStatus !== undefined && acceptorStatus !== null) {
     return acceptorStatusMap[acceptorStatus] || { text: '进行中', color: 'primary' }
   }
 
@@ -184,18 +181,14 @@ function getOrderStatusTag(row: AccOrder): any {
     case 0:
       return { text: '待支付', color: 'info' }
     case 1:
-      return { text: '已支付待接单', color: 'warning' }
-    case 2:
       return { text: '进行中', color: 'primary' }
-    case 3:
-      return { text: '待确认', color: '' }
-    case 4:
+    case 2:
       return { text: '已完成', color: 'success' }
-    case 5:
+    case 3:
       return { text: '已取消', color: 'info' }
-    case 6:
+    case 4:
       return { text: '退款中', color: 'danger' }
-    case 7:
+    case 5:
       return { text: '已退款', color: 'warning' }
     default:
       return { text: '未知状态', color: 'primary' }
@@ -360,14 +353,12 @@ async function handleAuditOrderComplete(row: any) {
           @change="(val) => { handleOrderStatusFilterChange(val); handleQuery() }"
         >
           <el-option label="待支付" :value="0" />
-          <el-option label="已支付待接单" :value="1" />
           <el-option label="派单中" value="dispatching" />
-          <el-option label="进行中" value="inProgress" />
-          <el-option label="待确认" :value="3" />
-          <el-option label="已完成" :value="4" />
-          <el-option label="已取消" :value="5" />
-          <el-option label="退款中" :value="6" />
-          <el-option label="已退款" :value="7" />
+          <el-option label="进行中" :value="1" />
+          <el-option label="已完成" :value="2" />
+          <el-option label="已取消" :value="3" />
+          <el-option label="退款中" :value="4" />
+          <el-option label="已退款" :value="5" />
         </el-select>
       </el-form-item>
       <el-form-item label="支付状态" prop="payStatus">
@@ -626,14 +617,14 @@ async function handleAuditOrderComplete(row: any) {
                 </el-dropdown-item>
                 <!-- 完成订单 -->
                 <el-dropdown-item
-                  v-if="scope.row.completeTime"
+                  v-if="scope.row.completeTime && scope.row.orderStatus === 1"
                   v-hasPermi="['gamer:acc-order:update']"
                   @click="handleAuditOrderComplete(scope.row)"
                 >
                   完成订单
                 </el-dropdown-item>
                 <el-dropdown-item
-                  v-if="scope.row.orderStatus === 6"
+                  v-if="scope.row.orderStatus === 4"
                   v-hasPermi="['gamer:acc-order:update']"
                   @click="openRefundDialog(scope.row)"
                 >
@@ -647,7 +638,7 @@ async function handleAuditOrderComplete(row: any) {
                   立即退款
                 </el-dropdown-item>
                 <el-dropdown-item
-                  v-if="scope.row.orderStatus === 1 || scope.row.orderStatus === 2"
+                  v-if="scope.row.orderStatus === 1"
                   v-hasPermi="['gamer:acc-order:cancel-accept']"
                   @click="handleCancelOrder(scope.row)"
                 >

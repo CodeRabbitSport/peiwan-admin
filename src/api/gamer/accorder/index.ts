@@ -11,8 +11,8 @@ export interface AccOrder {
   levelDecided: number // 接单人等级,0代表未接单
   productPrice?: number // 商品价格，单位：分
   productPriceDifference?: number // 订单差价，单位：分
-  productDuration?: number // 商品数量(时长,小时制)
-  orderStatus?: number // 订单状态：0-待支付 1-已支付待接单 2-进行中 3-待确认 4-已完成 6-已取消 6-退款中 7-已退款
+  productDuration?: number // 商品数量(时长,分钟制)
+  orderStatus?: number // 订单状态：0-待支付 1-进行中 2-已完成 3-已取消 4-退款中 5-已退款
   orderRemark: string // 订单备注
   totalAmount?: number // 订单总金额，单位：分
   discountAmount?: number // 优惠金额，单位：分
