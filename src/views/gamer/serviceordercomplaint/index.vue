@@ -246,7 +246,7 @@ async function handleDeleteBatch() {
     message.success(t('common.delSuccess'))
     await getList()
   }
-  catch {}
+  catch { }
 }
 
 function handleRowCheckboxChange(records: ServiceOrderComplaint[]) {
@@ -366,9 +366,7 @@ onMounted(() => {
     </OrderTable>
     <!-- 分页 -->
     <Pagination
-      v-model:page="queryParams.pageNo"
-      v-model:limit="queryParams.pageSize"
-      :total="total"
+      v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" :total="total"
       @pagination="getList"
     />
   </ContentWrap>
@@ -399,10 +397,7 @@ onMounted(() => {
   <!-- 订单详情弹窗 -->
   <Dialog v-model="orderDetailDialogVisible" title="订单详情" width="80vw" align-center>
     <el-table
-      v-loading="orderDetailLoading"
-      row-key="id"
-      :data="orderDetailList"
-      :stripe="true"
+      v-loading="orderDetailLoading" row-key="id" :data="orderDetailList" :stripe="true"
       :show-overflow-tooltip="true"
     >
       <!-- 订单号 -->
@@ -420,7 +415,10 @@ onMounted(() => {
       <!-- 接单信息 -->
       <el-table-column label="接单信息" align="center" min-width="220px">
         <template #default="scope">
-          <div v-if="Array.isArray(scope.row.acceptorList) && scope.row.acceptorList.length" class="flex flex-col items-start gap-2">
+          <div
+            v-if="Array.isArray(scope.row.acceptorList) && scope.row.acceptorList.length"
+            class="flex flex-col items-start gap-2"
+          >
             <div v-for="acceptor in scope.row.acceptorList" :key="acceptor.id" class="flex flex-col items-center">
               <el-avatar :src="acceptor.avatar" size="small" />
               <span>{{ acceptor.nickname || '-' }}</span>
@@ -504,7 +502,16 @@ onMounted(() => {
         </template>
       </el-table-column>
       <!-- 商品名称 -->
-      <el-table-column label="商品名称" align="center" prop="productName" />
+      <el-table-column label="商品名称" align="center" prop="productName">
+        <template #default="scope">
+          <div class="flex flex-col items-center">
+            <el-image :src="scope.row.productPicUrl" fit="cover" style="width: 60px; height: 60px" />
+            <p class="break-all">
+              {{ scope.row.productName || '无' }}
+            </p>
+          </div>
+        </template>
+      </el-table-column>
       <!-- 金额 -->
       <el-table-column label="金额" align="center" width="180">
         <template #default="scope">
@@ -558,9 +565,7 @@ onMounted(() => {
       </el-button>
       <el-button
         v-if="currentComplaintStatus !== 2" v-hasPermi="['gamer:service-order-complaint:complete']"
-        type="success"
-
-        @click="openCompleteDialog"
+        type="success" @click="openCompleteDialog"
       >
         完成
       </el-button>
@@ -580,7 +585,13 @@ onMounted(() => {
       <el-table-column label="图片" align="center" prop="images">
         <template #default="scope">
           <div class="flex flex-wrap gap-2">
-            <el-image v-if="scope.row?.images || scope.row?.images !== ''" :src="scope.row?.images.startsWith('[') ? JSON.parse(scope.row?.images || '[]')?.[0] : scope.row?.images" fit="cover" style="width: 60px; height: 60px" :preview-src-list="scope.row?.images.startsWith('[') ? JSON.parse(scope.row?.images || '[]') : [scope.row?.images]" preview-teleported />
+            <el-image
+              v-if="scope.row?.images || scope.row?.images !== ''"
+              :src="scope.row?.images.startsWith('[') ? JSON.parse(scope.row?.images || '[]')?.[0] : scope.row?.images"
+              fit="cover" style="width: 60px; height: 60px"
+              :preview-src-list="scope.row?.images.startsWith('[') ? JSON.parse(scope.row?.images || '[]') : [scope.row?.images]"
+              preview-teleported
+            />
             <span v-else>-</span>
           </div>
         </template>

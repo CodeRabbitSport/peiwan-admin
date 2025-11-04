@@ -163,7 +163,7 @@ onMounted(() => {
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
         </el-button>
-        <el-button
+        <!--        <el-button
           v-hasPermi="['gamer:conversation:create']"
           type="primary"
           plain
@@ -171,7 +171,7 @@ onMounted(() => {
         >
           <Icon icon="ep:plus" class="mr-[5px]" /> 新增
         </el-button>
-        <!-- <el-button
+        <el-button
           v-hasPermi="['gamer:conversation:export']"
           type="success"
           plain

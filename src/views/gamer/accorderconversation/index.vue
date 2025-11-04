@@ -3,7 +3,6 @@ import type { AccOrderConversation } from '@/api/gamer/accorderconversation'
 import { AccOrderConversationApi } from '@/api/gamer/accorderconversation'
 import download from '@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
-import { isEmpty } from '@/utils/is'
 import AccOrderConversationMessage from '@/views/gamer/accorderconversationmessage/index.vue'
 
 import AccOrderConversationForm from './AccOrderConversationForm.vue'
@@ -172,32 +171,6 @@ onMounted(() => {
         </el-button>
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
-        </el-button>
-        <el-button
-          v-hasPermi="['gamer:acc-order-conversation:create']"
-          type="primary"
-          plain
-          @click="openForm('create')"
-        >
-          <Icon icon="ep:plus" class="mr-[5px]" /> 新增
-        </el-button>
-        <el-button
-          v-hasPermi="['gamer:acc-order-conversation:export']"
-          type="success"
-          plain
-          :loading="exportLoading"
-          @click="handleExport"
-        >
-          <Icon icon="ep:download" class="mr-[5px]" /> 导出
-        </el-button>
-        <el-button
-          v-hasPermi="['gamer:acc-order-conversation:delete']"
-          type="danger"
-          plain
-          :disabled="isEmpty(checkedIds)"
-          @click="handleDeleteBatch"
-        >
-          <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
         </el-button>
       </el-form-item>
     </el-form>

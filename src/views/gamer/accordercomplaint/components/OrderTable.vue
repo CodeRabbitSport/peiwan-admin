@@ -55,32 +55,6 @@ function formatPayStatus(value?: number): TagMeta {
   }
 }
 
-function parseJsonEntries(json: any): Array<{ key: string, value: any }> {
-  try {
-    const obj = typeof json === 'string' ? JSON.parse(json) : json
-    if (obj && typeof obj === 'object') {
-      return Object.entries(obj).map(([key, value]) => ({ key, value }))
-    }
-    return []
-  }
-  catch {
-    return []
-  }
-}
-
-function normalizeJackpot(info: any): { prizeTitle?: string, prizeCover?: string } | null {
-  try {
-    const obj = typeof info === 'string' ? JSON.parse(info) : info
-    if (obj && typeof obj === 'object') {
-      return { prizeTitle: (obj as any).prizeTitle, prizeCover: (obj as any).prizeCover }
-    }
-    return null
-  }
-  catch {
-    return null
-  }
-}
-
 function handleSelectionChange(rows: any[]) {
   emit('selection-change', rows)
 }
@@ -115,9 +89,14 @@ function handleSelectionChange(rows: any[]) {
           <div v-for="acceptor in scope.row.acceptorList" :key="acceptor.id" class="flex flex-col items-center">
             <el-avatar :src="acceptor.avatar" size="small" />
             <span>{{ acceptor.nickname || '-' }}</span>
-            <span>接单时间：{{ acceptor.confirmTime ? formatDate(acceptor.confirmTime) : '-' }}</span>
-            <span>完成时间：{{ acceptor.completeTime ? formatDate(acceptor.completeTime) : '-' }}</span>
+            <span>接单时间：{{ acceptor.confirmTime ? formatDate(acceptor.confirmTime) : scope.row.acceptConfirmTime ? formatDate(scope.row.acceptConfirmTime) : '-' }}</span>
+            <span>完成时间：{{ formatDate(scope.row.completeTime) || '-' }}</span>
           </div>
+        </div>
+        <div v-else-if="scope.row.captainId" class="flex flex-col items-center">
+          <span>接单人：{{ scope.row.captainId }}</span>
+          <span>接单时间：{{ formatDate(scope.row.acceptConfirmTime) || '-' }}</span>
+          <span>完成时间：{{ formatDate(scope.row.completeTime) || '-' }}</span>
         </div>
         <div v-else class="flex items-center justify-center">
           <span>-</span>
@@ -130,29 +109,16 @@ function handleSelectionChange(rows: any[]) {
       <template #default="scope">
         <div class="flex flex-col gap-1 text-left">
           <div>
-            订单类型：{{ scope.row.categoryType === 1 ? '陪玩' : scope.row.categoryType === 2 ? '打手' : '未知' }}
-          </div>
-          <div v-if="scope.row.gameCard">
-            <div v-for="item in parseJsonEntries(scope.row.gameCard)" :key="item.key">
-              {{ item.key }}：{{ item.value }}
-            </div>
+            订单类型：<el-tag type="success">陪玩</el-tag>
           </div>
           <div v-if="scope.row.gameRegion">
             游戏区服：{{ scope.row.gameRegion }}
           </div>
-          <div v-if="normalizeJackpot(scope.row.jackpotPrizeInfo)">
-            <div class="font-semibold">
-              盲盒信息
-            </div>
-            <div>
-              奖品：{{ normalizeJackpot(scope.row.jackpotPrizeInfo)?.prizeTitle || '-' }}
-            </div>
-            <el-image
-              v-if="normalizeJackpot(scope.row.jackpotPrizeInfo)?.prizeCover"
-              :src="normalizeJackpot(scope.row.jackpotPrizeInfo)?.prizeCover"
-              fit="cover"
-              style="width: 60px; height: 60px"
-            />
+          <div v-if="scope.row.userPickLevel">
+            选择等级：{{ scope.row.userPickLevel }}
+          </div>
+          <div v-if="scope.row.productDuration">
+            时长：{{ scope.row.productDuration / 60 }} 小时
           </div>
           <div v-if="scope.row.orderRemark">
             订单备注：{{ scope.row.orderRemark || '-' }}
@@ -164,11 +130,11 @@ function handleSelectionChange(rows: any[]) {
     <el-table-column label="时间" align="center" width="250">
       <template #default="scope">
         <div class="text-left">
-          <div v-if="scope.row.acceptTime">
-            接单时间：{{ formatDate(scope.row.acceptTime) || '-' }}
-          </div>
           <div v-if="scope.row.startTime">
             开始执行：{{ formatDate(scope.row.startTime) || '-' }}
+          </div>
+          <div v-if="scope.row.startTimeForCustomer">
+            用户确认开始：{{ formatDate(scope.row.startTimeForCustomer) || '-' }}
           </div>
           <div v-if="scope.row.completeTime">
             完成时间：{{ formatDate(scope.row.completeTime) || '-' }}
@@ -194,17 +160,6 @@ function handleSelectionChange(rows: any[]) {
         </div>
       </template>
     </el-table-column>
-    <!-- 商品名称 -->
-    <el-table-column label="商品名称" align="center" prop="productName">
-      <template #default="scope">
-        <div class="flex flex-col items-center">
-          <el-image :src="scope.row.productPicUrl" fit="cover" style="width: 60px; height: 60px" />
-          <p class="break-all">
-            {{ scope.row.productName || '无' }}
-          </p>
-        </div>
-      </template>
-    </el-table-column>
     <!-- 金额 -->
     <el-table-column label="金额" align="center" width="180">
       <template #default="scope">
@@ -216,6 +171,9 @@ function handleSelectionChange(rows: any[]) {
           <div>接单人获得金额：{{ scope.row.acceptorAmount != null ? fenToYuan(scope.row.acceptorAmount) : '-' }}</div>
           <div v-if="scope.row.refundAmount > 0">
             退款金额：{{ scope.row.refundAmount != null ? fenToYuan(scope.row.refundAmount) : '-' }}
+          </div>
+          <div v-if="scope.row.differenceAmount > 0">
+            差价：{{ scope.row.differenceAmount != null ? fenToYuan(scope.row.differenceAmount) : '-' }}
           </div>
         </div>
       </template>
@@ -251,3 +209,4 @@ function handleSelectionChange(rows: any[]) {
   overflow: visible;
 }
 </style>
+

@@ -4,7 +4,6 @@ import { UserCouponApi } from '@/api/gamer/usercoupon'
 import { fenToYuan } from '@/utils'
 import download from '@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
-import { isEmpty } from '@/utils/is'
 
 import UserCouponForm from './UserCouponForm.vue'
 
@@ -216,7 +215,7 @@ onMounted(() => {
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
         </el-button>
-        <el-button
+        <!-- <el-button
           v-hasPermi="['gamer:user-coupon:create']"
           type="primary"
           plain
@@ -241,7 +240,7 @@ onMounted(() => {
           @click="handleDeleteBatch"
         >
           <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
-        </el-button>
+        </el-button> -->
       </el-form-item>
     </el-form>
   </ContentWrap>

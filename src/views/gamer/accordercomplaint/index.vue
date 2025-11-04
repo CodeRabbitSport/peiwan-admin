@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import { AccOrderApi } from '@/api/gamer/accorder'
 import type { AccOrderComplaint } from '@/api/gamer/accordercomplaint'
 import { AccOrderComplaintApi } from '@/api/gamer/accordercomplaint'
+import { useUserStore } from '@/store/modules/user'
 import download from '@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
-import { isEmpty } from '@/utils/is'
 
 import AccOrderComplaintForm from './AccOrderComplaintForm.vue'
+import OrderTable from './components/OrderTable.vue'
 
 /** 陪玩订单投诉内容 列表 */
 defineOptions({ name: 'AccOrderComplaint' })
@@ -14,7 +16,7 @@ const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
 
 const loading = ref(true) // 列表的加载中
-const list = ref<AccOrderComplaint[]>([]) // 列表的数据
+const list = ref<any[]>([]) // 列表的数据（订单数据）
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
@@ -22,16 +24,116 @@ const queryParams = reactive({
   orderId: undefined,
   userId: undefined,
   userType: undefined,
+  complaintStatus: 1,
   createTime: [],
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 
+// 当前登录用户
+const userStore = useUserStore()
+
+// 用户类型枚举映射
+type TagType = 'success' | 'warning' | 'info' | 'primary' | 'danger'
+interface TagMeta { text: string, color: TagType }
+const userTypeTagMap: Record<number, TagMeta> = {
+  1: { text: '会员', color: 'success' },
+  2: { text: '管理员', color: 'warning' },
+}
+function formatUserTypeTag(value?: number): TagMeta {
+  if (value == null) return { text: '-', color: 'info' }
+  return userTypeTagMap[value] || { text: String(value), color: 'info' }
+}
+
+// 回复投诉对话框
+const replyDialogVisible = ref(false)
+const replyFormLoading = ref(false)
+const replyForm = reactive<{ orderId?: number, content?: string, images: string[] }>({ images: [] })
+
+// 投诉列表弹窗
+const complaintDialogVisible = ref(false)
+const complaintLoading = ref(false)
+const complaintList = ref<AccOrderComplaint[]>([])
+const currentComplaintStatus = ref<number | undefined>(undefined)
+async function openComplaintDialog(row: any) {
+  complaintDialogVisible.value = true
+  complaintLoading.value = true
+  try {
+    replyForm.orderId = row.id
+    currentComplaintStatus.value = row?.complaintStatus
+    const data = await AccOrderComplaintApi.getAccOrderComplaintPage({ pageNo: 1, pageSize: 100, orderId: row.id })
+    complaintList.value = data.list || []
+  }
+  finally {
+    complaintLoading.value = false
+  }
+}
+
+watch(complaintDialogVisible, (val) => {
+  if (!val) {
+    complaintList.value = []
+  }
+})
+
+// 完成投诉处理弹窗
+const completeDialogVisible = ref(false)
+const completeFormLoading = ref(false)
+const completeForm = reactive<{ orderId?: number, contributeDeduct?: boolean }>({})
+
+function openCompleteDialog() {
+  completeForm.orderId = replyForm.orderId
+  completeForm.contributeDeduct = undefined
+  completeDialogVisible.value = true
+}
+
+async function submitComplete() {
+  if (!completeForm.orderId) return message.warning('缺少订单ID')
+  if (completeForm.contributeDeduct === undefined) return message.warning('请选择是否扣分')
+  completeFormLoading.value = true
+  try {
+    await AccOrderComplaintApi.AccOrderComplaint_completeComplaint({
+      orderId: completeForm.orderId,
+      contributeDeduct: !!completeForm.contributeDeduct,
+    } as any)
+    message.success('处理完成')
+    completeDialogVisible.value = false
+    currentComplaintStatus.value = 2
+    // 处理后刷新投诉列表
+    await openComplaintDialog({ id: completeForm.orderId })
+  }
+  finally {
+    completeFormLoading.value = false
+  }
+}
+
+async function submitReply() {
+  if (!replyForm.orderId) return message.warning('缺少订单ID')
+  if (!replyForm.content) return message.warning('请输入回复内容')
+  replyFormLoading.value = true
+  try {
+    await AccOrderComplaintApi.createAccOrderComplaint({
+      id: 0 as unknown as number,
+      orderId: replyForm.orderId,
+      userId: userStore.getUser.id,
+      // 2-管理员
+      userType: 2 as unknown as any,
+      content: replyForm.content!,
+      images: Array.isArray(replyForm.images) ? JSON.stringify(replyForm.images) : '',
+    } as unknown as AccOrderComplaint)
+    message.success('回复成功')
+    replyDialogVisible.value = false
+    await getList()
+  }
+  finally {
+    replyFormLoading.value = false
+  }
+}
+
 /** 查询列表 */
 async function getList() {
   loading.value = true
   try {
-    const data = await AccOrderComplaintApi.getAccOrderComplaintPage(queryParams)
+    const data = await AccOrderApi.getAccOrderPage(queryParams)
     list.value = data.list
     total.value = data.total
   }
@@ -54,24 +156,10 @@ function resetQuery() {
 
 /** 添加/修改操作 */
 const formRef = ref()
-function openForm(type: string, id?: number) {
-  formRef.value.open(type, id)
-}
 
-/** 删除按钮操作 */
-async function handleDelete(id: number) {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await AccOrderComplaintApi.deleteAccOrderComplaint(id)
-    message.success(t('common.delSuccess'))
-    currentRow.value = {}
-    // 刷新列表
-    await getList()
-  }
-  catch {}
-}
+// 删除功能此页面不再使用
+
+const checkedIds = ref<number[]>([])
 
 /** 批量删除陪玩订单投诉内容 */
 async function handleDeleteBatch() {
@@ -86,7 +174,6 @@ async function handleDeleteBatch() {
   catch {}
 }
 
-const checkedIds = ref<number[]>([])
 function handleRowCheckboxChange(records: AccOrderComplaint[]) {
   checkedIds.value = records.map(item => item.id!)
 }
@@ -127,29 +214,30 @@ onMounted(() => {
       <el-form-item label="订单ID" prop="orderId">
         <el-input
           v-model="queryParams.orderId"
-          placeholder="请输入订单ID"
+          placeholder="订单ID"
           clearable
           class="!w-[240px]"
-          @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="用户ID" prop="userId">
+      <el-form-item label="用户" prop="userId">
         <UserSelectInput
           v-model="queryParams.userId"
           placeholder="请选择用户"
           @change="handleQuery"
         />
       </el-form-item>
-      <!-- <el-form-item label="用户类型(1-会员,2-管理员)" prop="userType">
+      <el-form-item label="投诉状态" prop="userType">
         <el-select
-          v-model="queryParams.userType"
-          placeholder="请选择用户类型(1-会员,2-管理员)"
+          v-model="queryParams.complaintStatus"
+          placeholder="请选择投诉状态"
           clearable
-          class="!w-240px"
+          class="!w-[240px]"
+          @change="handleQuery"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option label="未处理" :value="1" />
+          <el-option label="已处理" :value="2" />
         </el-select>
-      </el-form-item> -->
+      </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
@@ -168,81 +256,19 @@ onMounted(() => {
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
         </el-button>
-        <el-button
-          v-hasPermi="['gamer:acc-order-complaint:create']"
-          type="primary"
-          plain
-          @click="openForm('create')"
-        >
-          <Icon icon="ep:plus" class="mr-[5px]" /> 新增
-        </el-button>
-        <el-button
-          v-hasPermi="['gamer:acc-order-complaint:export']"
-          type="success"
-          plain
-          :loading="exportLoading"
-          @click="handleExport"
-        >
-          <Icon icon="ep:download" class="mr-[5px]" /> 导出
-        </el-button>
-        <el-button
-          v-hasPermi="['gamer:acc-order-complaint:delete']"
-          type="danger"
-          plain
-          :disabled="isEmpty(checkedIds)"
-          @click="handleDeleteBatch"
-        >
-          <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
-        </el-button>
       </el-form-item>
     </el-form>
   </ContentWrap>
 
   <!-- 列表 -->
   <ContentWrap>
-    <el-table
-      v-loading="loading"
-      row-key="id"
-      :data="list"
-      :stripe="true"
-      :show-overflow-tooltip="true"
-      @selection-change="handleRowCheckboxChange"
-    >
-      <el-table-column type="selection" width="55" />
-      <el-table-column label="主键" align="center" prop="id" />
-      <el-table-column label="订单ID" align="center" prop="orderId" />
-      <el-table-column label="用户ID" align="center" prop="userId" />
-      <el-table-column label="用户类型(1-会员,2-管理员)" align="center" prop="userType" />
-      <el-table-column label="回复内容" align="center" prop="content" />
-      <el-table-column label="图片列表" align="center" prop="images" />
-      <el-table-column
-        label="创建时间"
-        align="center"
-        prop="createTime"
-        :formatter="dateFormatter"
-        width="180px"
-      />
-      <el-table-column label="操作" align="center" min-width="120px">
-        <template #default="scope">
-          <el-button
-            v-hasPermi="['gamer:acc-order-complaint:update']"
-            link
-            type="primary"
-            @click="openForm('update', scope.row.id)"
-          >
-            编辑
-          </el-button>
-          <el-button
-            v-hasPermi="['gamer:acc-order-complaint:delete']"
-            link
-            type="danger"
-            @click="handleDelete(scope.row.id)"
-          >
-            删除
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <OrderTable :data="list" :loading="loading" @selection-change="handleRowCheckboxChange">
+      <template #operations="{ row }">
+        <el-button link type="warning" @click="openComplaintDialog(row)">
+          查看投诉
+        </el-button>
+      </template>
+    </OrderTable>
     <!-- 分页 -->
     <Pagination
       v-model:page="queryParams.pageNo"
@@ -254,4 +280,87 @@ onMounted(() => {
 
   <!-- 表单弹窗：添加/修改 -->
   <AccOrderComplaintForm ref="formRef" @success="getList" />
+
+  <!-- 回复投诉弹窗 -->
+  <Dialog v-model="replyDialogVisible" title="回复投诉" width="600px" align-center>
+    <el-form v-loading="replyFormLoading" :model="replyForm" label-width="80px">
+      <el-form-item label="内容">
+        <el-input v-model="replyForm.content" type="textarea" :rows="4" placeholder="请输入回复内容" />
+      </el-form-item>
+      <el-form-item label="图片">
+        <UploadImgs v-model="replyForm.images" :limit="6" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="replyDialogVisible = false">
+        取 消
+      </el-button>
+      <el-button type="primary" :disabled="!replyForm.content" @click="submitReply">
+        确 定
+      </el-button>
+    </template>
+  </Dialog>
+
+  <!-- 投诉列表弹窗 -->
+  <Dialog v-if="complaintDialogVisible" v-model="complaintDialogVisible" title="投诉内容" width="80vw" align-center>
+    <div class="mb-3">
+      <el-button type="primary" class="mr-2" @click="replyDialogVisible = true">
+        回复
+      </el-button>
+      <el-button
+        v-if="currentComplaintStatus !== 2" v-hasPermi="['gamer:acc-order-complaint:complete']"
+        type="success"
+
+        @click="openCompleteDialog"
+      >
+        完成
+      </el-button>
+    </div>
+    <el-table v-loading="complaintLoading" :data="complaintList" :stripe="true" :show-overflow-tooltip="true">
+      <el-table-column type="selection" width="55" />
+      <el-table-column label="订单ID" align="center" prop="orderId" width="120" />
+      <el-table-column label="用户ID" align="center" prop="userId" />
+      <el-table-column label="用户类型" align="center" prop="userType" width="110">
+        <template #default="scope">
+          <el-tag :type="formatUserTypeTag(scope.row.userType).color" effect="plain">
+            {{ formatUserTypeTag(scope.row.userType).text }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="内容" align="center" prop="content" />
+      <el-table-column label="图片" align="center" prop="images">
+        <template #default="scope">
+          <div class="flex flex-wrap gap-2">
+            <el-image v-if="scope.row?.images || scope.row?.images !== ''" :src="scope.row?.images.startsWith('[') ? JSON.parse(scope.row?.images || '[]')?.[0] : scope.row?.images" fit="cover" style="width: 60px; height: 60px" :preview-src-list="scope.row?.images.startsWith('[') ? JSON.parse(scope.row?.images || '[]') : [scope.row?.images]" preview-teleported />
+            <span v-else>-</span>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
+    </el-table>
+  </Dialog>
+
+  <!-- 完成处理弹窗 -->
+  <Dialog v-model="completeDialogVisible" title="完成投诉处理" width="420px" align-center>
+    <el-form v-loading="completeFormLoading" :model="completeForm" label-width="100px">
+      <el-form-item label="是否扣分">
+        <el-radio-group v-model="completeForm.contributeDeduct">
+          <el-radio :value="true">
+            是
+          </el-radio>
+          <el-radio :value="false">
+            否
+          </el-radio>
+        </el-radio-group>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="completeDialogVisible = false">
+        取 消
+      </el-button>
+      <el-button type="primary" :disabled="completeForm.contributeDeduct === undefined" @click="submitComplete">
+        确 定
+      </el-button>
+    </template>
+  </Dialog>
 </template>

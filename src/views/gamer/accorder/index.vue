@@ -8,7 +8,6 @@ import UserInfoPickerDialog from '@/components/UserSelectInput/UserInfoPickerDia
 import { fenToYuan } from '@/utils'
 import download from '@/utils/download'
 import { formatDate } from '@/utils/formatTime'
-import { isEmpty } from '@/utils/is'
 
 import AccOrderForm from './AccOrderForm.vue'
 
@@ -329,7 +328,7 @@ async function handleAuditOrderComplete(row: any) {
           class="!w-[240px]"
         />
       </el-form-item>
-      <el-form-item label="用户ID" prop="userId">
+      <el-form-item label="用户" prop="userId">
         <UserMultiSelectInput
           v-model="queryParams.userId"
           :multiple="false"
@@ -337,10 +336,10 @@ async function handleAuditOrderComplete(row: any) {
           @change="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="队长ID" prop="captainId">
+      <el-form-item label="接单人" prop="captainId">
         <UserSelectInput
           v-model="queryParams.captainId"
-          placeholder="请选择队长"
+          placeholder="请选择接单人"
           @change="handleQuery"
         />
       </el-form-item>
@@ -402,32 +401,6 @@ async function handleAuditOrderComplete(row: any) {
         </el-button>
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
-        </el-button>
-        <el-button
-          v-hasPermi="['gamer:acc-order:create']"
-          type="primary"
-          plain
-          @click="openForm('create')"
-        >
-          <Icon icon="ep:plus" class="mr-[5px]" /> 新增
-        </el-button>
-        <el-button
-          v-hasPermi="['gamer:acc-order:export']"
-          type="success"
-          plain
-          :loading="exportLoading"
-          @click="handleExport"
-        >
-          <Icon icon="ep:download" class="mr-[5px]" /> 导出
-        </el-button>
-        <el-button
-          v-hasPermi="['gamer:acc-order:delete']"
-          type="danger"
-          plain
-          :disabled="isEmpty(checkedIds)"
-          @click="handleDeleteBatch"
-        >
-          <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
         </el-button>
       </el-form-item>
     </el-form>

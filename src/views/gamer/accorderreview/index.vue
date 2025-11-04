@@ -3,7 +3,6 @@ import type { AccOrderReview } from '@/api/gamer/accorderreview'
 import { AccOrderReviewApi } from '@/api/gamer/accorderreview'
 import download from '@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
-import { isEmpty } from '@/utils/is'
 
 import AccOrderReviewForm from './AccOrderReviewForm.vue'
 
@@ -133,14 +132,14 @@ onMounted(() => {
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="评价人ID" prop="userId">
+      <el-form-item label="评价人" prop="userId">
         <UserSelectInput
           v-model="queryParams.userId"
           placeholder="请选择用户"
           @change="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="接单人ID" prop="acceptorId">
+      <el-form-item label="接单人" prop="acceptorId">
         <UserSelectInput
           v-model="queryParams.acceptorId"
           placeholder="请选择接单人"
@@ -165,32 +164,6 @@ onMounted(() => {
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
         </el-button>
-        <el-button
-          v-hasPermi="['gamer:acc-order-review:create']"
-          type="primary"
-          plain
-          @click="openForm('create')"
-        >
-          <Icon icon="ep:plus" class="mr-[5px]" /> 新增
-        </el-button>
-        <el-button
-          v-hasPermi="['gamer:acc-order-review:export']"
-          type="success"
-          plain
-          :loading="exportLoading"
-          @click="handleExport"
-        >
-          <Icon icon="ep:download" class="mr-[5px]" /> 导出
-        </el-button>
-        <el-button
-          v-hasPermi="['gamer:acc-order-review:delete']"
-          type="danger"
-          plain
-          :disabled="isEmpty(checkedIds)"
-          @click="handleDeleteBatch"
-        >
-          <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
-        </el-button>
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -209,8 +182,10 @@ onMounted(() => {
       <el-table-column label="主键ID" align="center" prop="id" />
       <el-table-column label="订单ID" align="center" prop="orderId" />
       <el-table-column label="评价人ID" align="center" prop="userId" />
+      <el-table-column label="评价人昵称" align="center" prop="userNickname" />
       <el-table-column label="接单人ID" align="center" prop="acceptorId" />
-      <el-table-column label="星级评分 1-5" align="center" prop="star" />
+      <el-table-column label="接单人昵称" align="center" prop="acceptorNickname" />
+      <el-table-column label="星级评分" align="center" prop="star" />
       <el-table-column label="标签" align="center" prop="commentTag" />
       <el-table-column label="评价内容" align="center" prop="commentContent" />
       <el-table-column
@@ -220,7 +195,7 @@ onMounted(() => {
         :formatter="dateFormatter"
         width="180px"
       />
-      <el-table-column label="操作" align="center" min-width="120px">
+      <!-- <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
           <el-button
             v-hasPermi="['gamer:acc-order-review:update']"
@@ -239,7 +214,7 @@ onMounted(() => {
             删除
           </el-button>
         </template>
-      </el-table-column>
+      </el-table-column> -->
     </el-table>
     <!-- 分页 -->
     <Pagination

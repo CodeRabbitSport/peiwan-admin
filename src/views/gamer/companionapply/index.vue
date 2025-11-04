@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { LevelApply } from '@/api/gamer/levelapply'
 import { LevelApply_syncUserGameRegion, LevelApplyApi } from '@/api/gamer/levelapply'
+import { LevelConfigApi } from '@/api/gamer/levelconfig'
 import { ProductCategoryApi } from '@/api/gamer/productcategory'
 import CategorySelect from '@/components/CategorySelect/index.vue'
 import { dateFormatter } from '@/utils/formatTime'
@@ -26,6 +27,13 @@ const editRegionLoading = ref(false)
 const currentEditRow = ref<LevelApply | null>(null)
 const selectedRegions = ref<string[]>([])
 const regionOptions = ref<string[]>([])
+
+// 修改等级弹窗相关
+const editLevelDialogVisible = ref(false)
+const editLevelLoading = ref(false)
+const currentEditLevelRow = ref<LevelApply | null>(null)
+const selectedLevelId = ref<number | undefined>(undefined)
+const levelOptions = ref<any[]>([])
 
 // 打开修改区服弹窗
 async function handleEditRegion(row: LevelApply) {
@@ -83,6 +91,63 @@ async function confirmEditRegion() {
   }
   finally {
     editRegionLoading.value = false
+  }
+}
+
+// 打开修改等级弹窗
+async function handleEditLevel(row: LevelApply) {
+  currentEditLevelRow.value = row
+  // 设置当前等级
+  selectedLevelId.value = row.level
+
+  // 获取陪玩等级配置列表 (categoryType=1 代表陪玩)
+  try {
+    const data = await LevelConfigApi.getLevelConfigPage({
+      categoryType: 1,
+      categoryId: row.productCategoryId,
+      pageNo: 1,
+      pageSize: 100,
+    })
+    levelOptions.value = data.list || []
+  }
+  catch (error) {
+    console.error('获取等级配置失败:', error)
+    levelOptions.value = []
+  }
+
+  editLevelDialogVisible.value = true
+}
+
+// 确认修改等级
+async function confirmEditLevel() {
+  if (!currentEditLevelRow.value) return
+  if (selectedLevelId.value === undefined) {
+    message.warning('请选择等级')
+    return
+  }
+
+  editLevelLoading.value = true
+  try {
+    // 1. 先调用更新接口修改 level
+    const updateData = {
+      ...currentEditLevelRow.value,
+      level: selectedLevelId.value,
+    }
+    await LevelApplyApi.updateLevelApply(updateData)
+
+    // 2. 再调用同步接口
+    await LevelApply_syncUserGameRegion(currentEditLevelRow.value.id)
+
+    message.success('修改等级成功')
+    editLevelDialogVisible.value = false
+    // 刷新列表
+    await getList()
+  }
+  catch (error) {
+    console.error('修改等级失败:', error)
+  }
+  finally {
+    editLevelLoading.value = false
   }
 }
 
@@ -312,11 +377,21 @@ onMounted(() => {
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="等级类型" align="center" prop="levelType">
-        <template #default>
-          <el-tag type="success">
-            陪玩
-          </el-tag>
+      <el-table-column label="等级类型" align="center" prop="levelName">
+        <template #default="scope">
+          <div class="flex flex-col items-center gap-1">
+            <el-tag type="success">
+              {{ scope.row.levelName }}
+            </el-tag>
+            <el-button
+              type="primary"
+              size="small"
+              link
+              @click="handleEditLevel(scope.row)"
+            >
+              修改等级
+            </el-button>
+          </div>
         </template>
       </el-table-column>
       <el-table-column label="级别" align="center" prop="level" />
@@ -445,6 +520,43 @@ onMounted(() => {
         type="primary"
         :loading="editRegionLoading"
         @click="confirmEditRegion"
+      >
+        确定
+      </el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 修改等级弹窗 -->
+  <el-dialog
+    v-model="editLevelDialogVisible"
+    title="修改等级"
+    width="500px"
+    :close-on-click-modal="false"
+  >
+    <el-form label-width="100px">
+      <el-form-item label="选择等级">
+        <el-select
+          v-model="selectedLevelId"
+          placeholder="请选择等级"
+          class="w-full"
+        >
+          <el-option
+            v-for="option in levelOptions"
+            :key="option.levelNumber"
+            :label="`${option.levelName} (${option.levelNumber}级)`"
+            :value="option.levelNumber"
+          />
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="editLevelDialogVisible = false">
+        取消
+      </el-button>
+      <el-button
+        type="primary"
+        :loading="editLevelLoading"
+        @click="confirmEditLevel"
       >
         确定
       </el-button>

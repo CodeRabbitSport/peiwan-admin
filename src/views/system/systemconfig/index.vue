@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { SystemConfigApi } from '@/api/gamer/systemconfig'
+import { getTenant } from '@/api/system/tenant'
 import UploadImg from '@/components/UploadFile/src/UploadImg.vue'
+import { getTenantId } from '@/utils/auth'
 
 import ProductSelectorDialog from './components/ProductSelectorDialog.vue'
 
@@ -50,6 +52,7 @@ const KEYS = {
   // 应用配置
   ENABLE_INVITATION_MODE: 'appConfigEnableInvitationMode',
   INVITATION_POSTER: 'appConfigInvitePoster',
+  SITE_CONFIG_HTML_H5_KEY: 'siteConfigHtmlH5Key',
 } as const
 
 type KeyName = typeof KEYS[keyof typeof KEYS]
@@ -93,6 +96,7 @@ const formData = reactive<any>({
   // 应用配置
   enableInvitationMode: false,
   invitationPoster: '',
+  htmlH5Key: '',
 })
 
 // 当前已有配置映射（key -> id）
@@ -100,6 +104,7 @@ const existingIdMap = ref<Record<string, number>>({})
 
 const loadingAll = ref(false)
 const activeGroups = ref<string[]>(['topic', 'order', 'service', 'point', 'itemShop', 'sms', 'commission', 'app'])
+const tenantDomain = ref<string>('')
 
 // 工具：字符串转布尔
 function toBool(v: string | null | undefined) {
@@ -121,10 +126,29 @@ function safeJsonParse<T>(s: string | null | undefined, def: T): T {
 
 const configList = ref<any[]>([])
 
+// 加载租户域名
+async function loadTenantDomain() {
+  try {
+    const tenantId = getTenantId()
+    if (tenantId) {
+      const tenantData = await getTenant(tenantId)
+      if (tenantData?.websites && tenantData.websites.length > 0) {
+        tenantDomain.value = tenantData.websites[0]
+      }
+    }
+  }
+  catch (error) {
+    console.error('获取租户域名失败:', error)
+  }
+}
+
 // 加载全部配置（分页拉取一页足够）
 async function loadAll() {
   loadingAll.value = true
   try {
+    // 加载租户域名
+    await loadTenantDomain()
+
     const data = await SystemConfigApi.getSystemConfigPage()
     configList.value = data || []
     const idMap: Record<string, number> = {}
@@ -232,6 +256,9 @@ async function loadAll() {
         case KEYS.INVITATION_POSTER:
           formData.invitationPoster = String(item.configValue || '')
           break
+        case KEYS.SITE_CONFIG_HTML_H5_KEY:
+          formData.htmlH5Key = String(item.configValue || '')
+          break
       }
     })
     existingIdMap.value = idMap
@@ -243,7 +270,30 @@ async function loadAll() {
 
 // 保存逻辑：根据类型转换成字符串并调用 createOrUpdate
 const savingKeys = ref<Set<string>>(new Set())
-async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'productIds', value: any) {
+// 生成随机6位字母和数字组合
+function generateRandomKey() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return result
+}
+
+// 生成并保存H5 Key
+async function handleGenerateH5Key() {
+  const randomKey = generateRandomKey()
+  formData.htmlH5Key = randomKey
+  await handleSave(KEYS.SITE_CONFIG_HTML_H5_KEY, 'string', randomKey)
+}
+
+// 计算完整的H5链接
+const fullH5Url = computed(() => {
+  const domain = tenantDomain.value || window.location.origin
+  return formData.htmlH5Key ? `${domain}/html/${formData.htmlH5Key}` : ''
+})
+
+async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'productIds' | 'string', value: any) {
   savingKeys.value.add(key)
   try {
     let configValue = ''
@@ -261,6 +311,9 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
         configValue = Array.isArray(value) ? value.join(',') : String(value || '')
         // 同步回显
         formData.restrictProductIds = configValue
+        break
+      case 'string':
+        configValue = String(value || '')
         break
     }
 
@@ -582,6 +635,23 @@ onMounted(() => {
         <!-- 邀请配置 -->
         <el-collapse-item name="app" title="应用配置">
           <el-row :gutter="16">
+            <!-- 微信防红参数 -->
+            <el-col :xs="24" :sm="24" :md="16" :lg="12">
+              <el-form-item label="微信防红链接">
+                <div class="w-full flex gap-2">
+                  <el-input
+                    :value="fullH5Url"
+                    readonly
+                    placeholder="点击生成按钮生成防红链接"
+                    class="flex-1"
+                  />
+                  <el-button type="primary" @click="handleGenerateH5Key">
+                    生成
+                  </el-button>
+                </div>
+              </el-form-item>
+            </el-col>
+
             <el-col :xs="24" :sm="12" :md="8" :lg="6">
               <el-form-item label="是否开启邀请模式">
                 <el-switch

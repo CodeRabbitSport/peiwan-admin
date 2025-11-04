@@ -46,5 +46,10 @@ export const AccOrderComplaintApi = {
   // 导出陪玩订单投诉内容 Excel
   exportAccOrderComplaint: async (params) => {
     return await request.download({ url: `/gamer/acc-order-complaint/export-excel`, params })
-  }
+  },
+
+  // 完成投诉处理
+  AccOrderComplaint_completeComplaint: async (data: { orderId: number, contributeDeduct: boolean }) => {
+    return await request.post({ url: `/gamer/acc-order-complaint/complete`, data })
+  },
 }

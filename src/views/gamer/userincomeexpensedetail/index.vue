@@ -3,7 +3,6 @@ import type { UserIncomeExpenseDetail } from '@/api/gamer/userincomeexpensedetai
 import { UserIncomeExpenseDetailApi } from '@/api/gamer/userincomeexpensedetail'
 import { fenToYuan } from '@/utils'
 import { dateFormatter } from '@/utils/formatTime'
-import { isEmpty } from '@/utils/is'
 
 import UserIncomeExpenseDetailForm from './UserIncomeExpenseDetailForm.vue'
 
@@ -228,7 +227,7 @@ onMounted(() => {
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
         </el-button>
-        <el-button
+        <!-- <el-button
           v-hasPermi="['gamer:user-income-expense-detail:create']"
           type="primary"
           plain
@@ -244,7 +243,7 @@ onMounted(() => {
           @click="handleDeleteBatch"
         >
           <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
-        </el-button>
+        </el-button> -->
       </el-form-item>
     </el-form>
   </ContentWrap>

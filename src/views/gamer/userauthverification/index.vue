@@ -219,7 +219,7 @@ onMounted(() => {
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
         </el-button>
-        <el-button
+        <!-- <el-button
           v-hasPermi="['gamer:user-auth-verification:create']"
           type="primary"
           plain
@@ -235,7 +235,7 @@ onMounted(() => {
           @click="handleDeleteBatch"
         >
           <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
-        </el-button>
+        </el-button> -->
       </el-form-item>
     </el-form>
   </ContentWrap>

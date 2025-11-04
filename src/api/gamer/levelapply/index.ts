@@ -67,3 +67,12 @@ export const LevelApplyApi = {
 export function LevelApply_syncUserGameRegion(id: number) {
   return request.post({ url: `/gamer/level-apply/sync-user-game-region?id=${id}` })
 }
+
+/**
+ * 同步用户等级
+ * @param {string} id
+ * @returns
+ */
+export function LevelApply_syncUserLevel(id: number) {
+  return request.post({ url: `/gamer/level-apply/sync-user-level?id=${id}` })
+}
