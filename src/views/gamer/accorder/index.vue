@@ -10,6 +10,7 @@ import download from '@/utils/download'
 import { formatDate } from '@/utils/formatTime'
 
 import AccOrderForm from './AccOrderForm.vue'
+import UserInfoViewDialog from '../userinfo/UserInfoViewDialog.vue'
 
 /** 用户陪玩订单 列表 */
 defineOptions({ name: 'AccOrder' })
@@ -203,6 +204,12 @@ function formatPayStatus(value: number): any {
     case 2:
       return { text: '已退款', color: 'danger' }
   }
+}
+
+// 用户信息弹窗
+const userInfoDialogRef = ref()
+function handleViewUserInfo(userId: number) {
+  userInfoDialogRef.value.open(userId)
 }
 
 /** 初始化 */
@@ -507,9 +514,9 @@ async function handleAuditOrderComplete(row: any) {
       </el-table-column>
       <el-table-column label="用户信息" align="center" prop="userId" width="150">
         <template #default="scope">
-          <div class="flex flex-col items-center">
+          <div class="flex flex-col items-center cursor-pointer" @click="handleViewUserInfo(scope.row.userId)">
             <el-avatar :src="scope.row.avatar" size="small" />
-            <span>{{ scope.row.nickname || '无' }}</span>
+            <el-link type="primary">{{ scope.row.nickname || '无' }}</el-link>
             <span>{{ scope.row.mobile || '无' }}</span>
           </div>
         </template>
@@ -533,8 +540,8 @@ async function handleAuditOrderComplete(row: any) {
             class="flex flex-col items-start gap-2"
           >
             <div v-for="acceptor in scope.row.acceptorList" :key="acceptor.id" class="flex flex-col items-center">
-              <el-avatar :src="acceptor.avatar" size="small" />
-              <span>{{ acceptor.nickname || '无' }}</span>
+              <el-avatar :src="acceptor.avatar" size="small" class="cursor-pointer" @click="handleViewUserInfo(acceptor.acceptorId)" />
+              <el-link type="primary" @click="handleViewUserInfo(acceptor.acceptorId)">{{ acceptor.nickname || '无' }}</el-link>
               <span>接单时间：{{ acceptor.confirmTime ? formatDate(acceptor.confirmTime) : formatDate(scope.row.acceptConfirmTime) || '无' }}</span>
 
               <span>
@@ -696,6 +703,9 @@ async function handleAuditOrderComplete(row: any) {
       </div>
     </div>
   </Dialog>
+
+  <!-- 用户信息查看弹窗 -->
+  <UserInfoViewDialog ref="userInfoDialogRef" />
 </template>
 
 <style scoped>

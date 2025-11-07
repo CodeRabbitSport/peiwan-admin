@@ -395,7 +395,7 @@ export const useAppStore = defineStore('app', {
         const LoginApi = await import('@/api/login')
         const website = window.location.hostname
         // const website = window.location.hostname
-        const tenantData = await LoginApi.getTenantByWebsite("pw.zszs5.cn")
+        const tenantData = await LoginApi.getTenantByWebsite("hnadmin.ypesports.com")
         if (tenantData && tenantData.name) {
           this.setTenantName(tenantData.name)
           this.setTenantId(tenantData.id)

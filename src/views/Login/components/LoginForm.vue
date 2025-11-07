@@ -104,12 +104,14 @@ const getLoginFormCache = () => {
 }
 // 根据域名，获得租户信息
 const getTenantByWebsite = async () => {
-    const website = location.host
-    const res = await LoginApi.getTenantByWebsite(website)
-    if (res) {
-      loginData.loginForm.tenantName = res.name
-      authUtil.setTenantId(res.id)
+  if (loginData.tenantEnable === 'true') {
+    const tenantName = appStore.getTenantName
+    const tenantId = appStore.tenantId
+    if (tenantName && tenantId) {
+      loginData.loginForm.tenantName = tenantName
+      authUtil.setTenantId(tenantId)
     }
+  }
 }
 const loading = ref() // ElLoading.service 返回的实例
 // 登录

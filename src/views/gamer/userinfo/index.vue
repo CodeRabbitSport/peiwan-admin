@@ -21,6 +21,7 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<UserInfo[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
+const userType = ref(undefined) // 用户类型：1-打手，2-陪玩
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
@@ -51,7 +52,10 @@ const UpdateBalanceFormRef = ref() // 修改用户余额表单
 async function getList() {
   loading.value = true
   try {
-    const data = await UserInfoApi.getUserInfoPage(queryParams)
+    // 根据是否选择了用户类型来决定调用哪个接口
+    const data = userType.value
+      ? await UserInfoApi.getUserInfoPageByLevel(queryParams)
+      : await UserInfoApi.getUserInfoPage(queryParams)
     list.value = data.list
     total.value = data.total
   }
@@ -193,6 +197,19 @@ onMounted(() => {
           class="!w-[240px]"
         />
       </el-form-item>
+      <!-- 用户类型 -->
+      <el-form-item label="用户类型">
+        <el-select
+          v-model="userType"
+          placeholder="请选择用户类型"
+          clearable
+          class="!w-[240px]"
+          @change="handleQuery"
+        >
+          <el-option label="打手" :value="1" />
+          <el-option label="陪玩" :value="2" />
+        </el-select>
+      </el-form-item>
       
 
       <!--  <el-form-item label="城市" prop="city">
@@ -295,6 +312,11 @@ onMounted(() => {
                 联系手机号：{{ scope.row.levelApply.contact }}
               </div> -->
             </template>
+            <template v-else-if="scope.row.accompanyLevelApply">
+              <el-tag v-if="scope.row.accompanyLevelApply.levelName" type="warning">
+                {{ scope.row.accompanyLevelApply.levelName }}
+              </el-tag>
+            </template>
             <template v-else>
               <el-tag>普通用户</el-tag>
             </template>
@@ -383,7 +405,7 @@ onMounted(() => {
                 <el-menu-item v-hasPermi="['gamer:user-info:update']" index="moment-m" @click="onUserMenuCommand('usermoment', scope.row)">
                   用户动态管理
                 </el-menu-item>
-                <el-menu-item v-hasPermi="['gamer:user-info:update']" index="moment-b" @click="onUserMenuCommand('usermomentbrowse', scope.row)">
+                <!-- <el-menu-item v-hasPermi="['gamer:user-info:update']" index="moment-b" @click="onUserMenuCommand('usermomentbrowse', scope.row)">
                   用户浏览记录
                 </el-menu-item>
                 <el-menu-item v-hasPermi="['gamer:user-info:update']" index="moment-c" @click="onUserMenuCommand('usermomentcomment', scope.row)">
@@ -391,7 +413,7 @@ onMounted(() => {
                 </el-menu-item>
                 <el-menu-item v-hasPermi="['gamer:user-info:update']" index="moment-l" @click="onUserMenuCommand('usermomentlike', scope.row)">
                   用户点赞记录
-                </el-menu-item>
+                </el-menu-item> -->
               </el-sub-menu>
             </el-menu>
           </el-popover>

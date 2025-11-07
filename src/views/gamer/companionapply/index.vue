@@ -8,6 +8,7 @@ import { dateFormatter } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
 
 import LevelApplyForm from './LevelApplyForm.vue'
+import UserInfoViewDialog from '../userinfo/UserInfoViewDialog.vue'
 
 /** 陪玩等级申请 列表 */
 defineOptions({ name: 'CompanionLevelApply' })
@@ -259,6 +260,12 @@ function handleRowCheckboxChange(records: LevelApply[]) {
   checkedIds.value = records.map(item => item.id)
 }
 
+// 用户信息弹窗
+const userInfoDialogRef = ref()
+function handleViewUserInfo(userId: number) {
+  userInfoDialogRef.value.open(userId)
+}
+
 /** 初始化 */
 onMounted(() => {
   getList()
@@ -348,8 +355,20 @@ onMounted(() => {
     >
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" />
-      <el-table-column label="用户ID" align="center" prop="userId" />
-      <el-table-column label="用户昵称" align="center" prop="userNickname" />
+      <el-table-column label="用户ID" align="center" prop="userId">
+        <template #default="scope">
+          <el-link type="primary" @click="handleViewUserInfo(scope.row.userId)">
+            {{ scope.row.userId }}
+          </el-link>
+        </template>
+      </el-table-column>
+      <el-table-column label="用户昵称" align="center" prop="userNickname">
+        <template #default="scope">
+          <el-link type="primary" @click="handleViewUserInfo(scope.row.userId)">
+            {{ scope.row.userNickname }}
+          </el-link>
+        </template>
+      </el-table-column>
       <el-table-column label="所属分类" align="center" prop="categoryName" />
       <el-table-column label="申请区服" align="center" prop="gameRegion" width="180">
         <template #default="scope">
@@ -486,6 +505,9 @@ onMounted(() => {
 
   <!-- 表单弹窗：添加/修改 -->
   <LevelApplyForm ref="formRef" @success="getList" />
+
+  <!-- 用户信息查看弹窗 -->
+  <UserInfoViewDialog ref="userInfoDialogRef" />
 
   <!-- 修改区服弹窗 -->
   <el-dialog
