@@ -210,7 +210,6 @@ onMounted(() => {
           <el-option label="陪玩" :value="2" />
         </el-select>
       </el-form-item>
-      
 
       <!--  <el-form-item label="城市" prop="city">
         <el-input
@@ -305,7 +304,7 @@ onMounted(() => {
               <el-tag v-if="scope.row.levelApply.levelName" type="success">
                 {{ scope.row.levelApply.levelName }}
               </el-tag>
-              <div>保证金：{{ fenToYuan(scope.row.depositBalance) ?? 0 }}</div>
+              <div>保证金：{{ fenToYuan(scope.row?.wallet?.depositBalance) ?? 0 }}</div>
               <div>打手评分：{{ scope.row.contributePoint ?? 0 }}</div>
               <!--  <div>打手上班状态：{{ scope.row.authStatus ? '已上班' : '已下班' }}</div>
              <div v-if="scope.row.levelApply.contact">
@@ -386,7 +385,7 @@ onMounted(() => {
               >
                 查看下级用户
               </el-menu-item>
-              
+
               <el-menu-item
                 v-hasPermi="['pay:wallet:update-balance']"
                 index="balance"

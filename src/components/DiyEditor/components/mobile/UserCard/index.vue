@@ -5,7 +5,7 @@
         <el-avatar :size="60">
           <Icon icon="ep:avatar" :size="60" />
         </el-avatar>
-        <span class="text-[18px] font-bold">千航电竞</span>
+        <span class="text-[18px] font-bold"></span>
       </div>
       <Icon icon="tdesign:qrcode" :size="20" />
     </div>

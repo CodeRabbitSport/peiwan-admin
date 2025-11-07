@@ -25,7 +25,7 @@ async function handleBasicInfoSuccess() {
     </el-card>
     <el-card class="user ml-3 w-2/3" shadow="hover">
       <div>
-        <el-tabs v-model="activeName" class="profile-tabs" style="height: 400px" tab-position="top">
+        <el-tabs v-model="activeName" class="profile-tabs" style="height: 480px" tab-position="top">
           <el-tab-pane :label="t('profile.info.basicInfo')" name="basicInfo">
             <BasicInfo @success="handleBasicInfoSuccess" />
           </el-tab-pane>

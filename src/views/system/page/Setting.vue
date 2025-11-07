@@ -115,7 +115,7 @@ const form = reactive({
   siteLogoUrl: '' as string,
   siteName: '' as string,
   siteConfigGlobalProductPlacementMap: '' as string,
-  siteConfigEnableAssessmentCode: false as boolean,
+  siteConfigEnableAssessmentCode: true as boolean,
   siteConfigAssessmentGroupQrCode: '' as string,
   siteEnableRecycle: false as boolean,
   orderVirtualCount: '' as string,

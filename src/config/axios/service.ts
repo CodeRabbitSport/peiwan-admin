@@ -1,21 +1,23 @@
-import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import type { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 
+import axios from 'axios'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import qs from 'qs'
+
 import { config } from '@/config/axios/config'
+import { deleteUserCache } from '@/hooks/web/useCache'
+import { resetRouter } from '@/router'
 import {
   getAccessToken,
   getRefreshToken,
   getTenantId,
   getVisitTenantId,
   removeToken,
-  setToken
+  setToken,
 } from '@/utils/auth'
-import errorCode from './errorCode'
-
-import { resetRouter } from '@/router'
-import { deleteUserCache } from '@/hooks/web/useCache'
 import { ApiEncrypt } from '@/utils/encrypt'
+
+import errorCode from './errorCode'
 
 const tenantEnable = import.meta.env.VITE_APP_TENANT_ENABLE
 const { result_code, base_url, request_timeout } = config
@@ -23,7 +25,7 @@ const { result_code, base_url, request_timeout } = config
 // 需要忽略的提示。忽略后，自动 Promise.reject('error')
 const ignoreMsgs = [
   '无效的刷新令牌', // 刷新令牌被删除时，不用提示
-  '刷新令牌已过期' // 使用刷新令牌，刷新获取新的访问令牌时，结果因为过期失败，此时需要忽略。否则，会导致继续 401，无法跳转到登出界面
+  '刷新令牌已过期', // 使用刷新令牌，刷新获取新的访问令牌时，结果因为过期失败，此时需要忽略。否则，会导致继续 401，无法跳转到登出界面
 ]
 // 是否显示重新登录
 export const isRelogin = { show: false }
@@ -43,7 +45,7 @@ const service: AxiosInstance = axios.create({
   // 自定义参数序列化函数
   paramsSerializer: (params) => {
     return qs.stringify(params, { allowDots: true })
-  }
+  },
 })
 
 // request拦截器
@@ -52,12 +54,12 @@ service.interceptors.request.use(
     // 是否需要设置 token
     let isToken = (config!.headers || {}).isToken === false
     whiteList.some((v) => {
-      if (config.url && config.url.indexOf(v) > -1) {
+      if (config.url && config.url.includes(v)) {
         return (isToken = false)
       }
     })
     if (getAccessToken() && !isToken) {
-      config.headers.Authorization = 'Bearer ' + getAccessToken() // 让每个请求携带自定义token
+      config.headers.Authorization = `Bearer ${getAccessToken()}` // 让每个请求携带自定义token
     }
     // 设置租户
     if (tenantEnable && tenantEnable === 'true') {
@@ -73,7 +75,7 @@ service.interceptors.request.use(
     // 防止 GET 请求缓存
     if (method === 'GET') {
       config.headers['Cache-Control'] = 'no-cache'
-      config.headers['Pragma'] = 'no-cache'
+      config.headers.Pragma = 'no-cache'
     }
     // 自定义参数序列化函数
     else if (method === 'POST') {
@@ -81,6 +83,16 @@ service.interceptors.request.use(
       if (contentType === 'application/x-www-form-urlencoded') {
         if (config.data && typeof config.data !== 'string') {
           config.data = qs.stringify(config.data)
+        }
+      }
+      // 处理 multipart/form-data 文件上传
+      else if (contentType === 'multipart/form-data') {
+        if (config.data && !(config.data instanceof FormData)) {
+          const formData = new FormData()
+          Object.keys(config.data).forEach((key) => {
+            formData.append(key, config.data[key])
+          })
+          config.data = formData
         }
       }
     }
@@ -93,7 +105,8 @@ service.interceptors.request.use(
           // 设置加密标识头
           config.headers[ApiEncrypt.getEncryptHeader()] = 'true'
         }
-      } catch (error) {
+      }
+      catch (error) {
         console.error('请求数据加密失败:', error)
         throw error
       }
@@ -104,7 +117,7 @@ service.interceptors.request.use(
     // Do something with request error
     console.log(error) // for debug
     return Promise.reject(error)
-  }
+  },
 )
 
 // response 拦截器
@@ -119,16 +132,17 @@ service.interceptors.response.use(
 
     // 检查是否需要解密响应数据
     const encryptHeader = ApiEncrypt.getEncryptHeader()
-    const isEncryptResponse =
-      response.headers[encryptHeader] === 'true' ||
-      response.headers[encryptHeader.toLowerCase()] === 'true'
+    const isEncryptResponse
+      = response.headers[encryptHeader] === 'true'
+        || response.headers[encryptHeader.toLowerCase()] === 'true'
     if (isEncryptResponse && typeof data === 'string') {
       try {
         // 解密响应数据
         data = ApiEncrypt.decryptResponse(data)
-      } catch (error) {
+      }
+      catch (error) {
         console.error('响应数据解密失败:', error)
-        throw new Error('响应数据解密失败: ' + (error as Error).message)
+        throw new Error(`响应数据解密失败: ${(error as Error).message}`)
       }
     }
 
@@ -136,8 +150,8 @@ service.interceptors.response.use(
     // 未设置状态码则默认成功状态
     // 二进制数据则直接返回，例如说 Excel 导出
     if (
-      response.request.responseType === 'blob' ||
-      response.request.responseType === 'arraybuffer'
+      response.request.responseType === 'blob'
+      || response.request.responseType === 'arraybuffer'
     ) {
       // 注意：如果导出的响应为 json，说明可能失败了，不直接返回进行下载
       if (response.data.type !== 'application/json') {
@@ -147,11 +161,12 @@ service.interceptors.response.use(
     }
     const code = data.code || result_code
     // 获取错误信息
-    const msg = data.msg || errorCode[code] || errorCode['default']
-    if (ignoreMsgs.indexOf(msg) !== -1) {
+    const msg = data.msg || errorCode[code] || errorCode.default
+    if (ignoreMsgs.includes(msg)) {
       // 如果是忽略的错误码，直接返回 msg 异常
       return Promise.reject(msg)
-    } else if (code === 401) {
+    }
+    else if (code === 401) {
       // 如果未认证，并且未进行刷新令牌，说明可能是访问令牌过期了
       if (!isRefreshToken) {
         isRefreshToken = true
@@ -164,13 +179,14 @@ service.interceptors.response.use(
           const refreshTokenRes = await refreshToken()
           // 2.1 刷新成功，则回放队列的请求 + 当前请求
           setToken((await refreshTokenRes).data.data)
-          config.headers!.Authorization = 'Bearer ' + getAccessToken()
+          config.headers!.Authorization = `Bearer ${getAccessToken()}`
           requestList.forEach((cb: any) => {
             cb()
           })
           requestList = []
           return service(config)
-        } catch (e) {
+        }
+        catch (e) {
           // 为什么需要 catch 异常呢？刷新失败时，请求因为 Promise.reject 触发异常。
           // 2.2 刷新失败，只回放队列的请求
           requestList.forEach((cb: any) => {
@@ -178,70 +194,79 @@ service.interceptors.response.use(
           })
           // 提示是否要登出。即不回放当前请求！不然会形成递归
           return handleAuthorized()
-        } finally {
+        }
+        finally {
           requestList = []
           isRefreshToken = false
         }
-      } else {
+      }
+      else {
         // 添加到队列，等待刷新获取到新的令牌
         return new Promise((resolve) => {
           requestList.push(() => {
-            config.headers!.Authorization = 'Bearer ' + getAccessToken() // 让每个请求携带自定义token 请根据实际情况自行修改
+            config.headers!.Authorization = `Bearer ${getAccessToken()}` // 让每个请求携带自定义token 请根据实际情况自行修改
             resolve(service(config))
           })
         })
       }
-    } else if (code === 500) {
+    }
+    else if (code === 500) {
       ElMessage.error(t('sys.api.errMsg500'))
       return Promise.reject(new Error(msg))
-    } else if (code === 901) {
+    }
+    else if (code === 901) {
       ElMessage.error({
         offset: 300,
         dangerouslyUseHTMLString: true,
         message:
-          '<div>' +
-          t('sys.api.errMsg901') +
-          '</div>' +
-          '<div> &nbsp; </div>' +
-          '<div>参考 https://doc.iocoder.cn/ 教程</div>' +
-          '<div> &nbsp; </div>' +
-          '<div>5 分钟搭建本地环境</div>'
+          `<div>${
+            t('sys.api.errMsg901')
+          }</div>`
+          + `<div> &nbsp; </div>`
+          + `<div>参考 https://doc.iocoder.cn/ 教程</div>`
+          + `<div> &nbsp; </div>`
+          + `<div>5 分钟搭建本地环境</div>`,
       })
       return Promise.reject(new Error(msg))
-    } else if (code !== 200) {
+    }
+    else if (code !== 200) {
       if (msg === '无效的刷新令牌') {
         // hard coding：忽略这个提示，直接登出
         console.log(msg)
         return handleAuthorized()
-      } else {
+      }
+      else {
         ElNotification.error({ title: msg })
       }
       return Promise.reject('error')
-    } else {
+    }
+    else {
       return data
     }
   },
   (error: AxiosError) => {
-    console.log('err' + error) // for debug
+    console.log(`err${error}`) // for debug
     let { message } = error
     const { t } = useI18n()
     if (message === 'Network Error') {
       message = t('sys.api.errorMessage')
-    } else if (message.includes('timeout')) {
+    }
+    else if (message.includes('timeout')) {
       message = t('sys.api.apiTimeoutMessage')
-    } else if (message.includes('Request failed with status code')) {
+    }
+    else if (message.includes('Request failed with status code')) {
       message = t('sys.api.apiRequestFailed') + message.substr(message.length - 3)
     }
     ElMessage.error(message)
     return Promise.reject(error)
-  }
+  },
 )
 
-const refreshToken = async () => {
+async function refreshToken() {
   axios.defaults.headers.common['tenant-id'] = getTenantId()
-  return await axios.post(base_url + '/system/auth/refresh-token?refreshToken=' + getRefreshToken())
+  return await axios.post(`${base_url}/system/auth/refresh-token?refreshToken=${getRefreshToken()}`)
 }
-const handleAuthorized = () => {
+function handleAuthorized() {
   const { t } = useI18n()
   if (!isRelogin.show) {
     // 如果已经到登录页面则不进行弹窗提示
@@ -255,7 +280,7 @@ const handleAuthorized = () => {
       showClose: false,
       closeOnPressEscape: false,
       confirmButtonText: t('login.relogin'),
-      type: 'warning'
+      type: 'warning',
     }).then(() => {
       resetRouter() // 重置静态路由表
       deleteUserCache() // 删除用户缓存

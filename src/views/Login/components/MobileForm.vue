@@ -133,7 +133,7 @@ const loginData = reactive({
   },
   loginForm: {
     uuid: '',
-    tenantName: '千航电竞',
+    tenantName: '',
     mobileNumber: '',
     code: ''
   }
