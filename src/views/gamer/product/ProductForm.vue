@@ -370,6 +370,11 @@ function initOrderReceivingRegionFields() {
             <el-input-number v-model="formData.productStock" placeholder="请输入商品库存" :min="-1" class="!w-full" />
           </el-form-item>
         </el-col>
+        <el-col :xs="24" :sm="8">
+          <el-form-item label="商品排序" prop="sortOrder">
+            <el-input-number v-model="formData.sortOrder" placeholder="请输入商品排序" :min="0" class="!w-full" />
+          </el-form-item>
+        </el-col>
       </el-row>
 
       <!-- 分类配置 -->

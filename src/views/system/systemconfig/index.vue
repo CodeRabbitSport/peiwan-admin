@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ElMessageBox } from 'element-plus'
+
 import { SystemConfigApi } from '@/api/gamer/systemconfig'
 import { getTenant } from '@/api/system/tenant'
 import UploadImg from '@/components/UploadFile/src/UploadImg.vue'
@@ -13,8 +15,10 @@ const message = useMessage()
 // 配置键常量
 const KEYS = {
   WITHDRAW_ACCOUNT_CONFIG_ENABLE_WX_FAST_REFUND: 'withdrawAccountConfigEnableWxFastRefund',
+  SITE_CONFIG_APPLY_FIGHTER_REAL_NAME: 'siteConfigApplyFighterRealName',
   // 话题配置
   HOT_TOPIC_LIST: 'topicConfigHotTopicList',
+  CUSTOMER_SERVICE_LINK: 'siteConfigCustomerServiceLink',
   // 服务订单配置
   ORDER_VIRTUAL_COUNT: 'serviceOrderConfigVirtualCount',
   // 服务配置
@@ -53,6 +57,8 @@ const KEYS = {
   ENABLE_INVITATION_MODE: 'appConfigEnableInvitationMode',
   INVITATION_POSTER: 'appConfigInvitePoster',
   SITE_CONFIG_HTML_H5_KEY: 'siteConfigHtmlH5Key',
+  // 订单超时时间
+  ORDER_TIMEOUT_TIME: 'siteConfigOrderTimeoutTime',
 } as const
 
 type KeyName = typeof KEYS[keyof typeof KEYS]
@@ -69,6 +75,7 @@ const formData = reactive<any>({
   orderCommissionReleaseTime: 0,
   commissionRateOnTips: 0,
   withdrawAccountConfigEnableWxFastRefund: false,
+  siteConfigApplyFighterRealName: false,
   canCancelOrder: false,
   canRefundOrder: false,
   canCheckApplyRefundUserMobile: false,
@@ -95,8 +102,12 @@ const formData = reactive<any>({
   commissionRate: 0,
   // 应用配置
   enableInvitationMode: false,
+  siteConfigCustomerServiceLink: '',
   invitationPoster: '',
   htmlH5Key: '',
+  // 订单超时时间
+  orderTimeoutValue: 0,
+  orderTimeoutUnit: 'minute', // minute, hour, day
 })
 
 // 当前已有配置映射（key -> id）
@@ -182,6 +193,9 @@ async function loadAll() {
         case KEYS.WITHDRAW_ACCOUNT_CONFIG_ENABLE_WX_FAST_REFUND:
           formData.withdrawAccountConfigEnableWxFastRefund = toBool(item.configValue)
           break
+        case KEYS.SITE_CONFIG_APPLY_FIGHTER_REAL_NAME:
+          formData.siteConfigApplyFighterRealName = toBool(item.configValue)
+          break
         case KEYS.ENABLE_PICK_ORDER_SMS_NOTICE:
           formData.orderNoticeConfigEnablePickOrderSmsNotice = toBool(item.configValue)
           break
@@ -253,12 +267,39 @@ async function loadAll() {
         case KEYS.ENABLE_INVITATION_MODE:
           formData.enableInvitationMode = toBool(item.configValue)
           break
+        case KEYS.CUSTOMER_SERVICE_LINK:
+          formData.siteConfigCustomerServiceLink = String(item.configValue || '')
+          break
         case KEYS.INVITATION_POSTER:
           formData.invitationPoster = String(item.configValue || '')
           break
         case KEYS.SITE_CONFIG_HTML_H5_KEY:
           formData.htmlH5Key = String(item.configValue || '')
           break
+        case KEYS.ORDER_TIMEOUT_TIME: {
+          const minutes = Number(item.configValue || 0)
+          // 智能转换为合适的单位
+          if (minutes === 0) {
+            formData.orderTimeoutValue = 0
+            formData.orderTimeoutUnit = 'minute'
+          }
+          else if (minutes % 1440 === 0) {
+            // 能被1440整除，转换为天
+            formData.orderTimeoutValue = minutes / 1440
+            formData.orderTimeoutUnit = 'day'
+          }
+          else if (minutes % 60 === 0) {
+            // 能被60整除，转换为小时
+            formData.orderTimeoutValue = minutes / 60
+            formData.orderTimeoutUnit = 'hour'
+          }
+          else {
+            // 否则保持分钟
+            formData.orderTimeoutValue = minutes
+            formData.orderTimeoutUnit = 'minute'
+          }
+          break
+        }
       }
     })
     existingIdMap.value = idMap
@@ -282,9 +323,24 @@ function generateRandomKey() {
 
 // 生成并保存H5 Key
 async function handleGenerateH5Key() {
-  const randomKey = generateRandomKey()
-  formData.htmlH5Key = randomKey
-  await handleSave(KEYS.SITE_CONFIG_HTML_H5_KEY, 'string', randomKey)
+  try {
+    await ElMessageBox.confirm(
+      formData.htmlH5Key ? '已存在微信防红链接，生成新的将覆盖旧的链接。是否继续？' : '确认生成微信防红链接？',
+      '提示',
+      {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      },
+    )
+    const randomKey = generateRandomKey()
+    formData.htmlH5Key = randomKey
+    await handleSave(KEYS.SITE_CONFIG_HTML_H5_KEY, 'string', randomKey)
+  }
+  catch (error) {
+    // 用户取消操作
+    console.log('取消生成')
+  }
 }
 
 // 计算完整的H5链接
@@ -339,6 +395,28 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
   }
 }
 
+// 保存订单超时时间（需要转换单位为分钟）
+async function handleSaveOrderTimeout() {
+  const value = formData.orderTimeoutValue
+  const unit = formData.orderTimeoutUnit
+
+  // 转换为分钟
+  let minutes = 0
+  switch (unit) {
+    case 'minute':
+      minutes = value
+      break
+    case 'hour':
+      minutes = value * 60
+      break
+    case 'day':
+      minutes = value * 1440
+      break
+  }
+
+  await handleSave(KEYS.ORDER_TIMEOUT_TIME, 'number', minutes)
+}
+
 // ---------------- 商品选择逻辑 ----------------
 const productSelectorVisible = ref(false)
 const selectedProductIds = ref<number[]>([])
@@ -391,7 +469,7 @@ onMounted(() => {
         <!-- 服务配置 -->
         <el-collapse-item name="service" title="服务配置">
           <el-row :gutter="16">
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+            <!-- <el-col :xs="24" :sm="12" :md="8" :lg="8">
               <el-form-item label="接单保证金">
                 <el-input-number
                   v-model="formData.pickOrderDeposit"
@@ -568,6 +646,34 @@ onMounted(() => {
                   @change="(val: any) => handleSave(KEYS.CAN_CANCEL_ORDER, 'boolean', val)"
                 />
               </el-form-item>
+            </el-col> -->
+            <!-- 订单超时时间 -->
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="订单超时时间">
+                <div style="display: flex; gap: 8px; width: 100%;">
+                  <el-input-number
+                    v-model="formData.orderTimeoutValue"
+                    :min="0"
+                    :step="1"
+                    style="flex: 1;"
+                  />
+                  <el-select
+                    v-model="formData.orderTimeoutUnit"
+                    style="width: 100px;"
+                  >
+                    <el-option label="分钟" value="minute" />
+                    <el-option label="小时" value="hour" />
+                    <el-option label="天" value="day" />
+                  </el-select>
+                  <el-button
+                    type="primary"
+                    :loading="savingKeys.has(KEYS.ORDER_TIMEOUT_TIME)"
+                    @click="handleSaveOrderTimeout"
+                  >
+                    保存
+                  </el-button>
+                </div>
+              </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="8" :lg="8">
               <el-form-item label="是否开启微信急速提现">
@@ -575,6 +681,38 @@ onMounted(() => {
                   v-model="formData.withdrawAccountConfigEnableWxFastRefund"
                   @change="(val: any) => handleSave(KEYS.WITHDRAW_ACCOUNT_CONFIG_ENABLE_WX_FAST_REFUND, 'boolean', val)"
                 />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="申请打手是否需要先实名认证" label-width="200px">
+                <el-switch
+                  v-model="formData.siteConfigApplyFighterRealName"
+                  @change="(val: any) => handleSave(KEYS.SITE_CONFIG_APPLY_FIGHTER_REAL_NAME, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="16">
+            <!-- 微信防红参数 -->
+            <el-col :xs="24" :sm="24" :md="16" :lg="12">
+              <el-form-item label="客服连接">
+                <div class="w-full flex gap-2">
+                  <el-input
+                    v-model="formData.siteConfigCustomerServiceLink" placeholder="请输入客服连接" class="flex-1"
+                    @change="(val: any) => handleSave(KEYS.CUSTOMER_SERVICE_LINK, 'string', val)"
+                  />
+                </div>
+              </el-form-item>
+            </el-col>
+            <!-- 微信防红参数 -->
+            <el-col :xs="24" :sm="24" :md="16" :lg="12">
+              <el-form-item label="微信防红链接">
+                <div class="w-full flex gap-2">
+                  <el-input :value="fullH5Url" readonly placeholder="点击生成按钮生成防红链接" class="flex-1" />
+                  <el-button type="primary" @click="handleGenerateH5Key">
+                    生成
+                  </el-button>
+                </div>
               </el-form-item>
             </el-col>
           </el-row>
@@ -635,38 +773,19 @@ onMounted(() => {
         <!-- 邀请配置 -->
         <el-collapse-item name="app" title="应用配置">
           <el-row :gutter="16">
-            <!-- 微信防红参数 -->
-            <el-col :xs="24" :sm="24" :md="16" :lg="12">
-              <el-form-item label="微信防红链接">
-                <div class="w-full flex gap-2">
-                  <el-input
-                    :value="fullH5Url"
-                    readonly
-                    placeholder="点击生成按钮生成防红链接"
-                    class="flex-1"
-                  />
-                  <el-button type="primary" @click="handleGenerateH5Key">
-                    生成
-                  </el-button>
-                </div>
-              </el-form-item>
-            </el-col>
-
             <el-col :xs="24" :sm="12" :md="8" :lg="6">
               <el-form-item label="是否开启邀请模式">
                 <el-switch
                   v-model="formData.enableInvitationMode"
                   @change="(val: any) => handleSave(KEYS.ENABLE_INVITATION_MODE, 'boolean', val)"
                 />
+                <template #label="slotProps" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="8" :lg="6">
               <el-form-item label="分佣比例(%)">
                 <el-input-number
-                  v-model="formData.commissionRate"
-                  :min="0"
-                  :max="100"
-                  :step="1"
+                  v-model="formData.commissionRate" :min="0" :max="100" :step="1"
                   @change="(val: any) => handleSave(KEYS.COMMISSION_RATE, 'number', val)"
                 />
                 <div style="font-size: 12px; color: #909399; margin-top: 4px;" class="ml-2">
@@ -676,11 +795,7 @@ onMounted(() => {
             </el-col>
             <el-col :xs="24" :sm="12" :md="6" :lg="6">
               <el-form-item label="邀请海报">
-                <UploadImg
-                  v-model="formData.invitationPoster"
-                  height="200px"
-                  width="150px"
-                />
+                <UploadImg v-model="formData.invitationPoster" height="200px" width="150px" />
               </el-form-item>
             </el-col>
           </el-row>

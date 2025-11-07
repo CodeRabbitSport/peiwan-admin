@@ -1,11 +1,3 @@
-/**
- * Created by 热游电竞
- *
- * AI 枚举类
- *
- * 问题：为什么不放在 src/utils/constants.ts 呢？
- * 回答：主要 AI 是可选模块，考虑到独立、解耦，所以放在了 /views/ai/utils/constants.ts
- */
 
 /**
  * AI 平台的枚举

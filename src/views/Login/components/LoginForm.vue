@@ -1,19 +1,22 @@
 <script lang="ts" setup>
-import { ElLoading } from 'element-plus'
-import LoginFormTitle from './LoginFormTitle.vue'
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
 
-import { useIcon } from '@/hooks/web/useIcon'
+import { ElLoading } from 'element-plus'
 
-import * as authUtil from '@/utils/auth'
-import { usePermissionStore } from '@/store/modules/permission'
 import * as LoginApi from '@/api/login'
+import { useIcon } from '@/hooks/web/useIcon'
+import { useAppStore } from '@/store/modules/app'
+import { usePermissionStore } from '@/store/modules/permission'
+import * as authUtil from '@/utils/auth'
+
+import LoginFormTitle from './LoginFormTitle.vue'
 import { LoginStateEnum, useFormValid, useLoginState } from './useLogin'
 
 defineOptions({ name: 'LoginForm' })
 
 const { t } = useI18n()
 const message = useMessage()
+const appStore = useAppStore()
 const iconHouse = useIcon({ icon: 'ep:house' })
 const iconAvatar = useIcon({ icon: 'ep:avatar' })
 const iconLock = useIcon({ icon: 'ep:lock' })
@@ -44,6 +47,20 @@ const loginData = reactive({
     password: import.meta.env.VITE_APP_DEFAULT_LOGIN_PASSWORD || '',
     captchaVerification: '',
     rememberMe: true // 默认记录我。如果不需要，可手动修改
+  }
+})
+
+// 是否为自动获取的租户（控制只读状态）
+const isAutoTenant = ref(false)
+
+// 组件挂载时从 store 读取租户信息
+onMounted(() => {
+  if (loginData.tenantEnable === 'true') {
+    const tenantName = appStore.getTenantName
+    if (tenantName) {
+      loginData.loginForm.tenantName = tenantName
+      isAutoTenant.value = true
+    }
   }
 })
 
@@ -87,14 +104,12 @@ const getLoginFormCache = () => {
 }
 // 根据域名，获得租户信息
 const getTenantByWebsite = async () => {
-  if (loginData.tenantEnable === 'true') {
     const website = location.host
     const res = await LoginApi.getTenantByWebsite(website)
     if (res) {
       loginData.loginForm.tenantName = res.name
       authUtil.setTenantId(res.id)
     }
-  }
 }
 const loading = ref() // ElLoading.service 返回的实例
 // 登录
@@ -209,6 +224,8 @@ onMounted(() => {
             v-model="loginData.loginForm.tenantName"
             :placeholder="t('login.tenantNamePlaceholder')"
             :prefix-icon="iconHouse"
+            readonly
+            disabled
             link
             type="primary" />
         </el-form-item>

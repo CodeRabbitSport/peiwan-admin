@@ -14,7 +14,9 @@ const appStore = useAppStore()
 
 const show = ref(true)
 
-const title = computed(() => appStore.getTitle)
+const title = computed(() => appStore.getSiteName || appStore.getTitle)
+
+const logoUrl = computed(() => appStore.getSiteLogoUrl)
 
 const layout = computed(() => appStore.getLayout)
 
@@ -70,6 +72,12 @@ watch(
       to="/"
     >
       <img
+        v-if="logoUrl"
+        class="h-[calc(var(--logo-height)-10px)] w-[calc(var(--logo-height)-10px)] object-contain"
+        :src="logoUrl"
+      >
+      <img
+        v-else
         class="h-[calc(var(--logo-height)-10px)] w-[calc(var(--logo-height)-10px)]"
         src="@/assets/imgs/logo.png"
       >

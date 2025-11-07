@@ -1,10 +1,4 @@
-<!--
-  - Copyright (C) 2018-2019
-  - All rights reserved, Designed By www.joolun.com
-  热游电竞：
-  ① 移除暂时用不到的 websocket
-  ② 代码优化，补充注释，提升阅读性
--->
+
 <template>
   <ContentWrap>
     <div class="msg-div" ref="msgDivRef">

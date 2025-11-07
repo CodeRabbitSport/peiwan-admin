@@ -40,6 +40,10 @@ interface AppState {
   footer: boolean
   theme: ThemeTypes
   fixedMenu: boolean
+  siteLogoUrl: string // 网站Logo地址
+  siteName: string // 网站名称
+  tenantName: string // 租户名称
+  tenantId: number // 租户ID
 }
 
 export const useAppStore = defineStore('app', {
@@ -48,9 +52,12 @@ export const useAppStore = defineStore('app', {
       userInfo: 'userInfo', // 登录信息存储字段-建议每个项目换一个字段，避免与其他项目冲突
       sizeMap: ['default', 'large', 'small'],
       mobile: false, // 是否是移动端
-      title: import.meta.env.VITE_APP_TITLE, // 标题
+      title: wsCache.get('siteName') || import.meta.env.VITE_APP_TITLE, // 标题
       pageLoading: false, // 路由跳转loading
-
+      siteLogoUrl: wsCache.get('siteLogoUrl') || '', // 网站Logo
+      siteName: wsCache.get('siteName') || import.meta.env.VITE_APP_TITLE, // 网站名称
+      tenantName: wsCache.get('tenantName') || '', // 租户名称
+      tenantId: wsCache.get('tenantId') || 0, // 租户ID
       breadcrumb: true, // 面包屑
       breadcrumbIcon: true, // 面包屑图标
       collapse: false, // 折叠菜单
@@ -183,6 +190,15 @@ export const useAppStore = defineStore('app', {
     },
     getFooter(): boolean {
       return this.footer
+    },
+    getSiteLogoUrl(): string {
+      return this.siteLogoUrl
+    },
+    getSiteName(): string {
+      return this.siteName
+    },
+    getTenantName(): string {
+      return this.tenantName
     },
   },
   actions: {
@@ -355,6 +371,55 @@ export const useAppStore = defineStore('app', {
     },
     setFooter(footer: boolean) {
       this.footer = footer
+    },
+    setSiteLogoUrl(siteLogoUrl: string) {
+      this.siteLogoUrl = siteLogoUrl
+      wsCache.set('siteLogoUrl', siteLogoUrl)
+    },
+    setSiteName(siteName: string) {
+      this.siteName = siteName
+      this.title = siteName
+      wsCache.set('siteName', siteName)
+    },
+    setTenantName(tenantName: string) {
+      this.tenantName = tenantName
+      wsCache.set('tenantName', tenantName)
+    },
+    setTenantId(tenantId: number) {
+      this.tenantId = tenantId
+      wsCache.set('tenantId', tenantId)
+    },
+    // 根据域名加载租户信息
+    async loadTenantByWebsite() {
+      try {
+        const LoginApi = await import('@/api/login')
+        const website = window.location.hostname
+        // const website = window.location.hostname
+        const tenantData = await LoginApi.getTenantByWebsite("pw.zszs5.cn")
+        if (tenantData && tenantData.name) {
+          this.setTenantName(tenantData.name)
+          this.setTenantId(tenantData.id)
+          return tenantData.name
+        }
+      }
+      catch (error) {
+        console.error('获取租户信息失败:', error)
+      }
+      return null
+    },
+    // 从后台配置加载网站配置
+    async loadSiteConfig() {
+      try {
+        const { SystemConfigApi } = await import('@/api/gamer/systemconfig')
+        const data = await SystemConfigApi.getSystemLogoName()
+        if (data) {
+          this.setSiteLogoUrl(data.logoUrl)
+          this.setSiteName(data.siteName)
+        }
+      }
+      catch (error) {
+        console.error('加载网站配置失败:', error)
+      }
     },
   },
   persist: false,

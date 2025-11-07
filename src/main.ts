@@ -50,6 +50,16 @@ const setupAll = async () => {
 
   setupStore(app)
 
+  // 获取租户信息和网站配置
+  const { useAppStoreWithOut } = await import('@/store/modules/app')
+  const appStore = useAppStoreWithOut()
+
+  // 先加载租户信息
+  await appStore.loadTenantByWebsite()
+
+  // 加载网站配置（Logo和名称）
+  await appStore.loadSiteConfig()
+
   setupGlobCom(app)
 
   setupElementPlus(app)

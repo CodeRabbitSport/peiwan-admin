@@ -77,14 +77,14 @@ async function submitForm() {
   formLoading.value = true
   try {
     const data = formData.value as unknown as TenantApi.TenantVO
-    data.websites = data.websites.map((website) => {
-      if (website.includes(nowHost.value)) {
-        return website
-      }
-      else {
-        return `${website}.${nowHost.value}`
-      }
-    })
+    // data.websites = data.websites.map((website) => {
+    //   if (website.includes(nowHost.value)) {
+    //     return website
+    //   }
+    //   else {
+    //     return `${website}.${nowHost.value}`
+    //   }
+    // })
     if (formType.value === 'create') {
       await TenantApi.createTenant(data)
       message.success(t('common.createSuccess'))
@@ -183,11 +183,7 @@ function resetForm() {
           v-model="formData.websites"
           placeholder="请输入绑定域名，按回车添加"
           class="w-full"
-        >
-          <template #suffix>
-            {{ nowHost }}
-          </template>
-        </el-input-tag>
+        />
       </el-form-item>
       <el-form-item label="租户状态" prop="status">
         <el-radio-group v-model="formData.status">

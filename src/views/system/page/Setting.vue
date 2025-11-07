@@ -2,8 +2,10 @@
 import type { SystemConfig } from '@/api/gamer/systemconfig'
 import { SystemConfigApi } from '@/api/gamer/systemconfig'
 import { TenantNew_getAssessmentCode, TenantNew_refreshAssessmentCode } from '@/api/system/tenant'
+import { useAppStore } from '@/store/modules/app'
 
 const message = useMessage()
+const appStore = useAppStore()
 
 const activeTab = ref('basic')
 const saving = ref(false)
@@ -407,6 +409,14 @@ async function doSave(keys: string[]) {
     await Promise.all(tasks)
     message.success('保存成功')
     await fetchAll()
+
+    // 如果保存的是 Logo 或网站名称，同步更新 app store
+    if (keys.includes(CONFIG_KEYS.siteLogoUrl) && form.siteLogoUrl) {
+      appStore.setSiteLogoUrl(form.siteLogoUrl)
+    }
+    if (keys.includes(CONFIG_KEYS.siteName) && form.siteName) {
+      appStore.setSiteName(form.siteName)
+    }
   }
   catch (err) {
     console.error('保存失败:', err)

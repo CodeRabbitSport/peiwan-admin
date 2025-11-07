@@ -1,10 +1,4 @@
-<!--
-  - Copyright (C) 2018-2019
-  - All rights reserved, Designed By www.joolun.com
-  【微信消息 - 图文】
-  热游电竞：
-  ① 代码优化，补充注释，提升阅读性
--->
+
 <template>
   <div class="news-home">
     <div v-for="(article, index) in articles" :key="index" class="news-div">

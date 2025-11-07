@@ -17,6 +17,9 @@ export const SystemConfigApi = {
   getSystemConfigPage: async (params?: any) => {
     return await request.get({ url: `/gamer/system-config/list`, params })
   },
+  getSystemLogoName: async (params?: any) => {
+    return await request.get({ url: `/gamer/system-config/getSiteBasicConfig`, params })
+  },
 
   // 查询系统配置详情
   getSystemConfig: async (id: number) => {

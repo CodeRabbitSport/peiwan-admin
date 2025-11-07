@@ -55,3 +55,4 @@ body {
   filter: grayscale(100%);
 }
 </style>
+align items-center

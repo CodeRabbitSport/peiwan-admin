@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { computed } from 'vue'
+
 import { useAppStore } from '@/store/modules/app'
 import { underlineToHump } from '@/utils'
 
@@ -10,6 +12,11 @@ defineOptions({ name: 'Login' })
 
 const { t } = useI18n()
 const appStore = useAppStore()
+
+const logoUrl = computed(() => appStore.getSiteLogoUrl)
+const siteName = computed(() => appStore.getSiteName)
+
+// 根据域名获取租户信息
 </script>
 
 <template>
@@ -20,7 +27,8 @@ const appStore = useAppStore()
         <div class="z-[999] box-border w-full flex flex-col justify-between rounded-lg pb-10 pt-12 md:w-96">
           <div>
             <div class="flex items-center justify-center">
-              <img class="w-24" src="@/assets/imgs/logo.png" alt="">
+              <img v-if="logoUrl" class="w-24 object-contain" :src="logoUrl" alt="">
+              <img v-else class="w-24" src="@/assets/imgs/logo.png" alt="">
             </div>
             <div class="mb-9">
               <p class="text-center text-4xl font-bold">
@@ -32,8 +40,7 @@ const appStore = useAppStore()
             </div>
             <LoginForm />
             <ForgetPasswordForm class="m-auto h-auto p-[20px] lt-xl:rounded-3xl xl:light:bg-white" />
-            <MobileForm class="m-auto h-auto p-20px lt-xl:(rounded-3xl light:bg-white)" />
-
+            <MobileForm class="m-auto h-auto p-[20px] lt-xl:rounded-3xl xl:light:bg-white" />
           </div>
         </div>
       </div>
