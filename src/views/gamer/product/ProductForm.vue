@@ -39,7 +39,7 @@ const cascaderProps = {
       })
     }
     else if (level === 1) {
-      ProductTypeApi.getProductTypePage({ categoryId: node.value }).then((res) => {
+      ProductTypeApi.getProductTypePage({ categoryId: node.value, pageSize: 100 }).then((res) => {
         const data = res.list.map(item => ({
           value: item.id,
           label: item.typeName,
@@ -251,6 +251,7 @@ async function loadLevelOptions() {
   try {
     const data = await LevelConfigApi.getLevelConfigPage({
       categoryType: 2,
+      pageSize: 100,
     })
     levelOptions.value = data.list || []
   }

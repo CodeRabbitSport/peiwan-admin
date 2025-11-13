@@ -3,14 +3,18 @@ import { ElMessageBox } from 'element-plus'
 
 import type { AccOrder } from '@/api/gamer/accorder'
 import { AccOrder_acceptOrder, AccOrder_auditOrderComplete, AccOrder_cancelAcceptOrder, AccOrder_updateOrderRefunded, AccOrderApi } from '@/api/gamer/accorder'
+import { AccOrderConversationApi } from '@/api/gamer/accorderconversation'
+import ResponsiveFold from '@/components/ResponsiveFold/index.vue'
 import UserSelectInput from '@/components/UserSelectInput/index.vue'
 import UserInfoPickerDialog from '@/components/UserSelectInput/UserInfoPickerDialog.vue'
 import { fenToYuan } from '@/utils'
+import { isPhone } from '@/utils/device'
 import download from '@/utils/download'
 import { formatDate } from '@/utils/formatTime'
+import AccOrderConversationMessage from '@/views/gamer/accorderconversationmessage/index.vue'
 
-import AccOrderForm from './AccOrderForm.vue'
 import UserInfoViewDialog from '../userinfo/UserInfoViewDialog.vue'
+import AccOrderForm from './AccOrderForm.vue'
 
 /** 用户陪玩订单 列表 */
 defineOptions({ name: 'AccOrder' })
@@ -120,7 +124,7 @@ function openForm(type: string, id?: number) {
 const checkedIds = ref<number[]>([])
 
 /** 批量删除用户陪玩订单 */
-async function handleDeleteBatch() {
+async function _handleDeleteBatch() {
   try {
     // 删除的二次确认
     await message.delConfirm()
@@ -149,7 +153,7 @@ function handleOrderStatusFilterChange(value: string | number | undefined) {
 }
 
 /** 导出按钮操作 */
-async function handleExport() {
+async function _handleExport() {
   try {
     // 导出的二次确认
     await message.exportConfirm()
@@ -315,6 +319,27 @@ async function handleAuditOrderComplete(row: any) {
   }
   catch {}
 }
+
+// 会话记录弹窗（陪玩订单）
+const recordDialogVisible = ref(false)
+const recordConversationId = ref<number | undefined>()
+async function openAccOrderConversationByOrderId(orderId: number) {
+  try {
+    const data: any = await AccOrderConversationApi.getAccOrderConversationPage({
+      pageNo: 1,
+      pageSize: 1,
+      orderId,
+    })
+    const first = data?.list?.[0]
+    if (!first) {
+      message.warning('未找到该订单的会话记录')
+      return
+    }
+    recordConversationId.value = first.id
+    recordDialogVisible.value = true
+  }
+  catch {}
+}
 </script>
 
 <template>
@@ -327,6 +352,7 @@ async function handleAuditOrderComplete(row: any) {
       :inline="true"
       label-width="68px"
     >
+      <ResponsiveFold>
       <el-form-item label="订单号" prop="orderNo">
         <el-input
           v-model="queryParams.orderNo"
@@ -410,6 +436,7 @@ async function handleAuditOrderComplete(row: any) {
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
         </el-button>
       </el-form-item>
+      </ResponsiveFold>
     </el-form>
   </ContentWrap>
 
@@ -514,9 +541,11 @@ async function handleAuditOrderComplete(row: any) {
       </el-table-column>
       <el-table-column label="用户信息" align="center" prop="userId" width="150">
         <template #default="scope">
-          <div class="flex flex-col items-center cursor-pointer" @click="handleViewUserInfo(scope.row.userId)">
+          <div class="flex flex-col cursor-pointer items-center" @click="handleViewUserInfo(scope.row.userId)">
             <el-avatar :src="scope.row.avatar" size="small" />
-            <el-link type="primary">{{ scope.row.nickname || '无' }}</el-link>
+            <el-link type="primary">
+              {{ scope.row.nickname || '无' }}
+            </el-link>
             <span>{{ scope.row.mobile || '无' }}</span>
           </div>
         </template>
@@ -541,7 +570,9 @@ async function handleAuditOrderComplete(row: any) {
           >
             <div v-for="acceptor in scope.row.acceptorList" :key="acceptor.id" class="flex flex-col items-center">
               <el-avatar :src="acceptor.avatar" size="small" class="cursor-pointer" @click="handleViewUserInfo(acceptor.acceptorId)" />
-              <el-link type="primary" @click="handleViewUserInfo(acceptor.acceptorId)">{{ acceptor.nickname || '无' }}</el-link>
+              <el-link type="primary" @click="handleViewUserInfo(acceptor.acceptorId)">
+                {{ acceptor.nickname || '无' }}
+              </el-link>
               <span>接单时间：{{ acceptor.confirmTime ? formatDate(acceptor.confirmTime) : formatDate(scope.row.acceptConfirmTime) || '无' }}</span>
 
               <span>
@@ -580,7 +611,7 @@ async function handleAuditOrderComplete(row: any) {
         </template>
       </el-table-column>
 
-      <el-table-column label="操作" align="center" fixed="right" width="160px">
+      <el-table-column label="操作" align="center" :fixed="isPhone() ? false : 'right'" width="160px">
         <template #default="scope">
           <el-dropdown trigger="click">
             <el-button link type="primary">
@@ -594,6 +625,10 @@ async function handleAuditOrderComplete(row: any) {
                   @click="openForm('update', scope.row.id)"
                 >
                   查看
+                </el-dropdown-item>
+                <!-- 查看聊天记录 -->
+                <el-dropdown-item v-if="scope.row.captainId" @click="openAccOrderConversationByOrderId(scope.row.id)">
+                  查看聊天记录
                 </el-dropdown-item>
                 <!-- 完成订单 -->
                 <el-dropdown-item
@@ -682,6 +717,11 @@ async function handleAuditOrderComplete(row: any) {
       </el-button>
     </template>
   </Dialog>
+
+  <!-- 会话记录弹窗 -->
+  <el-dialog v-model="recordDialogVisible" title="会话记录" width="80%" destroy-on-close>
+    <AccOrderConversationMessage :embed="true" :conversation-id="recordConversationId" />
+  </el-dialog>
 
   <!-- 结单证明预览 -->
   <Dialog v-model="voucherPreviewVisible" title="结单证明" align-center width="80vw">

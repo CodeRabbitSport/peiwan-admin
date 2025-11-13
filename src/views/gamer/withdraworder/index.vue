@@ -318,7 +318,7 @@ onMounted(() => {
           <div class="flex flex-col items-center gap-1">
             <template v-if="scope.row.status === 0">
               <el-button-group>
-                <el-button size="small" type="success" @click="handleApproveWithdraw(scope.row)">
+                <el-button v-if="scope.row.withdrawType === 2" size="small" type="success" @click="handleApproveWithdraw(scope.row)">
                   通过
                 </el-button>
                 <el-button size="small" type="danger" @click="handleRejectWithdraw(scope.row)">
@@ -330,7 +330,13 @@ onMounted(() => {
               </el-tag>
             </template>
             <template v-else>
-              <el-tag :type="scope.row.status === 1 ? 'success' : scope.row.status === 2 ? 'danger' : 'info'">
+              <el-tag v-if="scope.row.status === 0 && !scope.row.transactionTime" type="warning">
+                等待用户确认收款
+              </el-tag>
+              <el-tag v-else-if="scope.row.status === 0 && scope.row.payTransferId" type="info">
+                转账中
+              </el-tag>
+              <el-tag v-else :type="scope.row.status === 1 ? 'success' : scope.row.status === 2 ? 'danger' : 'info'">
                 {{ scope.row.status === 1 ? '审核通过' : scope.row.status === 2 ? '审核拒绝' : '打款失败' }}
               </el-tag>
             </template>

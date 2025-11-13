@@ -192,19 +192,19 @@ function resetForm() {
     upgradeFee: undefined,
     upgradeDays: undefined,
     isDefault: false,
-    canUpgrade: false,
+    canUpgrade: true,
     depositFee: undefined,
     dailyOrderLimit: undefined,
     newOrderDelaySeconds: undefined,
     withdrawalFeeRate: undefined,
     orderFeeUnfreezeSeconds: undefined,
     rewardCommissionRate: undefined,
-    canCancelOrder: false, // 默认值
-    canRefundOrder: false, // 默认值
-    canViewRefundPhone: false, // 默认值
-    canViewUnrefundedPhone: false, // 默认值
+    canCancelOrder: true, // 默认值
+    canRefundOrder: true, // 默认值
+    canViewRefundPhone: true, // 默认值
+    canViewUnrefundedPhone: true, // 默认值
     viewPhoneDaysLimit: 0, // 默认值
-    canSetAnnouncement: false,
+    canSetAnnouncement: true,
     depositRefundSafeDays: undefined,
     restrictedProductIds: '',
     dailyOrderFeeLimit: undefined,
@@ -443,6 +443,24 @@ function clearSelectedProducts() {
             :inactive-value="0"
             active-text="需要验证"
             inactive-text="无需验证"
+          />
+        </el-form-item>
+        <el-form-item label="可自主取消接单订单" prop="canCancelOrder">
+          <el-switch
+            v-model="formData.canCancelOrder"
+            :active-value="1"
+            :inactive-value="0"
+            active-text="有"
+            inactive-text="无"
+          />
+        </el-form-item>
+        <el-form-item label="可自主退款接单订单" prop="canRefundOrder">
+          <el-switch
+            v-model="formData.canRefundOrder"
+            :active-value="1"
+            :inactive-value="0"
+            active-text="有"
+            inactive-text="无"
           />
         </el-form-item>
         <el-form-item label="限制升级人数名额" prop="upgradeSlotLimit">

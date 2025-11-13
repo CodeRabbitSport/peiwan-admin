@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { OrderConversationMessage } from '@/api/gamer/orderconversationmessage'
 import { OrderConversationMessageApi } from '@/api/gamer/orderconversationmessage'
+import ChatMessageList from '@/components/ChatMessageList.vue'
 import download from '@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
@@ -266,8 +267,8 @@ function messageTypeTag(type?: number) {
     </el-form>
   </ContentWrap>
 
-  <!-- 列表 -->
-  <ContentWrap>
+  <!-- 列表：非嵌入模式使用表格；嵌入对话框使用聊天样式 -->
+  <ContentWrap v-if="!props.embed">
     <el-table
       v-loading="loading"
       row-key="id"
@@ -342,6 +343,11 @@ function messageTypeTag(type?: number) {
       :total="total"
       @pagination="getList"
     />
+  </ContentWrap>
+
+  <!-- 聊天样式（嵌入弹窗时展示） -->
+  <ContentWrap v-else>
+    <ChatMessageList :items="list" />
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->

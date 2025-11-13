@@ -2,7 +2,8 @@
 import type { ConversationMessage } from '@/api/gamer/conversationmessage'
 import { ConversationMessageApi } from '@/api/gamer/conversationmessage'
 import download from '@/utils/download'
-import { dateFormatter } from '@/utils/formatTime'
+import ChatMessageList from '@/components/ChatMessageList.vue'
+import { dateFormatter, formatDate } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
 
 import ConversationMessageForm from './ConversationMessageForm.vue'
@@ -242,8 +243,8 @@ onMounted(() => {
     </el-form>
   </ContentWrap>
 
-  <!-- 列表 -->
-  <ContentWrap>
+  <!-- 列表：非嵌入模式使用表格；嵌入对话框使用聊天样式 -->
+  <ContentWrap v-if="!props.embed">
     <el-table
       v-loading="loading"
       row-key="id"
@@ -344,6 +345,13 @@ onMounted(() => {
     />
   </ContentWrap>
 
+  <!-- 聊天样式（嵌入弹窗时展示） -->
+  <ContentWrap v-else>
+    <ChatMessageList :items="list" />
+  </ContentWrap>
+
   <!-- 表单弹窗：添加/修改 -->
   <ConversationMessageForm ref="formRef" @success="getList" />
 </template>
+
+<style scoped></style>

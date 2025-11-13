@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ElMessageBox } from 'element-plus'
 
+import { LevelApply_batchUpdateAllUsersServiceStatus } from '@/api/gamer/levelapply'
 import { SystemConfigApi } from '@/api/gamer/systemconfig'
 import { getTenant } from '@/api/system/tenant'
 import UploadImg from '@/components/UploadFile/src/UploadImg.vue'
@@ -55,6 +56,7 @@ const KEYS = {
   COMMISSION_RATE: 'commissionConfigCommissionRate',
   // 应用配置
   ENABLE_INVITATION_MODE: 'appConfigEnableInvitationMode',
+  ENABLE_AUTO_PICK_ORDER: 'appConfigEnableAutoPickOrder',
   INVITATION_POSTER: 'appConfigInvitePoster',
   SITE_CONFIG_HTML_H5_KEY: 'siteConfigHtmlH5Key',
   // 订单超时时间
@@ -102,11 +104,12 @@ const formData = reactive<any>({
   commissionRate: 0,
   // 应用配置
   enableInvitationMode: false,
+  enableAutoPickOrder: false,
   siteConfigCustomerServiceLink: '',
   invitationPoster: '',
   htmlH5Key: '',
   // 订单超时时间
-  orderTimeoutValue: 0,
+  orderTimeoutValue: 15,
   orderTimeoutUnit: 'minute', // minute, hour, day
 })
 
@@ -267,6 +270,9 @@ async function loadAll() {
         case KEYS.ENABLE_INVITATION_MODE:
           formData.enableInvitationMode = toBool(item.configValue)
           break
+        case KEYS.ENABLE_AUTO_PICK_ORDER:
+          formData.enableAutoPickOrder = toBool(item.configValue)
+          break
         case KEYS.CUSTOMER_SERVICE_LINK:
           formData.siteConfigCustomerServiceLink = String(item.configValue || '')
           break
@@ -337,7 +343,7 @@ async function handleGenerateH5Key() {
     formData.htmlH5Key = randomKey
     await handleSave(KEYS.SITE_CONFIG_HTML_H5_KEY, 'string', randomKey)
   }
-  catch (error) {
+  catch {
     // 用户取消操作
     console.log('取消生成')
   }
@@ -417,9 +423,22 @@ async function handleSaveOrderTimeout() {
   await handleSave(KEYS.ORDER_TIMEOUT_TIME, 'number', minutes)
 }
 
+// 保存自动接单模式配置并调用批量更新接口
+async function handleSaveAutoPickOrder(val: any) {
+  await handleSave(KEYS.ENABLE_AUTO_PICK_ORDER, 'boolean', val)
+  try {
+    await LevelApply_batchUpdateAllUsersServiceStatus()
+    message.success('已批量更新所有用户服务状态')
+  }
+  catch (error) {
+    console.error('批量更新用户服务状态失败:', error)
+  }
+}
+
 // ---------------- 商品选择逻辑 ----------------
 const productSelectorVisible = ref(false)
 const selectedProductIds = ref<number[]>([])
+
 const selectedProductNamesDisplay = computed(() => {
   const ids = selectedProductIds.value
   if (ids.length === 0) {
@@ -588,86 +607,63 @@ onMounted(() => {
                       清空
                     </el-button>
                   </template>
-                </el-input>
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="限制每日接单缴费金额">
-                <el-input-number
-                  v-model="formData.limitPickOrderFee" :min="0" :step="1"
-                  @change="(val: any) => handleSave(KEYS.LIMIT_PICK_ORDER_FEE, 'number', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="限制同一时间段接单单数">
-                <el-input-number
-                  v-model="formData.limitSameTimePickOrderCount" :min="0" :step="1"
-                  @change="(val: any) => handleSave(KEYS.LIMIT_SAME_TIME_PICK_ORDER_COUNT, 'number', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="是否可以设置用户公告">
-                <el-switch
-                  v-model="formData.canSetUserNotice"
-                  @change="(val: any) => handleSave(KEYS.CAN_SET_USER_NOTICE, 'boolean', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="接单验证类型">
-                <el-switch
-                  v-model="formData.pickOrderVerify"
-                  @change="(val: any) => handleSave(KEYS.PICK_ORDER_VERIFY, 'boolean', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="限制升级人数名额">
-                <el-input-number
-                  v-model="formData.limitUpgradePeopleCount" :min="0" :step="1"
-                  @change="(val: any) => handleSave(KEYS.LIMIT_UPGRADE_PEOPLE_COUNT, 'number', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="允许订单抵扣保证金">
-                <el-switch
-                  v-model="formData.allowRechargeDeposit"
-                  @change="(val: any) => handleSave(KEYS.ALLOW_RECHARGE_DEPOSIT, 'boolean', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="是否可以取消接单订单">
-                <el-switch
-                  v-model="formData.canCancelOrder"
-                  @change="(val: any) => handleSave(KEYS.CAN_CANCEL_ORDER, 'boolean', val)"
-                />
-              </el-form-item>
-            </el-col> -->
+</el-input>
+</el-form-item>
+</el-col>
+<el-col :xs="24" :sm="12" :md="8" :lg="8">
+  <el-form-item label="限制每日接单缴费金额">
+    <el-input-number v-model="formData.limitPickOrderFee" :min="0" :step="1"
+      @change="(val: any) => handleSave(KEYS.LIMIT_PICK_ORDER_FEE, 'number', val)" />
+  </el-form-item>
+</el-col>
+<el-col :xs="24" :sm="12" :md="8" :lg="8">
+  <el-form-item label="限制同一时间段接单单数">
+    <el-input-number v-model="formData.limitSameTimePickOrderCount" :min="0" :step="1"
+      @change="(val: any) => handleSave(KEYS.LIMIT_SAME_TIME_PICK_ORDER_COUNT, 'number', val)" />
+  </el-form-item>
+</el-col>
+<el-col :xs="24" :sm="12" :md="8" :lg="8">
+  <el-form-item label="是否可以设置用户公告">
+    <el-switch v-model="formData.canSetUserNotice"
+      @change="(val: any) => handleSave(KEYS.CAN_SET_USER_NOTICE, 'boolean', val)" />
+  </el-form-item>
+</el-col>
+<el-col :xs="24" :sm="12" :md="8" :lg="8">
+  <el-form-item label="接单验证类型">
+    <el-switch v-model="formData.pickOrderVerify"
+      @change="(val: any) => handleSave(KEYS.PICK_ORDER_VERIFY, 'boolean', val)" />
+  </el-form-item>
+</el-col>
+<el-col :xs="24" :sm="12" :md="8" :lg="8">
+  <el-form-item label="限制升级人数名额">
+    <el-input-number v-model="formData.limitUpgradePeopleCount" :min="0" :step="1"
+      @change="(val: any) => handleSave(KEYS.LIMIT_UPGRADE_PEOPLE_COUNT, 'number', val)" />
+  </el-form-item>
+</el-col>
+<el-col :xs="24" :sm="12" :md="8" :lg="8">
+  <el-form-item label="允许订单抵扣保证金">
+    <el-switch v-model="formData.allowRechargeDeposit"
+      @change="(val: any) => handleSave(KEYS.ALLOW_RECHARGE_DEPOSIT, 'boolean', val)" />
+  </el-form-item>
+</el-col>
+<el-col :xs="24" :sm="12" :md="8" :lg="8">
+  <el-form-item label="是否可以取消接单订单">
+    <el-switch v-model="formData.canCancelOrder"
+      @change="(val: any) => handleSave(KEYS.CAN_CANCEL_ORDER, 'boolean', val)" />
+  </el-form-item>
+</el-col> -->
             <!-- 订单超时时间 -->
             <el-col :xs="24" :sm="12" :md="8" :lg="8">
               <el-form-item label="订单超时时间">
                 <div style="display: flex; gap: 8px; width: 100%;">
-                  <el-input-number
-                    v-model="formData.orderTimeoutValue"
-                    :min="0"
-                    :step="1"
-                    style="flex: 1;"
-                  />
-                  <el-select
-                    v-model="formData.orderTimeoutUnit"
-                    style="width: 100px;"
-                  >
+                  <el-input-number v-model="formData.orderTimeoutValue" :min="0" :step="1" style="flex: 1;" />
+                  <el-select v-model="formData.orderTimeoutUnit" style="width: 100px;">
                     <el-option label="分钟" value="minute" />
                     <el-option label="小时" value="hour" />
                     <el-option label="天" value="day" />
                   </el-select>
                   <el-button
-                    type="primary"
-                    :loading="savingKeys.has(KEYS.ORDER_TIMEOUT_TIME)"
+                    type="primary" :loading="savingKeys.has(KEYS.ORDER_TIMEOUT_TIME)"
                     @click="handleSaveOrderTimeout"
                   >
                     保存
@@ -773,13 +769,33 @@ onMounted(() => {
         <!-- 邀请配置 -->
         <el-collapse-item name="app" title="应用配置">
           <el-row :gutter="16">
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="提现手续费率(%)">
+                <el-input-number
+                  v-model="formData.withdrawFeeRate" :min="0" :max="100"
+                  @change="(val: any) => handleSave(KEYS.FEE_RATE, 'number', val)"
+                />
+                <div style="font-size: 12px; color: #909399; margin-top: 4px;" class="ml-2">
+                  当用户是陪玩/打手的时候使用这个费率
+                </div>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="6">
+              <el-form-item label="是否开启自动接单模式">
+                <el-switch
+                  v-model="formData.enableAutoPickOrder"
+                  @change="handleSaveAutoPickOrder"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="16">
             <el-col :xs="24" :sm="12" :md="8" :lg="6">
               <el-form-item label="是否开启邀请模式">
                 <el-switch
                   v-model="formData.enableInvitationMode"
                   @change="(val: any) => handleSave(KEYS.ENABLE_INVITATION_MODE, 'boolean', val)"
                 />
-                <template #label="slotProps" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="8" :lg="6">
@@ -812,6 +828,7 @@ onMounted(() => {
         </el-collapse-item>
         <el-collapse-item name="itemShop" title="礼物/商店配置">
           <el-row :gutter="16">
+
             <el-col :xs="24" :sm="12" :md="8" :lg="8">
               <el-form-item label="礼物抽成比例(%)">
                 <el-input-number
@@ -821,6 +838,7 @@ onMounted(() => {
                   :step="1"
                   @change="(val: any) => handleSave(KEYS.GIFT_COMMISSION_RATE, 'number', val)"
                 />
+
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="8" :lg="8">

@@ -251,8 +251,8 @@ onMounted(() => {
       </el-table-column>
       <el-table-column label="支付状态" align="center">
         <template #default="{ row }">
-          <el-tag :type="row.payStatus === 1 ? 'success' : 'warning'">
-            {{ row.payStatus === 1 ? '已支付' : '未支付' }}
+          <el-tag :type="row.payStatus ? 'success' : 'warning'">
+            {{ row.payStatus ? '已支付' : '未支付' }}
           </el-tag>
         </template>
       </el-table-column>

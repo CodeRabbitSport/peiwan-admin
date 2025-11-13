@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { AccOrderConversationMessage } from '@/api/gamer/accorderconversationmessage'
 import { AccOrderConversationMessageApi } from '@/api/gamer/accorderconversationmessage'
+import ChatMessageList from '@/components/ChatMessageList.vue'
 import { dateFormatter } from '@/utils/formatTime'
 
 /** 陪玩订单会话消息 列表 */
@@ -213,8 +214,8 @@ function messageTypeTag(type?: number) {
     </el-form>
   </ContentWrap> -->
 
-    <!-- 列表 -->
-    <ContentWrap>
+    <!-- 列表：非嵌入模式使用表格；嵌入对话框使用聊天样式 -->
+    <ContentWrap v-if="!props.embed">
       <el-table
         v-loading="loading"
         row-key="id"
@@ -290,7 +291,26 @@ function messageTypeTag(type?: number) {
       />
     </ContentWrap>
 
+    <!-- 聊天样式（嵌入弹窗时展示） -->
+    <ContentWrap v-else>
+      <ChatMessageList :items="list" />
+    </ContentWrap>
+
     <!-- 表单弹窗：添加/修改 -->
     <!-- <AccOrderConversationMessageForm ref="formRef" @success="getList" /> -->
   </contentwrap>
 </template>
+
+    <style scoped>
+    .chat-container {
+  height: 70vh;
+  display: flex;
+}
+.chat-scroll {
+  width: 100%;
+}
+.chat-inner {
+  padding: 10px 12px;
+  width: 100%;
+}
+</style>

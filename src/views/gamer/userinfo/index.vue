@@ -82,7 +82,8 @@ function openForm(type: string, id?: number) {
   formRef.value.open(type, id)
 }
 
-async function handleToggleUserStatus(row: any) {
+async function handleToggleUserStatus(row: any, e: any) {
+  console.log(row, e)
   try {
     await UserInfoApi.toggleUserStatus({ userId: row.id })
     getList()
@@ -306,8 +307,8 @@ onMounted(() => {
               </el-tag>
               <div>保证金：{{ fenToYuan(scope.row?.wallet?.depositBalance) ?? 0 }}</div>
               <div>打手评分：{{ scope.row.contributePoint ?? 0 }}</div>
-              <!--  <div>打手上班状态：{{ scope.row.authStatus ? '已上班' : '已下班' }}</div>
-             <div v-if="scope.row.levelApply.contact">
+              <div>打手自动接单状态：{{ scope.row.serverStatus ? '已开启' : '已关闭' }}</div>
+              <!--   <div v-if="scope.row.levelApply.contact">
                 联系手机号：{{ scope.row.levelApply.contact }}
               </div> -->
             </template>
@@ -347,7 +348,7 @@ onMounted(() => {
             style="--el-switch-off-color: #13ce66; --el-switch-on-color: #ff4949"
             active-text="封禁"
             inactive-text="正常"
-            @change="() => handleToggleUserStatus(scope.row)"
+            @change="(e) => handleToggleUserStatus(scope.row, e)"
           />
         </template>
       </el-table-column>

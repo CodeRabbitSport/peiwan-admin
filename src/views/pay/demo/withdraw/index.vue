@@ -2,15 +2,15 @@
   <ContentWrap>
     <!-- 搜索工作栏 -->
     <el-form
-      class="-mb-15px"
+      class="-mb-[15px]"
       :model="queryParams"
       ref="queryFormRef"
       :inline="true"
       label-width="68px"
     >
       <el-form-item>
-        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
-        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
+        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-[5px]" /> 搜索</el-button>
+        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-[5px]" /> 重置</el-button>
         <el-button type="primary" plain @click="openForm('create')">
           <Icon icon="ep:plus" />创建示例提现单
         </el-button>
@@ -59,8 +59,8 @@
       <el-table-column label="收款人账号" align="center" prop="userAccount" min-width="250" />
       <el-table-column label="提现状态" align="center" prop="status" width="100">
         <template #default="scope">
-          <el-tag v-if="scope.row.status === 0 && !scope.row.payTransferId" type="warning">
-            等待转账
+          <el-tag v-if="scope.row.status === 0 && !scope.row.transactionTime" type="warning">
+            等待用户确认收款
           </el-tag>
           <el-tag v-else-if="scope.row.status === 0 && scope.row.payTransferId" type="info">
             转账中

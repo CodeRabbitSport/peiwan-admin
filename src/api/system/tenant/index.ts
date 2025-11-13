@@ -49,7 +49,7 @@ export function getTenantList() {
 
 // 新增租户
 export function createTenant(data: TenantVO) {
-  return request.post({ url: '/system/tenant/create', data })
+  return request.post({ url: '/system/tenant-new/create', data })
 }
 
 // 修改租户

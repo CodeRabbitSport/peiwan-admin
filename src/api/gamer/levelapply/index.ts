@@ -76,3 +76,8 @@ export function LevelApply_syncUserGameRegion(id: number) {
 export function LevelApply_syncUserLevel(id: number) {
   return request.post({ url: `/gamer/level-apply/sync-user-level?id=${id}` })
 }
+
+// batch-update-all-users-service-status
+export function LevelApply_batchUpdateAllUsersServiceStatus() {
+  return request.post({ url: `/gamer/level-apply/batch-update-all-users-service-status` })
+}

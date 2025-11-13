@@ -1,5 +1,6 @@
-import request from '@/config/axios'
 import type { RegisterVO, UserLoginVO } from './types'
+
+import request from '@/config/axios'
 
 export interface SmsCodeVO {
   mobile: string
@@ -12,48 +13,48 @@ export interface SmsLoginVO {
 }
 
 // 登录
-export const login = (data: UserLoginVO) => {
+export function login(data: UserLoginVO) {
   return request.post({
     url: '/system/auth/login',
     data,
     headers: {
-      isEncrypt: false
-    }
+      isEncrypt: false,
+    },
   })
 }
 
 // 注册
-export const register = (data: RegisterVO) => {
+export function register(data: RegisterVO) {
   return request.post({ url: '/system/auth/register', data })
 }
 
 // 使用租户名，获得租户编号
-export const getTenantIdByName = (name: string) => {
-  return request.get({ url: '/system/tenant/get-id-by-name?name=' + name })
+export function getTenantIdByName(name: string) {
+  return request.get({ url: `/system/tenant/get-id-by-name?name=${name}` })
 }
 
 // 使用租户域名，获得租户信息
-export const getTenantByWebsite = (website: string) => {
-  return request.get({ url: '/system/tenant/get-by-website?website=' + website })
+export function getTenantByWebsite(website: string) {
+  return request.get({ url: `/system/tenant/get-by-website?website=${website}` })
 }
 
 // 登出
-export const loginOut = () => {
+export function loginOut() {
   return request.post({ url: '/system/auth/logout' })
 }
 
 // 获取用户权限信息
-export const getInfo = () => {
+export function getInfo() {
   return request.get({ url: '/system/auth/get-permission-info' })
 }
 
-//获取登录验证码
-export const sendSmsCode = (data: SmsCodeVO) => {
+// 获取登录验证码
+export function sendSmsCode(data: SmsCodeVO) {
   return request.post({ url: '/system/auth/send-sms-code', data })
 }
 
 // 短信验证码登录
-export const smsLogin = (data: SmsLoginVO) => {
+export function smsLogin(data: SmsLoginVO) {
   return request.post({ url: '/system/auth/sms-login', data })
 }
 
@@ -64,28 +65,28 @@ export function socialLogin(type: string, code: string, state: string) {
     data: {
       type,
       code,
-      state
-    }
+      state,
+    },
   })
 }
 
 // 社交授权的跳转
-export const socialAuthRedirect = (type: number, redirectUri: string) => {
+export function socialAuthRedirect(type: number, redirectUri: string) {
   return request.get({
-    url: '/system/auth/social-auth-redirect?type=' + type + '&redirectUri=' + redirectUri
+    url: `/system/auth/social-auth-redirect?type=${type}&redirectUri=${redirectUri}`,
   })
 }
 // 获取验证图片以及 token
-export const getCode = (data: any) => {
+export function getCode(data: any) {
   return request.postOriginal({ url: 'system/captcha/get', data })
 }
 
 // 滑动或者点选验证
-export const reqCheck = (data: any) => {
+export function reqCheck(data: any) {
   return request.postOriginal({ url: 'system/captcha/check', data })
 }
 
 // 通过短信重置密码
-export const smsResetPassword = (data: any) => {
+export function smsResetPassword(data: any) {
   return request.post({ url: '/system/auth/reset-password', data })
 }

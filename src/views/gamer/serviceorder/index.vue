@@ -1,18 +1,22 @@
 <script setup lang="ts">
 import { ElMessageBox } from 'element-plus'
 
+import { OrderConversationApi } from '@/api/gamer/orderconversation'
 import { ProductApi } from '@/api/gamer/product'
 import type { ServiceOrder } from '@/api/gamer/serviceorder'
 import { acceptOrder, ServiceOrder_auditOrderComplete, ServiceOrder_cancelAcceptOrder, ServiceOrder_updateOrderRefunded, ServiceOrderApi } from '@/api/gamer/serviceorder'
+import ResponsiveFold from '@/components/ResponsiveFold/index.vue'
 import UserSelectInput from '@/components/UserSelectInput/index.vue'
 import UserInfoPickerDialog from '@/components/UserSelectInput/UserInfoPickerDialog.vue'
 import { fenToYuan } from '@/utils'
+import { isPhone } from '@/utils/device'
 import download from '@/utils/download'
 import { formatDate } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
+import OrderConversationMessage from '@/views/gamer/orderconversationmessage/index.vue'
 
-import ServiceOrderForm from './ServiceOrderForm.vue'
 import UserInfoViewDialog from '../userinfo/UserInfoViewDialog.vue'
+import ServiceOrderForm from './ServiceOrderForm.vue'
 
 /** 用户订单 列表 */
 defineOptions({ name: 'ServiceOrder' })
@@ -123,18 +127,18 @@ function openForm(type: string, id?: number) {
 }
 
 /** 删除按钮操作 */
-// async function handleDelete(id: number) {
-//   try {
-//     // 删除的二次确认
-//     await message.delConfirm()
-//     // 发起删除
-//     await ServiceOrderApi.deleteServiceOrder(id)
-//     message.success(t('common.delSuccess'))
-//     // 刷新列表
-//     await getList()
-//   }
-//   catch { }
-// }
+async function handleDelete(id: number) {
+  try {
+    // 删除的二次确认
+    await message.delConfirm()
+    // 发起删除
+    await ServiceOrderApi.deleteServiceOrder(id)
+    message.success(t('common.delSuccess'))
+    // 刷新列表
+    await getList()
+  }
+  catch { }
+}
 const checkedIds = ref<number[]>([])
 
 /** 批量删除用户订单 */
@@ -181,7 +185,7 @@ function handleOrderStatusFilterChange(value: string | number | undefined) {
 }
 
 /** 导出按钮操作 */
-async function handleExport() {
+async function _handleExport() {
   try {
     // 导出的二次确认
     await message.exportConfirm()
@@ -354,7 +358,7 @@ async function handleImmediateRefund(row: any) {
     message.success('操作成功')
     await getList()
   }
-  catch {}
+  catch { }
 }
 async function handleCancelOrder(row: any) {
   try {
@@ -365,7 +369,7 @@ async function handleCancelOrder(row: any) {
     message.success('操作成功')
     await getList()
   }
-  catch {}
+  catch { }
 }
 async function handleAuditOrderComplete(row: any) {
   try {
@@ -378,7 +382,28 @@ async function handleAuditOrderComplete(row: any) {
     message.success('操作成功')
     await getList()
   }
-  catch {}
+  catch { }
+}
+
+// 会话记录弹窗
+const recordDialogVisible = ref(false)
+const recordConversationId = ref<number | undefined>()
+async function openOrderConversationByOrderId(orderId: number) {
+  try {
+    const data: any = await OrderConversationApi.getOrderConversationPage({
+      pageNo: 1,
+      pageSize: 1,
+      orderId,
+    })
+    const first = data?.list?.[0]
+    if (!first) {
+      message.warning('未找到该订单的会话记录')
+      return
+    }
+    recordConversationId.value = first.id
+    recordDialogVisible.value = true
+  }
+  catch { }
 }
 </script>
 
@@ -392,30 +417,31 @@ async function handleAuditOrderComplete(row: any) {
       :inline="true"
       label-width="68px"
     >
-      <el-form-item label="订单号" prop="orderNo">
-        <el-input
-          v-model="queryParams.orderNo"
-          placeholder="请输入订单号"
-          clearable
-          class="!w-[240px]"
-        />
-      </el-form-item>
-      <el-form-item label="用户ID" prop="userId">
-        <UserMultiSelectInput
-          v-model="queryParams.userId"
-          :multiple="false"
-          placeholder="请选择用户"
-          @change="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="接单人ID" prop="captainId">
-        <UserSelectInput
-          v-model="queryParams.captainId"
-          placeholder="请选择接单人"
-          @change="handleQuery"
-        />
-      </el-form-item>
-      <!-- <el-form-item label="接单时间" prop="acceptTime">
+      <ResponsiveFold>
+        <el-form-item label="订单号" prop="orderNo">
+          <el-input
+            v-model="queryParams.orderNo"
+            placeholder="请输入订单号"
+            clearable
+            class="!w-[240px]"
+          />
+        </el-form-item>
+        <el-form-item label="用户ID" prop="userId">
+          <UserMultiSelectInput
+            v-model="queryParams.userId"
+            :multiple="false"
+            placeholder="请选择用户"
+            @change="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="接单人ID" prop="captainId">
+          <UserSelectInput
+            v-model="queryParams.captainId"
+            placeholder="请选择接单人"
+            @change="handleQuery"
+          />
+        </el-form-item>
+        <!-- <el-form-item label="接单时间" prop="acceptTime">
         <el-date-picker
           v-model="queryParams.acceptTime"
           value-format="YYYY-MM-DD HH:mm:ss"
@@ -426,82 +452,82 @@ async function handleAuditOrderComplete(row: any) {
           class="!w-[220px]"
         />
       </el-form-item> -->
-      <el-form-item label="商品名称" prop="productName">
-        <el-select
-          v-model="queryParams.productName"
-          placeholder="请选择商品名称"
-          filterable
-          clearable
-          class="!w-[240px]"
-          @change="handleQuery"
-        >
-          <el-option
-            v-for="item in productOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
+        <el-form-item label="商品名称" prop="productName">
+          <el-select
+            v-model="queryParams.productName"
+            placeholder="请选择商品名称"
+            filterable
+            clearable
+            class="!w-[240px]"
+            @change="handleQuery"
+          >
+            <el-option
+              v-for="item in productOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="订单状态" prop="orderStatus">
+          <el-select
+            v-model="selectedOrderStatus"
+            placeholder="请选择订单状态"
+            clearable
+            class="!w-[240px]"
+            @change="(val) => { handleOrderStatusFilterChange(val); handleQuery() }"
+          >
+            <el-option label="待支付" :value="0" />
+            <el-option label="派单中" value="dispatching" />
+            <el-option label="进行中" value="inProgress" />
+            <el-option label="已完成" :value="2" />
+            <el-option label="已取消" :value="3" />
+            <el-option label="退款中" :value="4" />
+            <el-option label="已退款" :value="5" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="支付状态" prop="payStatus">
+          <el-select
+            v-model="queryParams.payStatus"
+            placeholder="请选择支付状态"
+            clearable
+            class="!w-[240px]"
+          >
+            <el-option label="未支付" :value="0" />
+            <el-option label="已支付" :value="1" />
+            <el-option label="已退款" :value="2" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="退款状态" prop="refundAuditStatus">
+          <el-select
+            v-model="queryParams.refundAuditStatus"
+            placeholder="请选择退款审核状态"
+            clearable
+            class="!w-[240px]"
+          >
+            <el-option label="审核通过" :value="1" />
+            <el-option label="审核拒绝" :value="2" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="创建时间" prop="createTime">
+          <el-date-picker
+            v-model="queryParams.createTime"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            type="daterange"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
+            class="!w-[220px]"
           />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="订单状态" prop="orderStatus">
-        <el-select
-          v-model="selectedOrderStatus"
-          placeholder="请选择订单状态"
-          clearable
-          class="!w-[240px]"
-          @change="(val) => { handleOrderStatusFilterChange(val); handleQuery() }"
-        >
-          <el-option label="待支付" :value="0" />
-          <el-option label="派单中" value="dispatching" />
-          <el-option label="进行中" value="inProgress" />
-          <el-option label="已完成" :value="2" />
-          <el-option label="已取消" :value="3" />
-          <el-option label="退款中" :value="4" />
-          <el-option label="已退款" :value="5" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="支付状态" prop="payStatus">
-        <el-select
-          v-model="queryParams.payStatus"
-          placeholder="请选择支付状态"
-          clearable
-          class="!w-[240px]"
-        >
-          <el-option label="未支付" :value="0" />
-          <el-option label="已支付" :value="1" />
-          <el-option label="已退款" :value="2" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="退款状态" prop="refundAuditStatus">
-        <el-select
-          v-model="queryParams.refundAuditStatus"
-          placeholder="请选择退款审核状态"
-          clearable
-          class="!w-[240px]"
-        >
-          <el-option label="审核通过" :value="1" />
-          <el-option label="审核拒绝" :value="2" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="创建时间" prop="createTime">
-        <el-date-picker
-          v-model="queryParams.createTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-[220px]"
-        />
-      </el-form-item>
-      <el-form-item>
-        <el-button @click="handleQuery">
-          <Icon icon="ep:search" class="mr-[5px]" /> 搜索
-        </el-button>
-        <el-button @click="resetQuery">
-          <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
-        </el-button>
-        <!-- <el-button
+        </el-form-item>
+        <el-form-item>
+          <el-button @click="handleQuery">
+            <Icon icon="ep:search" class="mr-[5px]" /> 搜索
+          </el-button>
+          <el-button @click="resetQuery">
+            <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
+          </el-button>
+          <!-- <el-button
           v-hasPermi="['gamer:service-order:create']"
           type="primary"
           plain
@@ -517,17 +543,18 @@ async function handleAuditOrderComplete(row: any) {
           @click="handleExport"
         >
           <Icon icon="ep:download" class="mr-[5px]" /> 导出
-        </el-button>
-        <el-button
-          v-hasPermi="['gamer:service-order:delete']"
-          type="danger"
-          plain
-          :disabled="isEmpty(checkedIds)"
-          @click="handleDeleteBatch"
-        >
-          <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
         </el-button> -->
-      </el-form-item>
+          <el-button
+            v-hasPermi="['gamer:service-order:delete']"
+            type="danger"
+            plain
+            :disabled="isEmpty(checkedIds)"
+            @click="handleDeleteBatch"
+          >
+            <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
+          </el-button>
+        </el-form-item>
+      </ResponsiveFold>
     </el-form>
   </ContentWrap>
 
@@ -646,9 +673,11 @@ async function handleAuditOrderComplete(row: any) {
       </el-table-column>
       <el-table-column label="用户信息" align="center" prop="userId" width="150">
         <template #default="scope">
-          <div class="flex flex-col items-center cursor-pointer" @click="handleViewUserInfo(scope.row.userId)">
+          <div class="flex flex-col cursor-pointer items-center" @click="handleViewUserInfo(scope.row.userId)">
             <el-avatar :src="scope.row.avatar" size="small" />
-            <el-link type="primary">{{ scope.row.nickname || '无' }}</el-link>
+            <el-link type="primary">
+              {{ scope.row.nickname || '无' }}
+            </el-link>
             <span>{{ scope.row.mobile || '无' }}</span>
           </div>
         </template>
@@ -674,8 +703,13 @@ async function handleAuditOrderComplete(row: any) {
             class="flex flex-col items-start gap-2"
           >
             <div v-for="acceptor in scope.row.acceptorList" :key="acceptor.id" class="flex flex-col items-center">
-              <el-avatar :src="acceptor.avatar" size="small" class="cursor-pointer" @click="handleViewUserInfo(acceptor.userId)" />
-              <el-link type="primary" @click="handleViewUserInfo(acceptor.acceptorId)">{{ acceptor.nickname || '无' }}</el-link>
+              <el-avatar
+                :src="acceptor.avatar" size="small" class="cursor-pointer"
+                @click="handleViewUserInfo(acceptor.userId)"
+              />
+              <el-link type="primary" @click="handleViewUserInfo(acceptor.acceptorId)">
+                {{ acceptor.nickname || '无' }}
+              </el-link>
               <span>接单时间：{{ acceptor.confirmTime ? formatDate(acceptor.confirmTime) : '无' }}</span>
 
               <span>
@@ -701,7 +735,7 @@ async function handleAuditOrderComplete(row: any) {
         </template>
       </el-table-column>
 
-      <el-table-column label="操作" align="center" fixed="right" width="160px">
+      <el-table-column label="操作" align="center" :fixed="isPhone() ? false : 'right'" width="160px">
         <template #default="scope">
           <el-dropdown trigger="click">
             <el-button link type="primary">
@@ -716,9 +750,15 @@ async function handleAuditOrderComplete(row: any) {
                 >
                   查看
                 </el-dropdown-item>
+                <el-dropdown-item
+                  v-if="Array.isArray(scope.row.acceptorList) && scope.row.acceptorList.length"
+                  @click="openOrderConversationByOrderId(scope.row.id)"
+                >
+                  查看聊天记录
+                </el-dropdown-item>
                 <!-- 完成订单 -->
                 <el-dropdown-item
-                  v-if="scope.row.completeTime"
+                  v-if="scope.row.completeTime && !scope.row.confirmTime"
                   v-hasPermi="['gamer:service-order:update']"
                   @click="handleAuditOrderComplete(scope.row)"
                 >
@@ -748,12 +788,12 @@ async function handleAuditOrderComplete(row: any) {
                 <el-dropdown-item @click="openVoucherPreview(scope.row)">
                   查看结单证明
                 </el-dropdown-item>
-                <!-- <el-dropdown-item
+                <el-dropdown-item
                   v-hasPermi="['gamer:service-order:delete']"
                   @click="handleDelete(scope.row.id)"
                 >
                   删除
-                </el-dropdown-item> -->
+                </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -804,19 +844,27 @@ async function handleAuditOrderComplete(row: any) {
     </template>
   </Dialog>
 
+  <!-- 会话记录弹窗 -->
+  <el-dialog v-model="recordDialogVisible" title="会话记录" width="80%">
+    <OrderConversationMessage :embed="true" :conversation-id="recordConversationId" />
+  </el-dialog>
+
   <!-- 结单证明预览 -->
   <Dialog v-model="voucherPreviewVisible" title="结单证明" align-center width="80vw">
     <div class="flex items-center justify-center">
       <div v-if="voucherPreviewList.length" class="relative w-full">
-        <div class="absolute right-2 top-2 z-1000 rounded px-2 py-1 text-xs text-white" style="background: rgba(0,0,0,.5)">
+        <div
+          class="absolute right-2 top-2 z-1000 rounded px-2 py-1 text-xs text-white"
+          style="background: rgba(0,0,0,.5)"
+        >
           共 {{ voucherPreviewList.length }} 张
         </div>
         <el-carousel height="70vh" indicator-position="outside" arrow="hover" :autoplay="false">
           <el-carousel-item v-for="(img, idx) in voucherPreviewList" :key="idx">
             <div class="h-full flex items-center justify-center">
               <el-image
-                :src="img" :preview-src-list="voucherPreviewList" :initial-index="idx" fit="contain" class="h-full"
-                preview-teleported
+                :src="img" :preview-src-list="voucherPreviewList" :initial-index="idx" fit="contain"
+                class="h-full" preview-teleported
               />
             </div>
           </el-carousel-item>
