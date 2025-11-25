@@ -94,8 +94,10 @@ async function submitRefundAudit() {
 }
 
 /** 查询列表 */
-async function getList() {
-  loading.value = true
+async function getList(haveLoading = true) {
+  if (haveLoading) {
+    loading.value = true
+  }
   try {
     const data = await ServiceOrderApi.getServiceOrderPage(queryParams)
     list.value = data.list
@@ -278,6 +280,22 @@ function normalizeJackpot(info: any): { prizeTitle?: string, prizeCover?: string
   }
 }
 
+function normalizeJackpotList(infoList: any): Array<{ prizeTitle?: string, prizeCover?: string }> {
+  try {
+    const parsed = typeof infoList === 'string' ? JSON.parse(infoList) : infoList
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map(item => normalizeJackpot(item))
+        .filter((item): item is { prizeTitle?: string, prizeCover?: string } => !!item)
+    }
+    const single = normalizeJackpot(parsed)
+    return single ? [single] : []
+  }
+  catch {
+    return []
+  }
+}
+
 // 用户信息弹窗
 const userInfoDialogRef = ref()
 function handleViewUserInfo(userId: number) {
@@ -288,6 +306,31 @@ function handleViewUserInfo(userId: number) {
 onMounted(() => {
   loadProductOptions()
   getList()
+})
+
+onActivated(() => {
+  loadProductOptions()
+  getList()
+  pollOrderStatus()
+})
+
+// 轮训订单状态
+const pollOrderStatusInterval = ref<any>(null)
+function pollOrderStatus() {
+  pollOrderStatusInterval.value = setInterval(() => {
+    getList(false)
+  }, 10000)
+}
+onUnmounted(() => {
+  if (pollOrderStatusInterval.value) {
+    clearInterval(pollOrderStatusInterval.value)
+  }
+})
+
+onDeactivated(() => {
+  if (pollOrderStatusInterval.value) {
+    clearInterval(pollOrderStatusInterval.value)
+  }
 })
 
 // 指定接单人
@@ -588,20 +631,7 @@ async function openOrderConversationByOrderId(orderId: number) {
                 {{ item.key }}：{{ item.value }}
               </div>
             </div>
-            <div v-if="normalizeJackpot(scope.row.jackpotPrizeInfo)">
-              <div class="font-semibold">
-                盲盒信息
-              </div>
-              <div>
-                奖品：{{ normalizeJackpot(scope.row.jackpotPrizeInfo)?.prizeTitle || '无' }}
-              </div>
-              <el-image
-                v-if="normalizeJackpot(scope.row.jackpotPrizeInfo)?.prizeCover"
-                :src="normalizeJackpot(scope.row.jackpotPrizeInfo)?.prizeCover"
-                fit="cover"
-                style="width: 60px; height: 60px"
-              />
-            </div>
+
             <div>订单金额：{{ scope.row.totalAmount != null ? fenToYuan(scope.row.totalAmount) : '无' }}</div>
             <div>支付金额：{{ scope.row.actualAmount != null ? fenToYuan(scope.row.actualAmount) : '无' }}</div>
 
@@ -618,6 +648,26 @@ async function openOrderConversationByOrderId(orderId: number) {
             <p class="break-all">
               {{ scope.row.productName || '无' }}
             </p>
+          </div>
+          <div v-if="scope.row.jackpotPrizeList?.length">
+            <div class="font-semibold">
+              盲盒信息
+            </div>
+            <div
+              v-for="(jackpot, index) in normalizeJackpotList(scope.row.jackpotPrizeList)"
+              :key="index"
+              class="w-full flex items-center gap-2"
+            >
+              <p class="w-full text-center">
+                奖品：{{ jackpot.prizeTitle || '无' }}
+              </p>
+              <!-- <el-image
+                v-if="jackpot.prizeCover"
+                :src="jackpot.prizeCover"
+                fit="cover"
+                style="width: 60px; height: 60px"
+              /> -->
+            </div>
           </div>
         </template>
       </el-table-column>
@@ -748,8 +798,10 @@ async function openOrderConversationByOrderId(orderId: number) {
                   v-hasPermi="['gamer:service-order:update']"
                   @click="openForm('update', scope.row.id)"
                 >
-                  查看
+                  订单详情
                 </el-dropdown-item>
+                <!-- 查看订单操作历史 -->
+
                 <el-dropdown-item
                   v-if="Array.isArray(scope.row.acceptorList) && scope.row.acceptorList.length"
                   @click="openOrderConversationByOrderId(scope.row.id)"

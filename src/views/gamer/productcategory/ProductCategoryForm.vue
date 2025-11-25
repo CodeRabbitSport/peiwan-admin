@@ -37,7 +37,7 @@ const formData = ref({
 })
 
 // 游戏名片动态表单字段
-const gameCardFields = ref([{ type: 'text', label: '', value: '' }])
+const gameCardFields = ref([{ type: 'text', label: '', value: '', required: false }])
 // 接单大区动态表单字段
 const orderReceivingRegionFields = ref([''])
 const formRules = reactive({
@@ -113,7 +113,7 @@ async function submitForm() {
 
 // 添加游戏名片字段
 function addGameCardField() {
-  gameCardFields.value.push({ type: 'text', label: '', value: '' })
+  gameCardFields.value.push({ type: 'text', label: '', value: '', required: false })
   updateGameCardData()
 }
 
@@ -136,18 +136,22 @@ function initGameCardFields() {
     try {
       const parsed = JSON.parse(formData.value.gameCard)
       if (Array.isArray(parsed) && parsed.length > 0) {
-        gameCardFields.value = parsed
+        // 确保每个字段都有 required 属性，兼容旧数据
+        gameCardFields.value = parsed.map((item: any) => ({
+          ...item,
+          required: item.required ?? false,
+        }))
       }
       else {
-        gameCardFields.value = [{ type: 'text', label: '', value: '' }]
+        gameCardFields.value = [{ type: 'text', label: '', value: '', required: false }]
       }
     }
-    catch (error) {
-      gameCardFields.value = [{ type: 'text', label: '', value: '' }]
+    catch {
+      gameCardFields.value = [{ type: 'text', label: '', value: '', required: false }]
     }
   }
   else {
-    gameCardFields.value = [{ type: 'text', label: '', value: '' }]
+    gameCardFields.value = [{ type: 'text', label: '', value: '', required: false }]
   }
 }
 
@@ -207,7 +211,7 @@ function initOrderReceivingRegionFields() {
         return
       }
     }
-    catch (e) {
+    catch {
       // 不是 JSON 格式，按逗号分隔解析
     }
     // 逗号分隔格式
@@ -237,7 +241,7 @@ function resetForm() {
     sortOrder: undefined,
     gameType: undefined,
   }
-  gameCardFields.value = [{ type: 'text', label: '', value: '' }]
+  gameCardFields.value = [{ type: 'text', label: '', value: '', required: false }]
   orderReceivingRegionFields.value = ['']
   formRef.value?.resetFields()
   // 同步序列化默认值，避免未操作时为 undefined
@@ -290,13 +294,22 @@ function resetForm() {
               <el-col :span="4">
                 输入框名称
               </el-col>
-              <el-col :span="13">
+              <el-col :span="10">
                 <el-input
                   v-model="item.value"
                   label="输入框名称"
                   placeholder="输入框内容"
                   @input="updateGameCardData"
                 />
+              </el-col>
+              <el-col :span="6">
+                <div class="flex items-center gap-2">
+                  <span class="whitespace-nowrap text-sm">是否必填</span>
+                  <el-switch
+                    v-model="item.required"
+                    @change="updateGameCardData"
+                  />
+                </div>
               </el-col>
               <el-col :span="1">
                 <el-button

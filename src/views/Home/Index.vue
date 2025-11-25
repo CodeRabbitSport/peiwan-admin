@@ -42,7 +42,7 @@ const levelTabs = [
 ]
 
 // tab states
-const levelType = ref(1)
+const levelType = ref(2)
 const weekDateType = ref(1)
 const rankDateType = ref(1)
 const rateDateType = ref(1)

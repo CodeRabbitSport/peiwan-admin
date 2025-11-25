@@ -480,7 +480,7 @@ function initOrderReceivingRegionFields() {
                 大区名称
               </div>
               <div :span="3">
-                <el-input v-model="item.region" placeholder="请输入大区名称" @input="updateOrderReceivingRegionData" />
+                <el-input v-model="item.region" placeholder="请输入大区名称" disabled readonly />
               </div>
               <div :span="2" class="mx-2">
                 涨幅价格

@@ -414,7 +414,14 @@ onMounted(() => {
                 <el-menu-item v-hasPermi="['gamer:user-info:update']" index="moment-l" @click="onUserMenuCommand('usermomentlike', scope.row)">
                   用户点赞记录
                 </el-menu-item> -->
+                <!-- 删除 -->
               </el-sub-menu>
+
+              <el-menu-item v-hasPermi="['gamer:user-info:delete']" index="delete" @click="handleDelete(scope.row.id)">
+                <p class="text-red-500">
+                  删除
+                </p>
+              </el-menu-item>
             </el-menu>
           </el-popover>
         </template>
