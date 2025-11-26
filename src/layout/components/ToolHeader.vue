@@ -1,8 +1,10 @@
 <script lang="tsx">
-import { computed, defineComponent } from 'vue'
+import { ElSwitch, ElTooltip } from 'element-plus'
+import { computed, defineComponent, ref } from 'vue'
 
 import RouterSearch from '@/components/RouterSearch/index.vue'
 import { useDesign } from '@/hooks/web/useDesign'
+import { useEmitt } from '@/hooks/web/useEmitt'
 import { Message } from '@/layout/components//Message'
 import { Breadcrumb } from '@/layout/components/Breadcrumb'
 import { Collapse } from '@/layout/components/Collapse'
@@ -52,6 +54,14 @@ const hasTenantVisitPermission = computed(
 export default defineComponent({
   name: 'ToolHeader',
   setup() {
+    const orderSoundEnabled = ref(false)
+    const { emitter } = useEmitt()
+
+    const handleOrderSoundToggle = (value: boolean) => {
+      orderSoundEnabled.value = value
+      emitter.emit('order-sound-toggle', value)
+    }
+
     return () => (
       <div
         id={`${variables.namespace}-tool-header`}
@@ -74,6 +84,16 @@ export default defineComponent({
             )
           : undefined}
         <div class="h-full flex items-center">
+          <ElTooltip content={orderSoundEnabled.value ? '关闭订单铃声' : '开启订单铃声'} placement="bottom">
+            <ElSwitch
+              class="mr-4"
+              modelValue={orderSoundEnabled.value}
+              onUpdate:modelValue={handleOrderSoundToggle}
+              inlinePrompt
+              activeText="铃"
+              inactiveText="静"
+            />
+          </ElTooltip>
           {hasTenantVisitPermission.value ? <TenantVisit /> : undefined}
           {screenfull.value
             ? (

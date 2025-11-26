@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Download } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 
 import { OrderConversationApi } from '@/api/gamer/orderconversation'
@@ -187,7 +188,7 @@ function handleOrderStatusFilterChange(value: string | number | undefined) {
 }
 
 /** 导出按钮操作 */
-async function _handleExport() {
+async function handleExport() {
   try {
     // 导出的二次确认
     await message.exportConfirm()
@@ -570,6 +571,25 @@ async function openOrderConversationByOrderId(orderId: number) {
           <el-button @click="resetQuery">
             <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
           </el-button>
+          <el-button
+            v-hasPermi="['gamer:service-order:export']"
+            type="success"
+            plain
+            :loading="exportLoading" @click="handleExport"
+          >
+            <el-icon class="mr-[5px]">
+              <Download />
+            </el-icon> 导出
+          </el-button>
+          <!-- <el-button
+            v-hasPermi="['gamer:service-order:export']"
+            type="success"
+            plain
+            :loading="exportLoading"
+            @click="handleExport"
+          >
+            <Icon icon="ep:download" class="mr-[5px]" /> 导出
+          </el-button> -->
           <!-- <el-button
           v-hasPermi="['gamer:service-order:create']"
           type="primary"

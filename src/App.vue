@@ -4,6 +4,7 @@ import { ServiceOrderApi } from '@/api/gamer/serviceorder'
 import routerSearch from '@/components/RouterSearch/index.vue'
 import { useDesign } from '@/hooks/web/useDesign'
 // import { isDark } from '@/utils/is'
+import { useEmitt } from '@/hooks/web/useEmitt'
 import { useAppStore } from '@/store/modules/app'
 
 defineOptions({ name: 'APP' })
@@ -27,20 +28,37 @@ const greyMode = computed(() => appStore.getGreyMode)
 
 // 轮训订单，如果有新订单播放音乐
 const firstOrderId = ref<number | null>(null) // 存储第一条订单的 id
-const pollOrderInterval = ref<any>(null) // 轮询定时器
+const pollOrderInterval = ref<ReturnType<typeof setInterval> | null>(null) // 轮询定时器
 const audio = ref<HTMLAudioElement | null>(null) // 音频对象
+const orderSoundEnabled = ref(false) // 铃声开关状态
 
 // 初始化音频
 onMounted(() => {
   audio.value = new Audio('/order.MP3')
   audio.value.preload = 'auto'
-
-  // 初始化第一条订单 id
-  initFirstOrderId()
-
-  // 开始轮询
-  startPollOrder()
 })
+
+// 接收头部的开关事件
+useEmitt({
+  name: 'order-sound-toggle',
+  callback: (enabled: boolean) => {
+    orderSoundEnabled.value = enabled
+  },
+})
+
+watch(orderSoundEnabled, (enabled) => {
+  if (enabled) {
+    enableOrderSound()
+  }
+  else {
+    stopPollOrder()
+  }
+})
+
+async function enableOrderSound() {
+  await initFirstOrderId()
+  startPollOrder()
+}
 
 // 初始化第一条订单 id
 async function initFirstOrderId() {
@@ -48,6 +66,7 @@ async function initFirstOrderId() {
     const data = await ServiceOrderApi.getServiceOrderPage({
       pageNo: 1,
       pageSize: 1,
+      payStatus: 1,
     })
     if (data.list && data.list.length > 0) {
       firstOrderId.value = data.list[0].id
@@ -66,10 +85,11 @@ async function pollOrder() {
       pageSize: 1,
       payStatus: 1,
     })
+
     if (data.list && data.list.length > 0) {
       const currentFirstOrderId = data.list[0].id
       // 如果第一条订单 id 不同，说明有新订单
-      if (firstOrderId.value !== null && firstOrderId.value !== currentFirstOrderId) {
+      if (firstOrderId.value !== currentFirstOrderId) {
         // 播放音乐
         if (audio.value) {
           audio.value.play().catch(() => {
@@ -88,17 +108,23 @@ async function pollOrder() {
 
 // 开始轮询
 function startPollOrder() {
-  // 每 10 秒轮询一次
+  stopPollOrder()
   pollOrderInterval.value = setInterval(() => {
     pollOrder()
   }, 10000)
+  pollOrder()
+}
+
+function stopPollOrder() {
+  if (pollOrderInterval.value) {
+    clearInterval(pollOrderInterval.value)
+    pollOrderInterval.value = null
+  }
 }
 
 // 清理
 onUnmounted(() => {
-  if (pollOrderInterval.value) {
-    clearInterval(pollOrderInterval.value)
-  }
+  stopPollOrder()
   if (audio.value) {
     audio.value.pause()
     audio.value = null
