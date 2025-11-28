@@ -60,11 +60,34 @@ const queryParams = reactive<any>({
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 const productOptions = ref<{ label: string, value: string }[]>([])
+type EditableServiceOrder = ServiceOrder & { orderRemark?: string }
+
 const selectedOrderStatus = ref<string | number | undefined>(undefined)
+const orderStatusOptions = [
+  { label: '待支付', value: 0 },
+  { label: '进行中', value: 1 },
+  { label: '已完成', value: 2 },
+  { label: '已取消', value: 3 },
+  { label: '退款中', value: 4 },
+  { label: '已退款', value: 5 },
+]
+const payStatusOptions = [
+  { label: '未支付', value: 0 },
+  { label: '已支付', value: 1 },
+  { label: '已退款', value: 2 },
+]
 
 const refundDialogVisible = ref(false)
 const refundFormLoading = ref(false)
 const refundForm = reactive<{ orderId?: number, auditStatus?: 1 | 2, auditReason?: string }>({})
+const quickEditDialogVisible = ref(false)
+const quickEditFormLoading = ref(false)
+const quickEditForm = ref<any>({
+  id: undefined,
+  orderStatus: undefined,
+  payStatus: undefined,
+  orderRemark: '',
+})
 
 function openRefundDialog(row: any) {
   refundForm.orderId = row.id
@@ -91,6 +114,40 @@ async function submitRefundAudit() {
   }
   finally {
     refundFormLoading.value = false
+  }
+}
+
+function resetQuickEditForm() {
+  quickEditForm.value = {}
+}
+
+function openQuickEditDialog(row: EditableServiceOrder) {
+  quickEditForm.value = {
+    ...row,
+    orderStatus: row.orderStatus ?? undefined,
+    payStatus: row.payStatus ?? undefined,
+    orderRemark: row.orderRemark || '',
+  }
+  quickEditDialogVisible.value = true
+}
+
+async function submitQuickEdit() {
+  if (!quickEditForm.value.id) return
+  quickEditFormLoading.value = true
+  try {
+    const payload: Partial<EditableServiceOrder> = {
+      ...quickEditForm.value,
+      orderStatus: quickEditForm.value.orderStatus,
+      payStatus: quickEditForm.value.payStatus,
+      orderRemark: quickEditForm.value.orderRemark,
+    }
+    await ServiceOrderApi.updateServiceOrder(payload as ServiceOrder)
+    message.success('更新成功')
+    quickEditDialogVisible.value = false
+    await getList()
+  }
+  finally {
+    quickEditFormLoading.value = false
   }
 }
 
@@ -815,12 +872,18 @@ async function openOrderConversationByOrderId(orderId: number) {
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item
+                  v-if="!scope.row.payTime"
+                  v-hasPermi="['gamer:service-order:update']"
+                  @click="openQuickEditDialog(scope.row)"
+                >
+                  编辑
+                </el-dropdown-item>
+                <el-dropdown-item
                   v-hasPermi="['gamer:service-order:update']"
                   @click="openForm('update', scope.row.id)"
                 >
                   订单详情
                 </el-dropdown-item>
-                <!-- 查看订单操作历史 -->
 
                 <el-dropdown-item
                   v-if="Array.isArray(scope.row.acceptorList) && scope.row.acceptorList.length"
@@ -910,6 +973,66 @@ async function openOrderConversationByOrderId(orderId: number) {
         type="primary"
         :disabled="!refundForm.auditStatus || (refundForm.auditStatus === 2 && !refundForm.auditReason)"
         @click="submitRefundAudit"
+      >
+        确 定
+      </el-button>
+    </template>
+  </Dialog>
+
+  <!-- 快速编辑弹窗 -->
+  <Dialog
+    v-model="quickEditDialogVisible"
+    title="编辑订单"
+    width="480px"
+    @closed="resetQuickEditForm"
+  >
+    <el-form :model="quickEditForm" label-width="100px">
+      <el-form-item label="订单状态">
+        <el-select
+          v-model="quickEditForm.orderStatus"
+          placeholder="请选择订单状态"
+          clearable
+        >
+          <el-option
+            v-for="item in orderStatusOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="支付状态">
+        <el-select
+          v-model="quickEditForm.payStatus"
+          placeholder="请选择支付状态"
+          clearable
+        >
+          <el-option
+            v-for="item in payStatusOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="订单备注">
+        <el-input
+          v-model="quickEditForm.orderRemark"
+          type="textarea"
+          placeholder="请输入订单备注"
+          :rows="3"
+        />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="quickEditDialogVisible = false">
+        取 消
+      </el-button>
+      <el-button
+        type="primary"
+        :loading="quickEditFormLoading"
+        :disabled="!quickEditForm.id"
+        @click="submitQuickEdit"
       >
         确 定
       </el-button>

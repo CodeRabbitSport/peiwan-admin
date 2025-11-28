@@ -54,8 +54,9 @@ const hasTenantVisitPermission = computed(
 export default defineComponent({
   name: 'ToolHeader',
   setup() {
-    const orderSoundEnabled = ref(false)
+    const orderSoundEnabled = ref(true)
     const { emitter } = useEmitt()
+    emitter.emit('order-sound-toggle', orderSoundEnabled.value)
 
     const handleOrderSoundToggle = (value: boolean) => {
       orderSoundEnabled.value = value

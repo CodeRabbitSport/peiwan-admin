@@ -353,89 +353,89 @@ async function openAccOrderConversationByOrderId(orderId: number) {
       label-width="68px"
     >
       <ResponsiveFold>
-      <el-form-item label="订单号" prop="orderNo">
-        <el-input
-          v-model="queryParams.orderNo"
-          placeholder="请输入订单号"
-          clearable
-          class="!w-[240px]"
-        />
-      </el-form-item>
-      <el-form-item label="用户" prop="userId">
-        <UserMultiSelectInput
-          v-model="queryParams.userId"
-          :multiple="false"
-          placeholder="请选择用户"
-          @change="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="接单人" prop="captainId">
-        <UserSelectInput
-          v-model="queryParams.captainId"
-          placeholder="请选择接单人"
-          @change="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="订单状态" prop="orderStatus">
-        <el-select
-          v-model="selectedOrderStatus"
-          placeholder="请选择订单状态"
-          clearable
-          class="!w-[240px]"
-          @change="(val) => { handleOrderStatusFilterChange(val); handleQuery() }"
-        >
-          <el-option label="待支付" :value="0" />
-          <el-option label="派单中" value="dispatching" />
-          <el-option label="进行中" :value="1" />
-          <el-option label="已完成" :value="2" />
-          <el-option label="已取消" :value="3" />
-          <el-option label="退款中" :value="4" />
-          <el-option label="已退款" :value="5" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="支付状态" prop="payStatus">
-        <el-select
-          v-model="queryParams.payStatus"
-          placeholder="请选择支付状态"
-          clearable
-          class="!w-[240px]"
-        >
-          <el-option label="未支付" :value="0" />
-          <el-option label="已支付" :value="1" />
-          <el-option label="已退款" :value="2" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="退款状态" prop="refundAuditStatus">
-        <el-select
-          v-model="queryParams.refundAuditStatus"
-          placeholder="请选择退款审核状态"
-          clearable
-          class="!w-[240px]"
-        >
-          <el-option label="待审核" :value="0" />
-          <el-option label="审核通过" :value="1" />
-          <el-option label="审核拒绝" :value="2" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="创建时间" prop="createTime">
-        <el-date-picker
-          v-model="queryParams.createTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-[220px]"
-        />
-      </el-form-item>
-      <el-form-item>
-        <el-button @click="handleQuery">
-          <Icon icon="ep:search" class="mr-[5px]" /> 搜索
-        </el-button>
-        <el-button @click="resetQuery">
-          <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
-        </el-button>
-      </el-form-item>
+        <el-form-item label="订单号" prop="orderNo">
+          <el-input
+            v-model="queryParams.orderNo"
+            placeholder="请输入订单号"
+            clearable
+            class="!w-[240px]"
+          />
+        </el-form-item>
+        <el-form-item label="用户" prop="userId">
+          <UserMultiSelectInput
+            v-model="queryParams.userId"
+            :multiple="false"
+            placeholder="请选择用户"
+            @change="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="接单人" prop="captainId">
+          <UserSelectInput
+            v-model="queryParams.captainId"
+            placeholder="请选择接单人"
+            @change="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="订单状态" prop="orderStatus">
+          <el-select
+            v-model="selectedOrderStatus"
+            placeholder="请选择订单状态"
+            clearable
+            class="!w-[240px]"
+            @change="(val) => { handleOrderStatusFilterChange(val); handleQuery() }"
+          >
+            <el-option label="待支付" :value="0" />
+            <el-option label="派单中" value="dispatching" />
+            <el-option label="进行中" :value="1" />
+            <el-option label="已完成" :value="2" />
+            <el-option label="已取消" :value="3" />
+            <el-option label="退款中" :value="4" />
+            <el-option label="已退款" :value="5" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="支付状态" prop="payStatus">
+          <el-select
+            v-model="queryParams.payStatus"
+            placeholder="请选择支付状态"
+            clearable
+            class="!w-[240px]"
+          >
+            <el-option label="未支付" :value="0" />
+            <el-option label="已支付" :value="1" />
+            <el-option label="已退款" :value="2" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="退款状态" prop="refundAuditStatus">
+          <el-select
+            v-model="queryParams.refundAuditStatus"
+            placeholder="请选择退款审核状态"
+            clearable
+            class="!w-[240px]"
+          >
+            <el-option label="待审核" :value="0" />
+            <el-option label="审核通过" :value="1" />
+            <el-option label="审核拒绝" :value="2" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="创建时间" prop="createTime">
+          <el-date-picker
+            v-model="queryParams.createTime"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            type="daterange"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
+            class="!w-[220px]"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button @click="handleQuery">
+            <Icon icon="ep:search" class="mr-[5px]" /> 搜索
+          </el-button>
+          <el-button @click="resetQuery">
+            <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
+          </el-button>
+        </el-form-item>
       </ResponsiveFold>
     </el-form>
   </ContentWrap>
