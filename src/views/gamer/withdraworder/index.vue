@@ -152,6 +152,21 @@ async function handleExport() {
   }
 }
 
+function getTransactionStatus(status: number): { text: string, color: any } {
+  switch (status) {
+    case 0:
+      return { text: '等待打款', color: 'info' }
+    case 10:
+      return { text: '打款成功', color: 'success' }
+    case 20:
+      return { text: '打款失败', color: 'danger' }
+    case 5:
+      return { text: '未确认收款', color: 'primary' }
+    default:
+      return { text: '-', color: 'info' }
+  }
+}
+
 /** 初始化 */
 onMounted(() => {
   getList()
@@ -236,7 +251,9 @@ onMounted(() => {
           :loading="exportLoading"
           @click="handleExport"
         >
-          <el-icon><Download /></el-icon> 导出
+          <el-icon>
+            <Download />
+          </el-icon> 导出
         </el-button>
       </el-form-item>
     </el-form>
@@ -316,17 +333,20 @@ onMounted(() => {
       <el-table-column label="提现状态" align="center" prop="status" width="160">
         <template #default="scope">
           <div class="flex flex-col items-center gap-1">
-            <template v-if="scope.row.status === 0">
+            <template v-if="scope.row.status === 0 || scope.row.status === 3">
               <el-button-group>
-                <el-button v-if="scope.row.withdrawType === 2" size="small" type="success" @click="handleApproveWithdraw(scope.row)">
+                <el-button
+                  v-if="scope.row.withdrawType === 2" size="small" type="success"
+                  @click="handleApproveWithdraw(scope.row)"
+                >
                   通过
                 </el-button>
                 <el-button size="small" type="danger" @click="handleRejectWithdraw(scope.row)">
                   拒绝
                 </el-button>
               </el-button-group>
-              <el-tag type="info">
-                待审核
+              <el-tag :type="scope.row.status === 0 ? 'info' : 'danger'">
+                {{ scope.row.status === 0 ? '待审核' : '打款失败' }}
               </el-tag>
             </template>
             <template v-else>
@@ -354,7 +374,14 @@ onMounted(() => {
         :formatter="dateFormatter"
         width="180px"
       /> -->
-      <el-table-column label="错误提示" align="center" prop="transactionErrorMsg" />
+      <el-table-column label="转账状态" align="center" prop="transactionStatus" width="160">
+        <template #default="scope">
+          <el-tag :type="getTransactionStatus(scope.row.transactionStatus).color">
+            {{ getTransactionStatus(scope.row.transactionStatus).text }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="错误提示" align="center" prop="transactionErrorMsg" min-width="200" />
       <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
       <!-- <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
