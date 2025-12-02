@@ -25,6 +25,7 @@ const userType = ref(undefined) // 用户类型：1-打手，2-陪玩
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
+  depositBalanceGt: undefined,
   openid: undefined,
   mpOpenid: undefined,
   unionid: undefined,
@@ -54,8 +55,14 @@ async function getList() {
   try {
     // 根据是否选择了用户类型来决定调用哪个接口
     const data = userType.value
-      ? await UserInfoApi.getUserInfoPageByLevel(queryParams)
-      : await UserInfoApi.getUserInfoPage(queryParams)
+      ? await UserInfoApi.getUserInfoPageByLevel({
+          ...queryParams,
+          depositBalanceGt: queryParams.depositBalanceGt ? Number(queryParams.depositBalanceGt) * 100 : undefined,
+        })
+      : await UserInfoApi.getUserInfoPage({
+          ...queryParams,
+          depositBalanceGt: queryParams.depositBalanceGt ? Number(queryParams.depositBalanceGt) * 100 : undefined,
+        })
     list.value = data.list
     total.value = data.total
   }
@@ -212,6 +219,14 @@ onMounted(() => {
         </el-select>
       </el-form-item>
 
+      <el-form-item label="保证金大于" prop="depositBalanceGt" label-width="100px">
+        <el-input
+          v-model="queryParams.depositBalanceGt"
+          placeholder="请输入保证金大于"
+          clearable
+          type="number"
+        />
+      </el-form-item>
       <!--  <el-form-item label="城市" prop="city">
         <el-input
           v-model="queryParams.city"

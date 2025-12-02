@@ -1,34 +1,36 @@
 <script lang="ts" setup>
 import type { EChartsOption } from 'echarts'
-import echarts from '@/plugins/echarts'
+import type { PropType } from 'vue'
+
 import { debounce } from 'lodash-es'
-import 'echarts-wordcloud'
-import { propTypes } from '@/utils/propTypes'
-import { PropType } from 'vue'
+
+import { useDesign } from '@/hooks/web/useDesign'
+import echarts from '@/plugins/echarts'
 import { useAppStore } from '@/store/modules/app'
 import { isString } from '@/utils/is'
-import { useDesign } from '@/hooks/web/useDesign'
+import { propTypes } from '@/utils/propTypes'
 
+import 'echarts-wordcloud'
 import 'echarts/lib/component/markPoint'
 import 'echarts/lib/component/markLine'
 import 'echarts/lib/component/markArea'
 
 defineOptions({ name: 'EChart' })
 
+const props = defineProps({
+  options: {
+    type: Object as PropType<EChartsOption>,
+    required: true,
+  },
+  width: propTypes.oneOfType([Number, String]).def(''),
+  height: propTypes.oneOfType([Number, String]).def('500px'),
+})
+
 const { getPrefixCls, variables } = useDesign()
 
 const prefixCls = getPrefixCls('echart')
 
 const appStore = useAppStore()
-
-const props = defineProps({
-  options: {
-    type: Object as PropType<EChartsOption>,
-    required: true
-  },
-  width: propTypes.oneOfType([Number, String]).def(''),
-  height: propTypes.oneOfType([Number, String]).def('500px')
-})
 
 const isDark = computed(() => appStore.getIsDark)
 
@@ -40,7 +42,7 @@ const theme = computed(() => {
 
 const options = computed(() => {
   return Object.assign(props.options, {
-    darkMode: unref(theme)
+    darkMode: unref(theme),
   })
 })
 
@@ -56,11 +58,11 @@ const styles = computed(() => {
 
   return {
     width,
-    height
+    height,
   }
 })
 
-const initChart = () => {
+function initChart() {
   if (unref(elRef) && props.options) {
     echartRef = echarts.init(unref(elRef) as HTMLElement)
     echartRef?.setOption(unref(options))
@@ -76,8 +78,8 @@ watch(
     }
   },
   {
-    deep: true
-  }
+    deep: true,
+  },
 )
 
 const resizeHandler = debounce(() => {
@@ -86,7 +88,7 @@ const resizeHandler = debounce(() => {
   }
 }, 100)
 
-const contentResizeHandler = async (e: TransitionEvent) => {
+async function contentResizeHandler(e: TransitionEvent) {
   if (e.propertyName === 'width') {
     resizeHandler()
   }
@@ -98,14 +100,14 @@ onMounted(() => {
   window.addEventListener('resize', resizeHandler)
 
   contentEl.value = document.getElementsByClassName(`${variables.namespace}-layout-content`)[0]
-  unref(contentEl) &&
-    (unref(contentEl) as Element).addEventListener('transitionend', contentResizeHandler)
+  unref(contentEl)
+  && (unref(contentEl) as Element).addEventListener('transitionend', contentResizeHandler)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', resizeHandler)
-  unref(contentEl) &&
-    (unref(contentEl) as Element).removeEventListener('transitionend', contentResizeHandler)
+  unref(contentEl)
+  && (unref(contentEl) as Element).removeEventListener('transitionend', contentResizeHandler)
 })
 
 onActivated(() => {
@@ -116,5 +118,5 @@ onActivated(() => {
 </script>
 
 <template>
-  <div ref="elRef" :class="[$attrs.class, prefixCls]" :style="styles"></div>
+  <div ref="elRef" :class="[$attrs.class, prefixCls]" :style="styles" />
 </template>

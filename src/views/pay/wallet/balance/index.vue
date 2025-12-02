@@ -113,6 +113,11 @@ onMounted(() => {
           {{ fenToYuan(row.balance) }} 元
         </template>
       </el-table-column>
+      <el-table-column label="保证金" align="center" prop="balance">
+        <template #default="{ row }">
+          {{ fenToYuan(row.depositBalance) }} 元
+        </template>
+      </el-table-column>
       <el-table-column label="累计支出" align="center" prop="totalExpense">
         <template #default="{ row }">
           {{ fenToYuan(row.totalExpense) }} 元

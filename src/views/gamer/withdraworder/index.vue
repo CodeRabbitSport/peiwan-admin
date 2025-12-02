@@ -333,15 +333,21 @@ onMounted(() => {
       <el-table-column label="提现状态" align="center" prop="status" width="160">
         <template #default="scope">
           <div class="flex flex-col items-center gap-1">
+            <!-- 状态是0和3时，可以审核通过或拒绝 -->
             <template v-if="scope.row.status === 0 || scope.row.status === 3">
               <el-button-group>
+                <!-- 如果到账类型为普通到账，则可以审核通过 -->
                 <el-button
                   v-if="scope.row.withdrawType === 2" size="small" type="success"
                   @click="handleApproveWithdraw(scope.row)"
                 >
                   通过
                 </el-button>
-                <el-button size="small" type="danger" @click="handleRejectWithdraw(scope.row)">
+                <!--  如果到账类型为急速到账和普通到账且转账状态为打款失败，则可以拒绝 -->
+                <el-button
+                  v-if="scope.row.transactionStatus === 20 || scope.row.withdrawType === 2"
+                  size="small" type="danger" @click="handleRejectWithdraw(scope.row)"
+                >
                   拒绝
                 </el-button>
               </el-button-group>
