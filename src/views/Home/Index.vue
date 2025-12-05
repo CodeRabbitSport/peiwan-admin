@@ -28,13 +28,12 @@ const sizeChartRef = ref<InstanceType<typeof Echart>>()
 // 大屏数据
 const dashboardData = ref<StaticsDashboardRespVO>({})
 
-// 订单金额图表日期筛选
-const amountDateFilter = ref<'today' | 'yesterday' | 'last7days' | 'last30days' | 'lastMonth' | 'thisMonth' | 'custom'>('today')
-const amountCustomDate = ref<[string, string]>(['', ''])
+// 用户类型切换（1:陪玩,2:打手）
+const levelType = ref<1 | 2>(2)
 
-// 订单数量图表日期筛选
-const sizeDateFilter = ref<'today' | 'yesterday' | 'last7days' | 'last30days' | 'lastMonth' | 'thisMonth' | 'custom'>('today')
-const sizeCustomDate = ref<[string, string]>(['', ''])
+// 统一的日期筛选
+const dateFilter = ref<'today' | 'yesterday' | 'last7days' | 'last30days' | 'lastMonth' | 'thisMonth' | 'custom'>('today')
+const customDate = ref<[string, string]>(['', ''])
 
 // 图表数据
 const orderAmountData = ref<{
@@ -47,13 +46,13 @@ const orderSizeData = ref<{
   refundAmountList: StaticsOrderPeriodRespVO[]
 }>({ amountList: [], refundAmountList: [] })
 
-// 计算日期范围 - 订单金额图表
-function getAmountDateRange() {
+// 计算日期范围
+function getDateRange() {
   const now = dayjs()
   let startTime: string
   let endTime: string
 
-  switch (amountDateFilter.value) {
+  switch (dateFilter.value) {
     case 'today':
       startTime = now.startOf('day').format('YYYY-MM-DD HH:mm:ss')
       endTime = now.endOf('day').format('YYYY-MM-DD HH:mm:ss')
@@ -79,58 +78,9 @@ function getAmountDateRange() {
       endTime = now.endOf('day').format('YYYY-MM-DD HH:mm:ss')
       break
     case 'custom':
-      if (amountCustomDate.value[0] && amountCustomDate.value[1]) {
-        startTime = dayjs(amountCustomDate.value[0]).startOf('day').format('YYYY-MM-DD HH:mm:ss')
-        endTime = dayjs(amountCustomDate.value[1]).endOf('day').format('YYYY-MM-DD HH:mm:ss')
-      }
-      else {
-        startTime = now.startOf('day').format('YYYY-MM-DD HH:mm:ss')
-        endTime = now.endOf('day').format('YYYY-MM-DD HH:mm:ss')
-      }
-      break
-    default:
-      startTime = now.startOf('day').format('YYYY-MM-DD HH:mm:ss')
-      endTime = now.endOf('day').format('YYYY-MM-DD HH:mm:ss')
-  }
-
-  return { startTime, endTime }
-}
-
-// 计算日期范围 - 订单数量图表
-function getSizeDateRange() {
-  const now = dayjs()
-  let startTime: string
-  let endTime: string
-
-  switch (sizeDateFilter.value) {
-    case 'today':
-      startTime = now.startOf('day').format('YYYY-MM-DD HH:mm:ss')
-      endTime = now.endOf('day').format('YYYY-MM-DD HH:mm:ss')
-      break
-    case 'yesterday':
-      startTime = now.subtract(1, 'day').startOf('day').format('YYYY-MM-DD HH:mm:ss')
-      endTime = now.subtract(1, 'day').endOf('day').format('YYYY-MM-DD HH:mm:ss')
-      break
-    case 'last7days':
-      startTime = now.subtract(7, 'day').startOf('day').format('YYYY-MM-DD HH:mm:ss')
-      endTime = now.subtract(1, 'day').endOf('day').format('YYYY-MM-DD HH:mm:ss')
-      break
-    case 'last30days':
-      startTime = now.subtract(30, 'day').startOf('day').format('YYYY-MM-DD HH:mm:ss')
-      endTime = now.subtract(1, 'day').endOf('day').format('YYYY-MM-DD HH:mm:ss')
-      break
-    case 'lastMonth':
-      startTime = now.subtract(1, 'month').startOf('month').format('YYYY-MM-DD HH:mm:ss')
-      endTime = now.subtract(1, 'month').endOf('month').format('YYYY-MM-DD HH:mm:ss')
-      break
-    case 'thisMonth':
-      startTime = now.startOf('month').format('YYYY-MM-DD HH:mm:ss')
-      endTime = now.endOf('day').format('YYYY-MM-DD HH:mm:ss')
-      break
-    case 'custom':
-      if (sizeCustomDate.value[0] && sizeCustomDate.value[1]) {
-        startTime = dayjs(sizeCustomDate.value[0]).startOf('day').format('YYYY-MM-DD HH:mm:ss')
-        endTime = dayjs(sizeCustomDate.value[1]).endOf('day').format('YYYY-MM-DD HH:mm:ss')
+      if (customDate.value[0] && customDate.value[1]) {
+        startTime = dayjs(customDate.value[0]).startOf('day').format('YYYY-MM-DD HH:mm:ss')
+        endTime = dayjs(customDate.value[1]).endOf('day').format('YYYY-MM-DD HH:mm:ss')
       }
       else {
         startTime = now.startOf('day').format('YYYY-MM-DD HH:mm:ss')
@@ -149,7 +99,13 @@ function getSizeDateRange() {
 async function fetchDashboardData() {
   dashboardLoading.value = true
   try {
-    dashboardData.value = await getStaticDashboard()
+    const { startTime, endTime } = getDateRange()
+    const params = {
+      // levelType: levelType.value,
+      startTime,
+      endTime,
+    }
+    dashboardData.value = await getStaticDashboard(params)
   }
   catch (error) {
     console.error('获取大屏数据失败:', error)
@@ -163,9 +119,9 @@ async function fetchDashboardData() {
 async function fetchAmountChartData() {
   amountChartLoading.value = true
   try {
-    const { startTime, endTime } = getAmountDateRange()
+    const { startTime, endTime } = getDateRange()
     const params = {
-      levelType: 2, // 1:陪玩,2:打手，可以根据需要调整
+      levelType: levelType.value,
       startTime,
       endTime,
     }
@@ -186,9 +142,9 @@ async function fetchAmountChartData() {
 async function fetchSizeChartData() {
   sizeChartLoading.value = true
   try {
-    const { startTime, endTime } = getSizeDateRange()
+    const { startTime, endTime } = getDateRange()
     const params = {
-      levelType: 2, // 1:陪玩,2:打手，可以根据需要调整
+      levelType: levelType.value,
       startTime,
       endTime,
     }
@@ -205,28 +161,33 @@ async function fetchSizeChartData() {
   }
 }
 
-// 订单金额图表日期筛选变化
-function handleAmountDateFilterChange() {
+// 统一的日期筛选变化处理
+function handleDateFilterChange() {
+  fetchDashboardData()
   fetchAmountChartData()
-}
-
-// 订单金额图表自定义日期变化
-function handleAmountCustomDateChange() {
-  if (amountDateFilter.value === 'custom' && amountCustomDate.value[0] && amountCustomDate.value[1]) {
-    fetchAmountChartData()
-  }
-}
-
-// 订单数量图表日期筛选变化
-function handleSizeDateFilterChange() {
   fetchSizeChartData()
 }
 
-// 订单数量图表自定义日期变化
-function handleSizeCustomDateChange() {
-  if (sizeDateFilter.value === 'custom' && sizeCustomDate.value[0] && sizeCustomDate.value[1]) {
-    fetchSizeChartData()
+// 自定义日期变化处理
+function handleCustomDateChange() {
+  // 如果日期被清空，不执行请求
+  if (!customDate.value || !customDate.value[0] || !customDate.value[1]) {
+    return
   }
+
+  dateFilter.value = 'custom'
+  // if (dateFilter.value === 'custom') {
+  fetchDashboardData()
+  fetchAmountChartData()
+  fetchSizeChartData()
+  // }
+}
+
+// levelType切换处理
+function handleLevelTypeChange() {
+  fetchDashboardData()
+  fetchAmountChartData()
+  fetchSizeChartData()
 }
 
 // 生成24小时时段数组
@@ -319,15 +280,15 @@ function processChartData(
 const orderAmountChartOptions = computed<EChartsOption>(() => {
   const amountProcessed = processChartData(
     orderAmountData.value.amountList || [],
-    amountDateFilter.value,
+    dateFilter.value,
   )
   const refundProcessed = processChartData(
     orderAmountData.value.refundAmountList || [],
-    amountDateFilter.value,
+    dateFilter.value,
   )
 
   // 合并标签，确保两个数据集使用相同的x轴标签
-  const isHourMode = amountDateFilter.value === 'today' || amountDateFilter.value === 'yesterday'
+  const isHourMode = dateFilter.value === 'today' || dateFilter.value === 'yesterday'
   let labels: string[] = []
   const amountDataMap = new Map<string, number>()
   const refundDataMap = new Map<string, number>()
@@ -458,15 +419,15 @@ const orderAmountChartOptions = computed<EChartsOption>(() => {
 const orderSizeChartOptions = computed<EChartsOption>(() => {
   const sizeProcessed = processChartData(
     orderSizeData.value.amountList || [],
-    sizeDateFilter.value,
+    dateFilter.value,
   )
   const refundSizeProcessed = processChartData(
     orderSizeData.value.refundAmountList || [],
-    sizeDateFilter.value,
+    dateFilter.value,
   )
 
   // 合并标签，确保两个数据集使用相同的x轴标签
-  const isHourMode = sizeDateFilter.value === 'today' || sizeDateFilter.value === 'yesterday'
+  const isHourMode = dateFilter.value === 'today' || dateFilter.value === 'yesterday'
   let labels: string[] = []
   const sizeDataMap = new Map<string, number>()
   const refundSizeDataMap = new Map<string, number>()
@@ -742,47 +703,63 @@ onActivated(async () => {
       </el-col>
     </el-row>
 
+    <!-- 统一的筛选器 -->
+    <el-card shadow="never" class="mb-4">
+      <div class="flex flex-wrap items-center gap-4">
+        <span class="text-base font-medium">用户类型：</span>
+        <el-radio-group v-model="levelType" @change="handleLevelTypeChange">
+          <el-radio-button :value="1">
+            陪玩
+          </el-radio-button>
+          <el-radio-button :value="2">
+            打手
+          </el-radio-button>
+        </el-radio-group>
+        <span class="ml-4 text-base font-medium">时间范围：</span>
+        <el-radio-group v-model="dateFilter" @change="handleDateFilterChange">
+          <el-radio-button value="today">
+            今天
+          </el-radio-button>
+          <el-radio-button value="yesterday">
+            昨天
+          </el-radio-button>
+          <el-radio-button value="last7days">
+            最近7天
+          </el-radio-button>
+          <el-radio-button value="last30days">
+            最近30天
+          </el-radio-button>
+          <el-radio-button value="lastMonth">
+            上月
+          </el-radio-button>
+          <el-radio-button value="thisMonth">
+            本月
+          </el-radio-button>
+        </el-radio-group>
+        <el-date-picker
+          v-model="customDate"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          value-format="YYYY-MM-DD"
+          format="YYYY-MM-DD"
+          @change="handleCustomDateChange"
+        />
+        <el-button
+          v-if="dateFilter !== 'custom'"
+          @click="dateFilter = 'custom'"
+        >
+          指定日期
+        </el-button>
+      </div>
+    </el-card>
+
     <!-- 订单金额趋势图表 -->
     <el-card shadow="never" class="mb-4" :loading="amountChartLoading">
       <template #header>
         <div class="flex flex-wrap items-center gap-4">
           <span class="text-base font-medium">订单金额趋势</span>
-          <el-radio-group v-model="amountDateFilter" @change="handleAmountDateFilterChange">
-            <el-radio-button value="today">
-              今天
-            </el-radio-button>
-            <el-radio-button value="yesterday">
-              昨天
-            </el-radio-button>
-            <el-radio-button value="last7days">
-              最近7天
-            </el-radio-button>
-            <el-radio-button value="last30days">
-              最近30天
-            </el-radio-button>
-            <el-radio-button value="lastMonth">
-              上月
-            </el-radio-button>
-            <el-radio-button value="thisMonth">
-              本月
-            </el-radio-button>
-          </el-radio-group>
-          <el-date-picker
-            v-model="amountCustomDate"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-            format="YYYY-MM-DD"
-            @change="handleAmountCustomDateChange"
-          />
-          <el-button
-            v-if="amountDateFilter !== 'custom'"
-            @click="amountDateFilter = 'custom'"
-          >
-            指定日期
-          </el-button>
         </div>
       </template>
       <Echart :key="amountChartKey" ref="amountChartRef" :height="400" :options="orderAmountChartOptions" />
@@ -793,42 +770,6 @@ onActivated(async () => {
       <template #header>
         <div class="flex flex-wrap items-center gap-4">
           <span class="text-base font-medium">订单数量趋势</span>
-          <el-radio-group v-model="sizeDateFilter" @change="handleSizeDateFilterChange">
-            <el-radio-button value="today">
-              今天
-            </el-radio-button>
-            <el-radio-button value="yesterday">
-              昨天
-            </el-radio-button>
-            <el-radio-button value="last7days">
-              最近7天
-            </el-radio-button>
-            <el-radio-button value="last30days">
-              最近30天
-            </el-radio-button>
-            <el-radio-button value="lastMonth">
-              上月
-            </el-radio-button>
-            <el-radio-button value="thisMonth">
-              本月
-            </el-radio-button>
-          </el-radio-group>
-          <el-date-picker
-            v-model="sizeCustomDate"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-            format="YYYY-MM-DD"
-            @change="handleSizeCustomDateChange"
-          />
-          <el-button
-            v-if="sizeDateFilter !== 'custom'"
-            @click="sizeDateFilter = 'custom'"
-          >
-            指定日期
-          </el-button>
         </div>
       </template>
       <Echart :key="sizeChartKey" ref="sizeChartRef" :height="400" :options="orderSizeChartOptions" />

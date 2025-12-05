@@ -221,8 +221,8 @@ export interface StaticsDashboardRespVO {
  * 获取数据大屏
  * @returns
  */
-export function getStaticDashboard(): Promise<StaticsDashboardRespVO> {
-  return request.get({ url: `/gamer/statics/static-dashboard` })
+export function getStaticDashboard(params: StaticsOrderPeriodReqVO): Promise<StaticsDashboardRespVO> {
+  return request.get({ url: `/gamer/statics/static-dashboard`, params })
 }
 
 // Parameter interface
