@@ -39,12 +39,14 @@ const customDate = ref<[string, string]>(['', ''])
 const orderAmountData = ref<{
   amountList: StaticsOrderPeriodRespVO[]
   refundAmountList: StaticsOrderPeriodRespVO[]
-}>({ amountList: [], refundAmountList: [] })
+  inProgressAmountList: StaticsOrderPeriodRespVO[]
+}>({ amountList: [], refundAmountList: [], inProgressAmountList: [] })
 
 const orderSizeData = ref<{
   amountList: StaticsOrderPeriodRespVO[]
   refundAmountList: StaticsOrderPeriodRespVO[]
-}>({ amountList: [], refundAmountList: [] })
+  inProgressAmountList: StaticsOrderPeriodRespVO[]
+}>({ amountList: [], refundAmountList: [], inProgressAmountList: [] })
 
 // 计算日期范围
 function getDateRange() {
@@ -126,8 +128,12 @@ async function fetchAmountChartData() {
       endTime,
     }
 
-    const amountData = await getOrderAmountPeriod(params)
-    orderAmountData.value = amountData
+    const amountData = await getOrderAmountPeriod(params) as any
+    orderAmountData.value = {
+      amountList: amountData.amount || amountData.amountList || [],
+      refundAmountList: amountData.refundAmount || amountData.refundAmountList || [],
+      inProgressAmountList: amountData.inProgressAmount || amountData.inProgressAmountList || [],
+    }
   }
   catch (error) {
     console.error('获取订单金额图表数据失败:', error)
@@ -149,8 +155,12 @@ async function fetchSizeChartData() {
       endTime,
     }
 
-    const sizeData = await getOrderSizePeriod(params)
-    orderSizeData.value = sizeData
+    const sizeData = await getOrderSizePeriod(params) as any
+    orderSizeData.value = {
+      amountList: sizeData.size || [],
+      refundAmountList: sizeData.refundSize || [],
+      inProgressAmountList: sizeData.inProgressSize || [],
+    }
   }
   catch (error) {
     console.error('获取订单数量图表数据失败:', error)
@@ -286,12 +296,17 @@ const orderAmountChartOptions = computed<EChartsOption>(() => {
     orderAmountData.value.refundAmountList || [],
     dateFilter.value,
   )
+  const inProgressProcessed = processChartData(
+    orderAmountData.value.inProgressAmountList || [],
+    dateFilter.value,
+  )
 
-  // 合并标签，确保两个数据集使用相同的x轴标签
+  // 合并标签，确保所有数据集使用相同的x轴标签
   const isHourMode = dateFilter.value === 'today' || dateFilter.value === 'yesterday'
   let labels: string[] = []
   const amountDataMap = new Map<string, number>()
   const refundDataMap = new Map<string, number>()
+  const inProgressDataMap = new Map<string, number>()
 
   if (isHourMode) {
     // 小时模式：使用24小时标签
@@ -302,10 +317,17 @@ const orderAmountChartOptions = computed<EChartsOption>(() => {
     refundProcessed.labels.forEach((label, index) => {
       refundDataMap.set(label, refundProcessed.values[index])
     })
+    inProgressProcessed.labels.forEach((label, index) => {
+      inProgressDataMap.set(label, inProgressProcessed.values[index])
+    })
   }
   else {
     // 日期模式：合并所有日期
-    const allDates = new Set([...amountProcessed.labels, ...refundProcessed.labels])
+    const allDates = new Set([
+      ...amountProcessed.labels,
+      ...refundProcessed.labels,
+      ...inProgressProcessed.labels,
+    ])
     labels = Array.from(allDates).sort((a, b) => {
       return dayjs(a, 'MM-DD').valueOf() - dayjs(b, 'MM-DD').valueOf()
     })
@@ -314,6 +336,9 @@ const orderAmountChartOptions = computed<EChartsOption>(() => {
     })
     refundProcessed.labels.forEach((label, index) => {
       refundDataMap.set(label, refundProcessed.values[index])
+    })
+    inProgressProcessed.labels.forEach((label, index) => {
+      inProgressDataMap.set(label, inProgressProcessed.values[index])
     })
   }
 
@@ -325,6 +350,7 @@ const orderAmountChartOptions = computed<EChartsOption>(() => {
 
   const amountValues = labels.map(label => convertToYuan(amountDataMap.get(label) || 0))
   const refundValues = labels.map(label => convertToYuan(refundDataMap.get(label) || 0))
+  const inProgressValues = labels.map(label => convertToYuan(inProgressDataMap.get(label) || 0))
 
   return {
     title: {
@@ -342,7 +368,7 @@ const orderAmountChartOptions = computed<EChartsOption>(() => {
       },
     },
     legend: {
-      data: ['订单金额', '退款金额'],
+      data: ['订单金额', '退款金额', '进行中订单金额'],
       top: 35,
     },
     grid: {
@@ -401,6 +427,15 @@ const orderAmountChartOptions = computed<EChartsOption>(() => {
         },
         data: refundValues,
       },
+      {
+        name: '进行中订单金额',
+        type: 'line',
+        smooth: true,
+        itemStyle: {
+          color: '#E6A23C',
+        },
+        data: inProgressValues,
+      },
     ],
     toolbox: {
       feature: {
@@ -425,12 +460,17 @@ const orderSizeChartOptions = computed<EChartsOption>(() => {
     orderSizeData.value.refundAmountList || [],
     dateFilter.value,
   )
+  const inProgressSizeProcessed = processChartData(
+    orderSizeData.value.inProgressAmountList || [],
+    dateFilter.value,
+  )
 
-  // 合并标签，确保两个数据集使用相同的x轴标签
+  // 合并标签，确保所有数据集使用相同的x轴标签
   const isHourMode = dateFilter.value === 'today' || dateFilter.value === 'yesterday'
   let labels: string[] = []
   const sizeDataMap = new Map<string, number>()
   const refundSizeDataMap = new Map<string, number>()
+  const inProgressSizeDataMap = new Map<string, number>()
 
   if (isHourMode) {
     // 小时模式：使用24小时标签
@@ -441,10 +481,17 @@ const orderSizeChartOptions = computed<EChartsOption>(() => {
     refundSizeProcessed.labels.forEach((label, index) => {
       refundSizeDataMap.set(label, refundSizeProcessed.values[index])
     })
+    inProgressSizeProcessed.labels.forEach((label, index) => {
+      inProgressSizeDataMap.set(label, inProgressSizeProcessed.values[index])
+    })
   }
   else {
     // 日期模式：合并所有日期
-    const allDates = new Set([...sizeProcessed.labels, ...refundSizeProcessed.labels])
+    const allDates = new Set([
+      ...sizeProcessed.labels,
+      ...refundSizeProcessed.labels,
+      ...inProgressSizeProcessed.labels,
+    ])
     labels = Array.from(allDates).sort((a, b) => {
       return dayjs(a, 'MM-DD').valueOf() - dayjs(b, 'MM-DD').valueOf()
     })
@@ -454,10 +501,14 @@ const orderSizeChartOptions = computed<EChartsOption>(() => {
     refundSizeProcessed.labels.forEach((label, index) => {
       refundSizeDataMap.set(label, refundSizeProcessed.values[index])
     })
+    inProgressSizeProcessed.labels.forEach((label, index) => {
+      inProgressSizeDataMap.set(label, inProgressSizeProcessed.values[index])
+    })
   }
 
   const sizeValues = labels.map(label => sizeDataMap.get(label) || 0)
   const refundSizeValues = labels.map(label => refundSizeDataMap.get(label) || 0)
+  const inProgressSizeValues = labels.map(label => inProgressSizeDataMap.get(label) || 0)
 
   return {
     title: {
@@ -475,7 +526,7 @@ const orderSizeChartOptions = computed<EChartsOption>(() => {
       },
     },
     legend: {
-      data: ['订单数量', '退款数量'],
+      data: ['订单数量', '退款数量', '进行中订单数量'],
       top: 35,
     },
     grid: {
@@ -533,6 +584,15 @@ const orderSizeChartOptions = computed<EChartsOption>(() => {
           color: '#67C23A',
         },
         data: refundSizeValues,
+      },
+      {
+        name: '进行中订单数量',
+        type: 'line',
+        smooth: true,
+        itemStyle: {
+          color: '#E6A23C',
+        },
+        data: inProgressSizeValues,
       },
     ],
     toolbox: {
@@ -619,7 +679,7 @@ onActivated(async () => {
             icon="ep:user"
             icon-color="bg-purple-100"
             icon-bg-color="text-purple-500"
-            :value="Number(fenToYuan(dashboardData.todayUserCount || 0))"
+            :value="dashboardData.todayUserCount || 0"
           />
         </el-card>
       </el-col>
