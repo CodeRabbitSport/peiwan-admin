@@ -3,10 +3,9 @@ import type { LevelConfig } from '@/api/gamer/levelconfig'
 import { LevelConfigApi } from '@/api/gamer/levelconfig'
 import type { Product } from '@/api/gamer/product'
 import { ProductApi } from '@/api/gamer/product'
-import type { ProductCategory } from '@/api/gamer/productcategory'
 import { ProductCategoryApi } from '@/api/gamer/productcategory'
-import type { ProductType } from '@/api/gamer/producttype'
 import { ProductTypeApi } from '@/api/gamer/producttype'
+import PaginationSelect from '@/components/PaginationSelect/index.vue'
 import { fenToYuan } from '@/utils'
 import download from '@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
@@ -23,8 +22,6 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<Product[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
-const categoryList = ref<ProductCategory[]>([]) // 分类列表
-const typeList = ref<ProductType[]>([]) // 类型列表
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
@@ -101,6 +98,11 @@ function openForm(type: string, id?: number) {
   formRef.value.open(type, id)
 }
 
+const checkedIds = ref<number[]>([])
+function handleRowCheckboxChange(records: Product[]) {
+  checkedIds.value = records.map(item => item.id)
+}
+
 /** 删除按钮操作 */
 async function handleDelete(id: number) {
   try {
@@ -128,11 +130,6 @@ async function handleDeleteBatch() {
   catch { }
 }
 
-const checkedIds = ref<number[]>([])
-function handleRowCheckboxChange(records: Product[]) {
-  checkedIds.value = records.map(item => item.id)
-}
-
 /** 导出按钮操作 */
 async function handleExport() {
   try {
@@ -147,28 +144,6 @@ async function handleExport() {
   }
   finally {
     exportLoading.value = false
-  }
-}
-
-/** 获取分类列表 */
-async function getCategoryOptions() {
-  try {
-    const data = await ProductCategoryApi.getProductCategoryPage()
-    categoryList.value = data.list || []
-  }
-  catch (error) {
-    console.error('获取分类列表失败:', error)
-  }
-}
-
-/** 获取类型列表 */
-async function getTypeOptions() {
-  try {
-    const data = await ProductTypeApi.getProductTypePage()
-    typeList.value = data.list || []
-  }
-  catch (error) {
-    console.error('获取类型列表失败:', error)
   }
 }
 
@@ -191,8 +166,6 @@ async function changeGood(row) {
 /** 初始化 */
 onMounted(() => {
   getList()
-  getCategoryOptions()
-  getTypeOptions()
   loadLevelOptions()
 })
 </script>
@@ -216,34 +189,28 @@ onMounted(() => {
         />
       </el-form-item>
       <el-form-item label="分类" prop="categoryId">
-        <el-select
+        <PaginationSelect
           v-model="queryParams.categoryId"
           placeholder="请选择分类"
           clearable
-          class="!w-[240px]"
-        >
-          <el-option
-            v-for="category in categoryList"
-            :key="category.id"
-            :label="category.categoryName"
-            :value="category.id"
-          />
-        </el-select>
+          :api="ProductCategoryApi.getProductCategoryPage"
+          label-key="categoryName"
+          value-key="id"
+          :page-size="10"
+          width="240px"
+        />
       </el-form-item>
       <el-form-item label="类型" prop="typeId">
-        <el-select
+        <PaginationSelect
           v-model="queryParams.typeId"
           placeholder="请选择商品类型"
           clearable
-          class="!w-[240px]"
-        >
-          <el-option
-            v-for="type in typeList"
-            :key="type.id"
-            :label="type.typeName"
-            :value="type.id"
-          />
-        </el-select>
+          :api="ProductTypeApi.getProductTypePage"
+          label-key="typeName"
+          value-key="id"
+          :page-size="10"
+          width="240px"
+        />
       </el-form-item>
       <el-form-item label="上下架" prop="saleStatus">
         <el-select v-model="queryParams.saleStatus" placeholder="请选择上下架状态" clearable class="!w-[240px]">

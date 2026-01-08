@@ -6,6 +6,7 @@ import { OrderConversationApi } from '@/api/gamer/orderconversation'
 import { ProductApi } from '@/api/gamer/product'
 import type { ServiceOrder } from '@/api/gamer/serviceorder'
 import { acceptOrder, ServiceOrder_auditOrderComplete, ServiceOrder_cancelAcceptOrder, ServiceOrder_updateOrderRefunded, ServiceOrderApi } from '@/api/gamer/serviceorder'
+import PaginationSelect from '@/components/PaginationSelect/index.vue'
 import ResponsiveFold from '@/components/ResponsiveFold/index.vue'
 import UserSelectInput from '@/components/UserSelectInput/index.vue'
 import UserInfoPickerDialog from '@/components/UserSelectInput/UserInfoPickerDialog.vue'
@@ -59,7 +60,6 @@ const queryParams = reactive<any>({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
-const productOptions = ref<{ label: string, value: string }[]>([])
 type EditableServiceOrder = ServiceOrder & { orderRemark?: string }
 
 const selectedOrderStatus = ref<string | number | undefined>(undefined)
@@ -218,16 +218,6 @@ function handleRowCheckboxChange(records: ServiceOrder[]) {
   checkedIds.value = records.map(item => item.id)
 }
 
-async function loadProductOptions() {
-  try {
-    const { list = [] } = await ProductApi.getProductPage()
-    productOptions.value = list
-      .filter((item: any) => item?.productTitle)
-      .map((item: any) => ({ label: item.productTitle, value: item.productTitle }))
-  }
-  catch { }
-}
-
 function handleOrderStatusFilterChange(value: string | number | undefined) {
   selectedOrderStatus.value = value
   if (value === 'dispatching') {
@@ -362,12 +352,10 @@ function handleViewUserInfo(userId: number) {
 
 /** 初始化 */
 onMounted(() => {
-  loadProductOptions()
   getList()
 })
 
 onActivated(() => {
-  loadProductOptions()
   getList()
   pollOrderStatus()
 })
@@ -554,21 +542,17 @@ async function openOrderConversationByOrderId(orderId: number) {
         />
       </el-form-item> -->
         <el-form-item label="商品名称" prop="productName">
-          <el-select
+          <PaginationSelect
             v-model="queryParams.productName"
             placeholder="请选择商品名称"
-            filterable
             clearable
-            class="!w-[240px]"
+            :api="ProductApi.getProductPage"
+            label-key="productTitle"
+            value-key="productTitle"
+            :page-size="10"
+            width="240px"
             @change="handleQuery"
-          >
-            <el-option
-              v-for="item in productOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
+          />
         </el-form-item>
         <el-form-item label="订单状态" prop="orderStatus">
           <el-select
