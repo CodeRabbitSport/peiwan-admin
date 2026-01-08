@@ -205,8 +205,10 @@ export interface StaticsDashboardRespVO {
   totalOrderAmount?: number
   /* 今日订单金额 */
   todayOrderAmount?: number
-  /* 总用户数 */
+  /* 今日新增用户数 */
   todayUserCount?: number
+  /* 总用户数 */
+  totalUserCount?: number
   /* 退款金额 */
   refundAmount?: number
   /* 今日新增用户数 */

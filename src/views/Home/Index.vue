@@ -157,9 +157,9 @@ async function fetchSizeChartData() {
 
     const sizeData = await getOrderSizePeriod(params) as any
     orderSizeData.value = {
-      amountList: sizeData.size || [],
-      refundAmountList: sizeData.refundSize || [],
-      inProgressAmountList: sizeData.inProgressSize || [],
+      amountList: sizeData.size || sizeData.amountList || [],
+      refundAmountList: sizeData.refundSize || sizeData.refundAmountList || [],
+      inProgressAmountList: sizeData.inProgressSize || sizeData.inProgressAmountList || [],
     }
   }
   catch (error) {
@@ -207,20 +207,35 @@ function generate24Hours() {
   })
 }
 
-// 处理毫秒级时间戳
+// 处理毫秒级时间戳或日期字符串
 function parsePeriod(period: string | number | undefined, isHourMode: boolean): string {
   if (!period) return ''
 
-  // 如果是毫秒级时间戳
-  const timestamp = typeof period === 'string' ? Number.parseInt(period) : period
+  let date: dayjs.Dayjs
+
+  if (typeof period === 'string') {
+    // 如果是日期字符串格式（如 "2025-12-01 00:00:00"），直接解析
+    if (period.includes('-') || period.includes('/')) {
+      date = dayjs(period)
+    }
+    else {
+      // 如果是纯数字字符串，当作时间戳处理
+      const timestamp = Number.parseInt(period)
+      date = dayjs(timestamp)
+    }
+  }
+  else {
+    // 如果是数字，当作时间戳处理
+    date = dayjs(period)
+  }
 
   if (isHourMode) {
     // 返回小时格式 HH:00
-    return dayjs(timestamp).format('HH:00')
+    return date.format('HH:00')
   }
   else {
     // 返回日期格式 MM-DD
-    return dayjs(timestamp).format('MM-DD')
+    return date.format('MM-DD')
   }
 }
 
@@ -679,7 +694,7 @@ onActivated(async () => {
             icon="ep:user"
             icon-color="bg-purple-100"
             icon-bg-color="text-purple-500"
-            :value="dashboardData.todayUserCount || 0"
+            :value="dashboardData.totalUserCount || 0"
           />
         </el-card>
       </el-col>
@@ -717,7 +732,7 @@ onActivated(async () => {
             icon="ep:user-filled"
             icon-color="bg-cyan-100"
             icon-bg-color="text-cyan-500"
-            :value="Number(fenToYuan(dashboardData.todayApplyCount || 0))"
+            :value="Number(fenToYuan(dashboardData.todayUserCount || 0))"
           />
         </el-card>
       </el-col>
@@ -744,7 +759,7 @@ onActivated(async () => {
             icon="ep:arrow-left"
             icon-color="bg-indigo-100"
             icon-bg-color="text-indigo-500"
-            :value="0"
+            :value="dashboardData.todayApplyCount || 0"
           />
         </el-card>
       </el-col>
@@ -837,8 +852,8 @@ onActivated(async () => {
   </div>
 </template>
 
-<style scoped>
-.white-dashboard :deep(.el-card) {
+    <style scoped>
+    .white-dashboard :deep(.el-card) {
   background-color: #ffffff;
 }
 .white-dashboard {

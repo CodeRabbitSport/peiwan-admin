@@ -18,6 +18,7 @@ const KEYS = {
   WITHDRAW_ACCOUNT_CONFIG_ENABLE_WX_FAST_REFUND: 'withdrawAccountConfigEnableWxFastRefund',
   SITE_CONFIG_APPLY_FIGHTER_REAL_NAME: 'siteConfigApplyFighterRealName',
   SITE_CONFIG_ENABLE_BIND_MOBILE: 'siteConfigEnableBindMobile',
+  SITE_HISTORY_ACCEPTORS: 'siteHistoryAcceptors',
   // 话题配置
   HOT_TOPIC_LIST: 'topicConfigHotTopicList',
   CUSTOMER_SERVICE_LINK: 'siteConfigCustomerServiceLink',
@@ -80,6 +81,7 @@ const formData = reactive<any>({
   withdrawAccountConfigEnableWxFastRefund: false,
   siteConfigApplyFighterRealName: false,
   siteConfigEnableBindMobile: false,
+  siteHistoryAcceptors: false,
   canCancelOrder: false,
   canRefundOrder: false,
   canCheckApplyRefundUserMobile: false,
@@ -203,6 +205,9 @@ async function loadAll() {
           break
         case KEYS.SITE_CONFIG_ENABLE_BIND_MOBILE:
           formData.siteConfigEnableBindMobile = toBool(item.configValue)
+          break
+        case KEYS.SITE_HISTORY_ACCEPTORS:
+          formData.siteHistoryAcceptors = toBool(item.configValue)
           break
         case KEYS.ENABLE_PICK_ORDER_SMS_NOTICE:
           formData.orderNoticeConfigEnablePickOrderSmsNotice = toBool(item.configValue)
@@ -697,6 +702,14 @@ onMounted(() => {
                 <el-switch
                   v-model="formData.siteConfigEnableBindMobile"
                   @change="(val: any) => handleSave(KEYS.SITE_CONFIG_ENABLE_BIND_MOBILE, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="4" :lg="4">
+              <el-form-item label="是否开启指定陪玩" label-width="200px">
+                <el-switch
+                  v-model="formData.siteHistoryAcceptors"
+                  @change="(val: any) => handleSave(KEYS.SITE_HISTORY_ACCEPTORS, 'boolean', val)"
                 />
               </el-form-item>
             </el-col>
