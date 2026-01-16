@@ -778,6 +778,21 @@ onActivated(async () => {
       </el-col>
     </el-row>
 
+    <el-row :gutter="16" class="mb-4">
+      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+        <el-card shadow="never" :loading="dashboardLoading">
+          <SummaryCard
+            title="复购率"
+            icon="ep:present"
+            icon-color="bg-orange-100"
+            icon-bg-color="text-orange-500"
+            :value="Number((dashboardData.repeatPurchaseRate || 0) * 100)"
+            suffix="%"
+          />
+        </el-card>
+      </el-col>
+    </el-row>
+
     <!-- 统一的筛选器 -->
     <el-card shadow="never" class="mb-4">
       <div class="flex flex-wrap items-center gap-4">

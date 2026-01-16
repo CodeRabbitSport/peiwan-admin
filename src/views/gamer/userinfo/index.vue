@@ -345,6 +345,7 @@ onMounted(() => {
           <div class="flex flex-col items-start gap-1">
             <div>余额：{{ fenToYuan(scope.row.wallet?.balance) ?? 0 }}</div>
             <div>冻结余额：{{ fenToYuan(scope.row.wallet?.freezePrice) ?? 0 }}</div>
+            <div>消费金额：{{ fenToYuan(scope.row.wallet?.totalExpense - scope.row.wallet?.totalWithdraw) ?? 0 }}</div>
             <!-- <div>财富值：{{ scope.row.wealthVal ?? 0 }}</div>
             <div>魅力值：{{ scope.row.charmVal ?? 0 }}</div> -->
           </div>

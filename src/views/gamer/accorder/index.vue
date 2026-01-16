@@ -376,6 +376,17 @@ async function openAccOrderConversationByOrderId(orderId: number) {
             @change="handleQuery"
           />
         </el-form-item>
+        <el-form-item label="是否复购" prop="isRepeated">
+          <el-select
+            v-model="queryParams.isRepeated"
+            placeholder="请选择复购状态"
+            clearable
+            class="!w-[240px]"
+          >
+            <el-option label="是" :value="true" />
+            <el-option label="否" :value="false" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="订单状态" prop="orderStatus">
           <el-select
             v-model="selectedOrderStatus"
@@ -456,6 +467,14 @@ async function openAccOrderConversationByOrderId(orderId: number) {
           <div class="flex flex-col gap-1 text-left">
             <div>
               订单号：{{ scope.row.orderNo || '无' }}
+            </div>
+            <div>
+              是否复购：
+              <el-tag
+                :type="scope.row.isRepeated ? 'success' : 'info'"
+              >
+                {{ scope.row.isRepeated ? '是' : '否' }}
+              </el-tag>
             </div>
             <div>
               订单类型：

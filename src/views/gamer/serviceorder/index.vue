@@ -583,6 +583,17 @@ async function openOrderConversationByOrderId(orderId: number) {
             <el-option label="已退款" :value="2" />
           </el-select>
         </el-form-item>
+        <el-form-item label="是否复购" prop="isRepeated">
+          <el-select
+            v-model="queryParams.isRepeated"
+            placeholder="请选择复购状态"
+            clearable
+            class="!w-[240px]"
+          >
+            <el-option label="是" :value="true" />
+            <el-option label="否" :value="false" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="退款状态" prop="refundAuditStatus">
           <el-select
             v-model="queryParams.refundAuditStatus"
@@ -678,6 +689,15 @@ async function openOrderConversationByOrderId(orderId: number) {
           <div class="flex flex-col gap-1 text-left">
             <div>
               订单号：{{ scope.row.orderNo || '无' }}
+            </div>
+
+            <div>
+              是否复购：
+              <el-tag
+                :type="scope.row.isRepeated ? 'success' : 'info'"
+              >
+                {{ scope.row.isRepeated ? '是' : '否' }}
+              </el-tag>
             </div>
             <div>
               订单类型：
@@ -964,48 +984,20 @@ async function openOrderConversationByOrderId(orderId: number) {
   </Dialog>
 
   <!-- 快速编辑弹窗 -->
-  <Dialog
-    v-model="quickEditDialogVisible"
-    title="编辑订单"
-    width="480px"
-    @closed="resetQuickEditForm"
-  >
+  <Dialog v-model="quickEditDialogVisible" title="编辑订单" width="480px" @closed="resetQuickEditForm">
     <el-form :model="quickEditForm" label-width="100px">
       <el-form-item label="订单状态">
-        <el-select
-          v-model="quickEditForm.orderStatus"
-          placeholder="请选择订单状态"
-          clearable
-        >
-          <el-option
-            v-for="item in orderStatusOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
+        <el-select v-model="quickEditForm.orderStatus" placeholder="请选择订单状态" clearable>
+          <el-option v-for="item in orderStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
       <el-form-item label="支付状态">
-        <el-select
-          v-model="quickEditForm.payStatus"
-          placeholder="请选择支付状态"
-          clearable
-        >
-          <el-option
-            v-for="item in payStatusOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
+        <el-select v-model="quickEditForm.payStatus" placeholder="请选择支付状态" clearable>
+          <el-option v-for="item in payStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
       <el-form-item label="订单备注">
-        <el-input
-          v-model="quickEditForm.orderRemark"
-          type="textarea"
-          placeholder="请输入订单备注"
-          :rows="3"
-        />
+        <el-input v-model="quickEditForm.orderRemark" type="textarea" placeholder="请输入订单备注" :rows="3" />
       </el-form-item>
     </el-form>
     <template #footer>

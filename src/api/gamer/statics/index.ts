@@ -217,6 +217,8 @@ export interface StaticsDashboardRespVO {
   totalFeeAmount?: number
   /* 打赏利润 */
   giftFeeAmount?: number
+  /* 复购率 */
+  repeatPurchaseRate?: number
 }
 
 /**
