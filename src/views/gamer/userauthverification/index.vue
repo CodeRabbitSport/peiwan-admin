@@ -3,7 +3,6 @@ import { UserAuthVerification_auditUserAuthVerification, UserAuthVerificationApi
 import type { UserAuthVerification } from '@/api/gamer/userauthverification'
 import download from '@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
-import { isEmpty } from '@/utils/is'
 
 import UserAuthVerificationForm from './UserAuthVerificationForm.vue'
 
@@ -215,6 +214,9 @@ onMounted(() => {
       <el-form-item>
         <el-button @click="handleQuery">
           <Icon icon="ep:search" class="mr-[5px]" /> 搜索
+        </el-button>
+        <el-button :loading="exportLoading" @click="handleExport">
+          <Icon icon="ep:position" class="mr-[5px]" /> 导出
         </el-button>
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置

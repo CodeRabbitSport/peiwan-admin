@@ -284,16 +284,16 @@ onMounted(() => {
           </el-tag>
         </template>
       </el-table-column> -->
-      <el-table-column label="操作" align="center" min-width="120px">
+      <!-- <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
-          <!-- <el-button
+          <el-button
             v-hasPermi="['gamer:deposit-recharge:update']"
             link
             type="primary"
             @click="openForm('update', scope.row.id)"
           >
             编辑
-          </el-button> -->
+          </el-button>
           <el-button
             v-hasPermi="['gamer:deposit-recharge:delete']"
             link
@@ -303,7 +303,7 @@ onMounted(() => {
             删除
           </el-button>
         </template>
-      </el-table-column>
+      </el-table-column> -->
     </el-table>
     <!-- 分页 -->
     <Pagination

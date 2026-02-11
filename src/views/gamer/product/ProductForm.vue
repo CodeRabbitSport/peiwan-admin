@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Delete as ElIconDelete, Plus as ElIconPlus } from '@element-plus/icons-vue'
+
 import type { LevelConfig } from '@/api/gamer/levelconfig'
 import { LevelConfigApi } from '@/api/gamer/levelconfig'
 import type { PrizeGroup } from '@/api/gamer/prizegroup'
@@ -77,6 +79,8 @@ const formData = ref<any>({
   // 接单大区（从分类移入商品：保持字段与交互不变）
   orderReceivingStatus: true,
   orderReceivingRegion: '',
+  // 折扣配置
+  discountConfigList: undefined,
 })
 const formRules = reactive({
   productTitle: [{ required: true, message: '商品标题不能为空', trigger: 'blur' }],
@@ -88,6 +92,9 @@ const formRef = ref() // 表单 Ref
 
 // 接单大区动态表单字段（从分类移入：保持字段与交互不变）
 const orderReceivingRegionFields = ref([{ region: '', price: 0 }])
+
+// 折扣配置动态表单字段
+const discountFields = ref([{ amount: 0, discount: 0, discountType: 1 }])
 
 // 监听分类选择变化，加载该分类的接单大区
 async function handleCategoryChange(value: number[]) {
@@ -157,6 +164,8 @@ async function open(type: string, id?: number) {
       }
       // 初始化接单大区字段
       initOrderReceivingRegionFields()
+      // 初始化折扣配置字段
+      initDiscountFields()
       // 编辑时将等级字符串解析为数组，便于多选
       if (formData.value.productLevel && typeof formData.value.productLevel === 'string') {
         const arr = (formData.value.productLevel as unknown as string)
@@ -169,6 +178,10 @@ async function open(type: string, id?: number) {
       // 确保有默认的接单大区字段行
       if (!orderReceivingRegionFields.value || orderReceivingRegionFields.value.length === 0) {
         orderReceivingRegionFields.value = [{ region: '', price: 0 }]
+      }
+      // 确保有默认的折扣配置字段行
+      if (!discountFields.value || discountFields.value.length === 0) {
+        discountFields.value = [{ amount: 0, discount: 0, discountType: 1 }]
       }
     }
     finally {
@@ -195,6 +208,8 @@ async function submitForm() {
     formData.value.virtualPrice = formData.value.virtualPrice ? formData.value.virtualPrice * 100 : 0
     // 同步接单大区序列化数据
     updateOrderReceivingRegionData()
+    // 同步折扣配置序列化数据
+    updateDiscountData()
     // 重复校验：接单大区名称不得重复（只在启用时校验）
     if (formData.value.orderReceivingStatus === true) {
       const regions = orderReceivingRegionFields.value
@@ -289,7 +304,11 @@ function resetForm() {
     // 接单大区（从分类移入商品：保持字段与交互不变）
     orderReceivingStatus: true,
     orderReceivingRegion: '',
+    // 折扣配置
+    discountConfigList: undefined,
   }
+  // 重置折扣配置字段
+  discountFields.value = [{ amount: 0, discount: 0, discountType: 1 }]
   formRef.value?.resetFields()
 }
 
@@ -335,6 +354,53 @@ function initOrderReceivingRegionFields() {
     }
   }
   orderReceivingRegionFields.value = [{ region: '', price: 0 }]
+}
+
+// 折扣配置相关函数
+function addDiscountField() {
+  discountFields.value.push({ amount: 0, discount: 0, discountType: 1 })
+  updateDiscountData()
+}
+
+function removeDiscountField(index: number) {
+  if (discountFields.value.length > 1) {
+    discountFields.value.splice(index, 1)
+    updateDiscountData()
+  }
+}
+
+function updateDiscountData() {
+  const filtered = discountFields.value
+    .map(it => ({
+      amount: Number(it.amount ?? 0),
+      discount: Number(it.discount ?? 0),
+      discountType: Number(it.discountType ?? 1),
+    }))
+
+  formData.value.discountConfigList = filtered.length > 0 ? JSON.stringify(filtered) : undefined
+}
+
+function initDiscountFields() {
+  const value = formData.value.discountConfigList
+  if (value && value !== 'null') {
+    try {
+      const parsed = JSON.parse(value)
+      const parsedList = Array.isArray(parsed) ? parsed : []
+      const mapped = parsedList.map((it: any) => ({
+        amount: Number(it?.amount ?? 0),
+        discount: Number(it?.discount ?? 0),
+        discountType: Number(it?.discountType ?? 1),
+      }))
+      if (mapped.length > 0) {
+        discountFields.value = mapped
+        return
+      }
+    }
+    catch {
+      // ignore json parse error
+    }
+  }
+  discountFields.value = [{ amount: 0, discount: 0, discountType: 1 }]
 }
 </script>
 
@@ -486,7 +552,10 @@ function initOrderReceivingRegionFields() {
                 涨幅价格
               </div>
               <div :span="2">
-                <el-input-number v-model="item.price" :min="0" :step="0.01" :precision="2" @change="updateOrderReceivingRegionData" />
+                <el-input-number
+                  v-model="item.price" :min="0" :step="0.01" :precision="2"
+                  @change="updateOrderReceivingRegionData"
+                />
               </div>
               <!-- <div :span="1">
                 <el-button
@@ -610,6 +679,92 @@ function initOrderReceivingRegionFields() {
             />
           </el-form-item>
         </el-col>
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="是否开启产品弹窗" label-width="150px" prop="popUpEnabled">
+            <el-radio-group v-model="formData.popUpEnabled">
+              <el-radio :value="true">
+                开启
+              </el-radio>
+              <el-radio :value="false">
+                关闭
+              </el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </el-col>
+        <el-form-item label="弹窗内容" prop="popUp">
+          <Editor v-model="formData.popUp" height="150px" width="100%" />
+        </el-form-item>
+        <el-col :xs="24" :sm="24">
+          <el-form-item label="是否开启产品折扣" label-width="150px" prop="discountEnabled">
+            <el-radio-group v-model="formData.discountEnabled">
+              <el-radio :value="true">
+                开启
+              </el-radio>
+              <el-radio :value="false">
+                关闭
+              </el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </el-col>
+        <el-form-item label="折扣配置" prop="discountConfigList">
+          <div class="dynamic-form w-full">
+            <div v-for="(item, index) in discountFields" :key="index" class="mb-2">
+              <div class="flex gap-x-2">
+                <div :span="2">
+                  订单数量
+                </div>
+                <div :span="3">
+                  <el-input-number
+                    v-model="item.amount"
+                    placeholder="请输入订单数量"
+                    :min="0"
+                    class="!w-full"
+                    @change="updateDiscountData"
+                  />
+                </div>
+                <div :span="2" class="mx-2">
+                  折扣类型
+                </div>
+                <div :span="3">
+                  <el-radio-group v-model="item.discountType" @change="updateDiscountData">
+                    <el-radio :value="1">
+                      折扣
+                    </el-radio>
+                    <el-radio :value="2">
+                      送单
+                    </el-radio>
+                  </el-radio-group>
+                </div>
+                <div :span="2" class="mx-2">
+                  折扣/送单值
+                </div>
+                <div :span="2">
+                  <el-input-number
+                    v-model="item.discount" :min="0" :max="100" :step="0.01" :precision="2"
+                    class="!w-full" @change="updateDiscountData"
+                  >
+                    <template #suffix>
+                      %
+                    </template>
+                  </el-input-number>
+                </div>
+                <div :span="1">
+                  <el-button
+                    type="danger" :icon="ElIconDelete" size="small"
+                    :disabled="discountFields.length <= 1"
+                    @click="removeDiscountField(index)"
+                  />
+                </div>
+              </div>
+            </div>
+            <el-button
+              type="primary" :icon="ElIconPlus" size="small" class="mt-2 !w-[400px]"
+              @click="addDiscountField"
+            >
+              添加折扣
+            </el-button>
+          </div>
+        </el-form-item>
       </el-row>
     </el-form>
     <template #footer>

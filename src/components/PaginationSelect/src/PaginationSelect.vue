@@ -51,21 +51,34 @@ const currentPage = ref(1)
 const total = ref(0)
 const visible = ref(false)
 
+// 内部存储当前选中的值，用于立即显示，不依赖父组件的异步更新
+const _selectedValue = ref<number | string | number[] | string[] | null>(props.modelValue ?? null)
+
 // 计算属性：用于 v-model 绑定
 const selectedValue = computed({
-  get: () => props.modelValue ?? null,
+  get: () => _selectedValue.value,
   set: (val) => {
     const value = val ?? null
+    _selectedValue.value = value
     emit('update:modelValue', value)
     emit('change', value)
   },
 })
 
+// 监听 props.modelValue 变化，同步到内部值
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    _selectedValue.value = newVal ?? null
+  },
+  { immediate: true },
+)
+
 // 获取选中项的显示文本
 const selectedLabel = computed(() => {
   if (props.multiple) {
-    if (Array.isArray(selectedValue.value) && selectedValue.value.length > 0) {
-      return selectedValue.value
+    if (Array.isArray(_selectedValue.value) && _selectedValue.value.length > 0) {
+      return _selectedValue.value
         .map((val) => {
           const option = options.value.find(opt => opt[props.valueKey] === val)
           return option ? option[props.labelKey] : val
@@ -75,10 +88,37 @@ const selectedLabel = computed(() => {
     return ''
   }
   else {
-    const option = options.value.find(opt => opt[props.valueKey] === selectedValue.value)
+    if (!_selectedValue.value) return ''
+    const option = options.value.find(opt => opt[props.valueKey] === _selectedValue.value)
     return option ? option[props.labelKey] : ''
   }
 })
+
+// 检查选中值是否在选项列表中
+function isSelectedValueInOptions() {
+  if (!_selectedValue.value) return true
+  if (props.multiple) {
+    if (!Array.isArray(_selectedValue.value) || _selectedValue.value.length === 0) return true
+    return _selectedValue.value.every(val => options.value.some(opt => opt[props.valueKey] === val))
+  }
+  else {
+    return options.value.some(opt => opt[props.valueKey] === _selectedValue.value)
+  }
+}
+
+// 加载单页数据
+async function loadPageData(pageNo: number) {
+  const params = {
+    pageNo,
+    pageSize: props.pageSize,
+    ...props.extraParams,
+  }
+  const data = await props.api(params)
+  return {
+    list: data.list || [],
+    total: data.total || 0,
+  }
+}
 
 // 加载数据
 async function loadData(reset = false) {
@@ -88,15 +128,15 @@ async function loadData(reset = false) {
 
   loading.value = true
   try {
-    currentPage.value++
-    const params = {
-      pageNo: reset ? 1 : currentPage.value,
-      pageSize: props.pageSize,
-      ...props.extraParams,
+    if (reset) {
+      currentPage.value = 1
     }
-    const data = await props.api(params)
-    const newList = data.list || []
-    total.value = data.total || 0
+    else {
+      currentPage.value++
+    }
+
+    const { list: newList, total: newTotal } = await loadPageData(currentPage.value)
+    total.value = newTotal
 
     if (reset) {
       options.value = newList
@@ -108,6 +148,21 @@ async function loadData(reset = false) {
 
     // 判断是否还有更多数据
     hasMore.value = options.value.length < total.value
+
+    // 如果重置且有选中值但不在当前列表中，继续加载直到找到
+    if (reset && selectedValue.value && !isSelectedValueInOptions() && hasMore.value) {
+      // 继续加载更多数据，直到找到选中值或没有更多数据
+      while (!isSelectedValueInOptions() && hasMore.value) {
+        currentPage.value++
+        const { list: moreList, total: moreTotal } = await loadPageData(currentPage.value)
+        total.value = moreTotal
+        options.value = [...options.value, ...moreList]
+        hasMore.value = options.value.length < total.value
+
+        // 如果已经加载了所有数据还没找到，跳出循环
+        if (!hasMore.value) break
+      }
+    }
   }
   catch (error) {
     console.error('加载选项失败:', error)
@@ -127,10 +182,18 @@ function handleEndReached(direction: ScrollbarDirection) {
   }
 }
 
+// 清空选择
+function handleClear() {
+  const newValue = (props.multiple ? [] : null) as any
+  _selectedValue.value = newValue
+  emit('update:modelValue', newValue)
+  emit('change', newValue)
+}
+
 // 选择选项
 function handleSelect(option: any) {
   if (props.multiple) {
-    const currentValue = Array.isArray(selectedValue.value) ? [...selectedValue.value] : []
+    const currentValue = Array.isArray(_selectedValue.value) ? [..._selectedValue.value] : []
     const optionValue = option[props.valueKey]
     const index = currentValue.indexOf(optionValue)
     if (index > -1) {
@@ -139,10 +202,16 @@ function handleSelect(option: any) {
     else {
       currentValue.push(optionValue)
     }
-    selectedValue.value = currentValue as number[] | string[]
+    const newValue = currentValue as number[] | string[]
+    _selectedValue.value = newValue
+    emit('update:modelValue', newValue)
+    emit('change', newValue)
   }
   else {
-    selectedValue.value = option[props.valueKey] as number | string
+    const newValue = option[props.valueKey] as number | string
+    _selectedValue.value = newValue
+    emit('update:modelValue', newValue)
+    emit('change', newValue)
     visible.value = false
   }
 }
@@ -150,11 +219,11 @@ function handleSelect(option: any) {
 // 判断选项是否被选中
 function isSelected(option: any) {
   if (props.multiple) {
-    const currentValue = Array.isArray(selectedValue.value) ? selectedValue.value : ([] as (number | string)[])
+    const currentValue = Array.isArray(_selectedValue.value) ? _selectedValue.value : ([] as (number | string)[])
     return currentValue.includes(option[props.valueKey] as number | string)
   }
   else {
-    return selectedValue.value === option[props.valueKey]
+    return _selectedValue.value === option[props.valueKey]
   }
 }
 
@@ -179,6 +248,35 @@ watch(visible, (val) => {
   }
 })
 
+// 监听 modelValue 变化，如果值不在当前列表中，尝试加载
+watch(
+  () => props.modelValue,
+  async (newVal) => {
+    _selectedValue.value = newVal ?? null
+    if (newVal && !isSelectedValueInOptions() && !loading.value) {
+      // 如果选中值不在当前列表中，尝试加载更多数据
+      if (hasMore.value) {
+        // 先尝试加载更多页，看是否能找到
+        while (!isSelectedValueInOptions() && hasMore.value && !loading.value) {
+          currentPage.value++
+          try {
+            const { list: moreList, total: moreTotal } = await loadPageData(currentPage.value)
+            total.value = moreTotal
+            options.value = [...options.value, ...moreList]
+            hasMore.value = options.value.length < total.value
+            if (!hasMore.value) break
+          }
+          catch (error) {
+            console.error('加载选项失败:', error)
+            break
+          }
+        }
+      }
+    }
+  },
+  { immediate: false },
+)
+
 // 暴露刷新方法，允许外部手动刷新
 defineExpose({
   refresh: () => loadData(true),
@@ -193,23 +291,27 @@ defineExpose({
       :width="width"
       placement="bottom-start"
       trigger="click"
-      popper-class="pagination-select-popover">
+      popper-class="pagination-select-popover"
+    >
       <template #reference>
         <div
-          ref="selectRef"
           class="pagination-select-input"
-          :class="{ 'is-disabled': disabled, 'is-multiple': multiple }">
+          :class="{ 'is-disabled': disabled, 'is-multiple': multiple }"
+        >
           <div v-if="multiple" class="pagination-select-tags">
             <el-tag
-              v-for="(val, index) in (Array.isArray(selectedValue) ? selectedValue : [])"
+              v-for="(val, index) in (Array.isArray(_selectedValue) ? _selectedValue : [])"
               :key="index"
               closable
               size="small"
-              @close="handleSelect({ [valueKey]: val } as any)">
-              {{options.find(opt => opt[valueKey] === val)?.[labelKey] || val}}
+              @close="handleSelect({ [valueKey]: val } as any)"
+            >
+              {{ options.find(opt => opt[valueKey] === val)?.[labelKey] || val }}
             </el-tag>
-            <span v-if="!selectedValue || (Array.isArray(selectedValue) && selectedValue.length === 0)"
-              class="pagination-select-placeholder">
+            <span
+              v-if="!_selectedValue || (Array.isArray(_selectedValue) && _selectedValue.length === 0)"
+              class="pagination-select-placeholder"
+            >
               {{ placeholder }}
             </span>
           </div>
@@ -218,8 +320,10 @@ defineExpose({
             <span v-else class="pagination-select-placeholder">{{ placeholder }}</span>
           </div>
           <span class="pagination-select-suffix">
-            <el-icon v-if="clearable && selectedValue" class="pagination-select-clear"
-              @click.stop="selectedValue = (multiple ? [] : null) as any">
+            <el-icon
+              v-if="clearable && _selectedValue" class="pagination-select-clear"
+              @click.stop="handleClear"
+            >
               <Close />
             </el-icon>
             <el-icon class="pagination-select-arrow" :class="{ 'is-reverse': visible }">
@@ -230,8 +334,10 @@ defineExpose({
       </template>
       <el-scrollbar height="300px" @end-reached="handleEndReached">
         <div class="pagination-select-options">
-          <div v-for="option in options" :key="option[valueKey]" class="pagination-select-option"
-            :class="{ 'is-selected': isSelected(option), 'is-multiple': multiple }" @click="handleSelect(option)">
+          <div
+            v-for="option in options" :key="option[valueKey]" class="pagination-select-option"
+            :class="{ 'is-selected': isSelected(option), 'is-multiple': multiple }" @click="handleSelect(option)"
+          >
             <el-checkbox v-if="multiple" :model-value="isSelected(option)" @click.stop />
             <span class="pagination-select-option-label">{{ option[labelKey] }}</span>
           </div>

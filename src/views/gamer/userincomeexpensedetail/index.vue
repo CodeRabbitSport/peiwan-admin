@@ -2,6 +2,7 @@
 import type { UserIncomeExpenseDetail } from '@/api/gamer/userincomeexpensedetail'
 import { UserIncomeExpenseDetailApi } from '@/api/gamer/userincomeexpensedetail'
 import { fenToYuan } from '@/utils'
+import download from '@/utils/download'
 import { dateFormatter } from '@/utils/formatTime'
 
 import UserIncomeExpenseDetailForm from './UserIncomeExpenseDetailForm.vue'
@@ -31,7 +32,7 @@ const queryParams = reactive({
   createTime: [],
 })
 const queryFormRef = ref() // 搜索的表单
-// const exportLoading = ref(false) // 导出的加载中
+const exportLoading = ref(false) // 导出的加载中
 
 /** 查询列表 */
 async function getList() {
@@ -148,19 +149,19 @@ function handleRowCheckboxChange(records: UserIncomeExpenseDetail[]) {
 }
 
 /** 导出按钮操作（已隐藏按钮，保留逻辑以备后用） */
-// async function handleExport() {
-//   try {
-//     await message.exportConfirm()
-//     exportLoading.value = true
-//     const data = await UserIncomeExpenseDetailApi.exportUserIncomeExpenseDetail(queryParams)
-//     download.excel(data, '收入支出明细.xls')
-//   }
-//   catch {
-//   }
-//   finally {
-//     exportLoading.value = false
-//   }
-// }
+async function handleExport() {
+  try {
+    await message.exportConfirm()
+    exportLoading.value = true
+    const data = await UserIncomeExpenseDetailApi.exportUserIncomeExpenseDetail(queryParams)
+    download.excel(data, '收入支出明细.xls')
+  }
+  catch {
+  }
+  finally {
+    exportLoading.value = false
+  }
+}
 
 /** 初始化 */
 onMounted(() => {
@@ -223,6 +224,9 @@ onMounted(() => {
       <el-form-item>
         <el-button @click="handleQuery">
           <Icon icon="ep:search" class="mr-[5px]" /> 搜索
+        </el-button>
+        <el-button :loading="exportLoading" @click="handleExport">
+          <Icon icon="ep:position" class="mr-[5px]" /> 导出
         </el-button>
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置

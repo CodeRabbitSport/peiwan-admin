@@ -17,8 +17,17 @@ const props = defineProps<{
   extraParams?: Record<string, any>
   width?: string
 }>()
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', val: number | string | number[] | string[] | null): void
+  (e: 'change', val: number | string | number[] | string[] | null): void
+}>()
 </script>
 
 <template>
-  <PaginationSelect v-bind="props" />
+  <PaginationSelect
+    v-bind="props"
+    @update:model-value="emit('update:modelValue', $event)"
+    @change="emit('change', $event)"
+  />
 </template>

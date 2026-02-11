@@ -58,6 +58,7 @@ const KEYS = {
   COMMISSION_RATE: 'commissionConfigCommissionRate',
   // 应用配置
   ENABLE_INVITATION_MODE: 'appConfigEnableInvitationMode',
+  ENABLE_CONSUME_RANK: 'appConfigEnableConsumeRank',
   ENABLE_AUTO_PICK_ORDER: 'appConfigEnableAutoPickOrder',
   INVITATION_POSTER: 'appConfigInvitePoster',
   SITE_CONFIG_HTML_H5_KEY: 'siteConfigHtmlH5Key',
@@ -108,6 +109,7 @@ const formData = reactive<any>({
   commissionRate: 0,
   // 应用配置
   enableInvitationMode: false,
+  enableConsumeRank: false,
   enableAutoPickOrder: false,
   siteConfigCustomerServiceLink: '',
   invitationPoster: '',
@@ -279,6 +281,9 @@ async function loadAll() {
           break
         case KEYS.ENABLE_INVITATION_MODE:
           formData.enableInvitationMode = toBool(item.configValue)
+          break
+        case KEYS.ENABLE_CONSUME_RANK:
+          formData.enableConsumeRank = toBool(item.configValue)
           break
         case KEYS.ENABLE_AUTO_PICK_ORDER:
           formData.enableAutoPickOrder = toBool(item.configValue)
@@ -821,6 +826,14 @@ onMounted(() => {
                 <el-switch
                   v-model="formData.enableInvitationMode"
                   @change="(val: any) => handleSave(KEYS.ENABLE_INVITATION_MODE, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="6">
+              <el-form-item label="是否开启消费排名">
+                <el-switch
+                  v-model="formData.enableConsumeRank"
+                  @change="(val: any) => handleSave(KEYS.ENABLE_CONSUME_RANK, 'boolean', val)"
                 />
               </el-form-item>
             </el-col>
