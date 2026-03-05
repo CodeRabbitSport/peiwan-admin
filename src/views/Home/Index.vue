@@ -766,6 +766,18 @@ onActivated(async () => {
       <el-col :xs="24" :sm="12" :md="8" :lg="8">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
+            title="复购率"
+            icon="ep:present"
+            icon-color="bg-orange-100"
+            icon-bg-color="text-orange-500"
+            :value="Number((dashboardData.repeatPurchaseRate || 0) * 100)"
+            suffix="%"
+          />
+        </el-card>
+      </el-col>
+      <!-- <el-col :xs="24" :sm="12" :md="8" :lg="8">
+        <el-card shadow="never" :loading="dashboardLoading">
+          <SummaryCard
             title="打手服务费"
             icon="ep:calendar"
             icon-color="bg-pink-100"
@@ -775,10 +787,10 @@ onActivated(async () => {
             :value="Number(fenToYuan(dashboardData.totalFeeAmount || 0))"
           />
         </el-card>
-      </el-col>
+      </el-col> -->
     </el-row>
 
-    <el-row :gutter="16" class="mb-4">
+    <!-- <el-row :gutter="16" class="mb-4">
       <el-col :xs="24" :sm="12" :md="8" :lg="8">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
@@ -791,7 +803,7 @@ onActivated(async () => {
           />
         </el-card>
       </el-col>
-    </el-row>
+    </el-row> -->
 
     <!-- 统一的筛选器 -->
     <el-card shadow="never" class="mb-4">
@@ -849,7 +861,7 @@ onActivated(async () => {
     <el-card shadow="never" class="mb-4" :loading="amountChartLoading">
       <template #header>
         <div class="flex flex-wrap items-center gap-4">
-          <span class="text-base font-medium">订单金额趋势</span>
+          <span class="text-base font-medium">订单完成金额趋势</span>
         </div>
       </template>
       <Echart :key="amountChartKey" ref="amountChartRef" :height="400" :options="orderAmountChartOptions" />
@@ -859,7 +871,7 @@ onActivated(async () => {
     <el-card shadow="never" class="mb-4" :loading="sizeChartLoading">
       <template #header>
         <div class="flex flex-wrap items-center gap-4">
-          <span class="text-base font-medium">订单数量趋势</span>
+          <span class="text-base font-medium">订单完成数量趋势</span>
         </div>
       </template>
       <Echart :key="sizeChartKey" ref="sizeChartRef" :height="400" :options="orderSizeChartOptions" />

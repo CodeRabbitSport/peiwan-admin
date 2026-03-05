@@ -14,6 +14,7 @@ const props = defineProps({
   drag: propTypes.bool.def(true), // 是否支持拖拽上传 ==> 非必传（默认为 true）
   disabled: propTypes.bool.def(false), // 是否禁用上传组件 ==> 非必传（默认为 false）
   limit: propTypes.number.def(5), // 最大图片上传数 ==> 非必传（默认为 5张）
+  multiple: propTypes.bool.def(false),
   fileSize: propTypes.number.def(5), // 图片大小限制 ==> 非必传（默认为 5M）
   fileType: propTypes.array.def(['image/jpeg', 'image/png', 'image/gif']), // 图片类型限制 ==> 非必传（默认为 ["image/jpeg", "image/png", "image/gif"]）
   height: propTypes.string.def('150px'), // 组件高度 ==> 非必传（默认为 150px）
@@ -65,6 +66,7 @@ const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
       message: '上传图片不符合所需的格式！',
       type: 'warning',
     })
+    return
   }
   if (!isValidSize) {
     ElNotification({
@@ -72,6 +74,7 @@ const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
       message: `上传图片大小不能超过 ${props.fileSize}M！`,
       type: 'warning',
     })
+    return
   }
 
   // 只有在验证通过后才增加计数器
@@ -93,12 +96,15 @@ interface UploadEmits {
   (e: 'update:modelValue', value: string[]): void
 }
 
-const uploadSuccess: UploadProps['onSuccess'] = (res: any): void => {
+const uploadSuccess: UploadProps['onSuccess'] = (res: any, uploadFile): void => {
   loading.value.close()
+
   message.success('上传成功')
-  // 删除自身
-  const index = fileList.value.findIndex(item => item.response?.data === res.data)
-  fileList.value.splice(index, 1)
+  // 用 uid 精准删除，避免 findIndex 返回 -1 时 splice(-1,1) 误删最后一项
+  const index = fileList.value.findIndex(item => item.uid === uploadFile.uid)
+  if (index !== -1) {
+    fileList.value.splice(index, 1)
+  }
   uploadList.value.push({ name: res.data, url: res.data })
   if (uploadList.value.length == uploadNumber.value) {
     fileList.value.push(...uploadList.value)
@@ -176,7 +182,7 @@ function handleExceed() {
       :drag="drag"
       :http-request="httpRequest"
       :limit="limit"
-      :multiple="true"
+      :multiple="multiple"
       :on-error="uploadError"
       :on-exceed="handleExceed"
       :on-success="uploadSuccess"

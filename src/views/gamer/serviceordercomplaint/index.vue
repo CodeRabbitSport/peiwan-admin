@@ -185,19 +185,22 @@ async function submitReply() {
   if (!replyForm.orderId) return message.warning('缺少订单ID')
   if (!replyForm.content) return message.warning('请输入回复内容')
   replyFormLoading.value = true
+  const orderId = replyForm.orderId
   try {
     await ServiceOrderComplaintApi.createServiceOrderComplaint({
       id: 0 as unknown as number,
-      orderId: replyForm.orderId,
+      orderId,
       userId: userStore.getUser.id,
       // 2-管理员
       userType: 2 as unknown as any,
       content: replyForm.content!,
-      images: Array.isArray(replyForm.images) ? JSON.stringify(replyForm.images) : '',
+      images: Array.isArray(replyForm.images) ? replyForm.images.join(',') : '',
     } as unknown as ServiceOrderComplaint)
     message.success('回复成功')
     replyDialogVisible.value = false
-    await getList()
+    replyForm.content = undefined
+    replyForm.images = []
+    await openComplaintDialog({ id: orderId, complaintStatus: currentComplaintStatus.value })
   }
   finally {
     replyFormLoading.value = false
@@ -381,7 +384,7 @@ onMounted(() => {
         <el-input v-model="replyForm.content" type="textarea" :rows="4" placeholder="请输入回复内容" />
       </el-form-item>
       <el-form-item label="图片">
-        <UploadImgs v-model="replyForm.images" :limit="6" />
+        <UploadImgs v-model="replyForm.images" :limit="9" :drag="false" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -586,10 +589,10 @@ onMounted(() => {
         <template #default="scope">
           <div class="flex flex-wrap gap-2">
             <el-image
-              v-if="scope.row?.images || scope.row?.images !== ''"
-              :src="scope.row?.images.startsWith('[') ? JSON.parse(scope.row?.images || '[]')?.[0] : scope.row?.images"
+              v-if="scope.row?.images"
+              :src="scope.row.images.split(',')?.[0]"
               fit="cover" style="width: 60px; height: 60px"
-              :preview-src-list="scope.row?.images.startsWith('[') ? JSON.parse(scope.row?.images || '[]') : [scope.row?.images]"
+              :preview-src-list="scope.row.images.split(',')"
               preview-teleported
             />
             <span v-else>-</span>

@@ -19,6 +19,8 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<OrderConversationMessage[]>([]) // 列表的数据
 const total = ref(0)
+const loadingMore = ref(false) // 滚动加载中
+const finished = computed(() => list.value.length >= total.value) // 是否加载完毕
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
@@ -41,6 +43,21 @@ async function getList() {
   }
   finally {
     loading.value = false
+  }
+}
+
+/** 滚动加载更多（嵌入聊天模式） */
+async function handleLoadMore() {
+  if (loadingMore.value || finished.value) return
+  loadingMore.value = true
+  try {
+    queryParams.pageNo++
+    const data = await OrderConversationMessageApi.getOrderConversationMessagePage(queryParams)
+    list.value.push(...data.list)
+    total.value = data.total
+  }
+  finally {
+    loadingMore.value = false
   }
 }
 
@@ -347,7 +364,12 @@ function messageTypeTag(type?: number) {
 
   <!-- 聊天样式（嵌入弹窗时展示） -->
   <ContentWrap v-else>
-    <ChatMessageList :items="list" />
+    <ChatMessageList
+      :items="list"
+      :loading="loadingMore"
+      :finished="finished"
+      @load-more="handleLoadMore"
+    />
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->

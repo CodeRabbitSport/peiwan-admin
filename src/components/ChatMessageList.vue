@@ -4,14 +4,44 @@ import { formatDate } from '@/utils/formatTime'
 const props = defineProps<{
   items: any[]
   height?: string
+  loading?: boolean
+  finished?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'load-more'): void
 }>()
 
 const height = computed(() => props.height || '70vh')
+
+const scrollbarRef = ref()
+
+function parseCardInfo(content: any): Record<string, any> | null {
+  try {
+    const obj = typeof content === 'string' ? JSON.parse(content) : content
+    const cardInfo = obj?.cardInfo
+    if (!cardInfo) return null
+    return typeof cardInfo === 'string' ? JSON.parse(cardInfo) : cardInfo
+  }
+  catch {
+    return null
+  }
+}
+
+function handleScroll() {
+  const wrap = scrollbarRef.value?.wrapRef as HTMLElement | undefined
+  if (!wrap) return
+  // 距底部 50px 以内触发
+  const atBottom = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 50
+  if (atBottom && !props.loading && !props.finished) {
+    emit('load-more')
+  }
+}
 </script>
 
 <template>
   <div class="chat-container" :style="{ height }">
-    <el-scrollbar class="chat-scroll">
+    <el-scrollbar ref="scrollbarRef" class="chat-scroll" @scroll="handleScroll">
       <div class="chat-inner">
         <div
           v-for="item in items"
@@ -52,12 +82,30 @@ const height = computed(() => props.height || '70vh')
               </el-link>
               <audio v-else-if="(item as any).messageType === 4" :src="(item as any).fileUrl" controls class="audio" />
               <video v-else-if="(item as any).messageType === 5" :src="(item as any).fileUrl" controls class="video" />
+              <div v-else-if="(item as any).messageType === 6" class="game-card">
+                <template v-if="parseCardInfo((item as any).messageContent)">
+                  <div
+                    v-for="(val, key) in parseCardInfo((item as any).messageContent)"
+                    :key="key"
+                    class="card-line"
+                  >
+                    {{ key }}：{{ val }}
+                  </div>
+                </template>
+                <span v-else>-</span>
+              </div>
               <span v-else>-</span>
             </div>
             <div class="time">
               {{ formatDate((item as any).createTime) }}
             </div>
           </div>
+        </div>
+        <div v-if="loading" class="load-more-tip">
+          加载中...
+        </div>
+        <div v-else-if="finished" class="load-more-tip">
+          没有更多了
         </div>
       </div>
     </el-scrollbar>
@@ -119,5 +167,19 @@ const height = computed(() => props.height || '70vh')
   font-size: 12px;
   color: #999;
   margin: 6px 8px 0;
+}
+.load-more-tip {
+  text-align: center;
+  font-size: 13px;
+  color: #999;
+  padding: 12px 0;
+}
+.game-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.card-line {
+  line-height: 1.6;
 }
 </style>

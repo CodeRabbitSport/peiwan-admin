@@ -911,23 +911,31 @@ async function openOrderConversationByOrderId(orderId: number) {
                   退款审核
                 </el-dropdown-item>
                 <el-dropdown-item
-                  v-if="scope.row.payStatus === 1 && (!Array.isArray(scope.row.acceptorList) || scope.row.acceptorList.length === 0)"
+                  v-if="scope.row.payStatus === 1 && [1, 2].includes(scope.row.orderStatus)"
                   v-hasPermi="['gamer:service-order:refund']"
                   @click="handleImmediateRefund(scope.row)"
                 >
                   立即退款
                 </el-dropdown-item>
+                <!-- <el-dropdown-item
+                  v-if="scope.row.payStatus === 1 && (!Array.isArray(scope.row.acceptorList) || scope.row.acceptorList.length === 0)"
+                  v-hasPermi="['gamer:service-order:refund']"
+                  @click="handleImmediateRefund(scope.row)"
+                >
+                  立即退款
+                </el-dropdown-item> -->
                 <el-dropdown-item
-                  v-if="scope.row.orderStatus === 1"
+                  v-if="scope.row.orderStatus === 1 && scope.row.payStatus === 1"
                   v-hasPermi="['gamer:service-order:cancel-accept']"
                   @click="handleCancelOrder(scope.row)"
                 >
-                  取消订单
+                  取消接单
                 </el-dropdown-item>
                 <el-dropdown-item @click="openVoucherPreview(scope.row)">
                   查看结单证明
                 </el-dropdown-item>
                 <el-dropdown-item
+                  v-if="scope.row.orderStatus === 3"
                   v-hasPermi="['gamer:service-order:delete']"
                   @click="handleDelete(scope.row.id)"
                 >
