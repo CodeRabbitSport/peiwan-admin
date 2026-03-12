@@ -383,7 +383,7 @@ const orderAmountChartOptions = computed<EChartsOption>(() => {
       },
     },
     legend: {
-      data: ['订单金额', '退款金额', '进行中订单金额'],
+      data: ['订单完成金额', '退款金额', '进行中订单金额'],
       top: 35,
     },
     grid: {
@@ -412,7 +412,7 @@ const orderAmountChartOptions = computed<EChartsOption>(() => {
     },
     series: [
       {
-        name: '订单金额',
+        name: '订单完成金额',
         type: 'line',
         smooth: true,
         areaStyle: {
@@ -541,7 +541,7 @@ const orderSizeChartOptions = computed<EChartsOption>(() => {
       },
     },
     legend: {
-      data: ['订单数量', '退款数量', '进行中订单数量'],
+      data: ['订单完成数量', '退款数量', '进行中订单数量'],
       top: 35,
     },
     grid: {
@@ -570,7 +570,7 @@ const orderSizeChartOptions = computed<EChartsOption>(() => {
     },
     series: [
       {
-        name: '订单数量',
+        name: '订单完成数量',
         type: 'line',
         smooth: true,
         areaStyle: {

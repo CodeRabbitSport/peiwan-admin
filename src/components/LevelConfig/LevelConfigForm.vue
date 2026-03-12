@@ -124,7 +124,7 @@ async function open(type: string, id?: number) {
     formLoading.value = true
     try {
       formData.value = await LevelConfigApi.getLevelConfig(id)
-      formData.value.depositFee = formData.value.depositFee ? formData.value.depositFee / 100 : undefined
+      formData.value.depositFee = formData.value.depositFee != null ? formData.value.depositFee / 100 : undefined
       formData.value.dailyOrderFeeLimit = formData.value.dailyOrderFeeLimit ? formData.value.dailyOrderFeeLimit / 100 : undefined
       // 单价：分转元（仅陪玩）
       if (props.categoryType === 1 && formData.value.unitPrice) {
@@ -203,7 +203,7 @@ function resetForm() {
     canRefundOrder: true, // 默认值
     canViewRefundPhone: true, // 默认值
     canViewUnrefundedPhone: true, // 默认值
-    viewPhoneDaysLimit: 0, // 默认值
+    viewPhoneDaysLimit: -1, // 默认值
     canSetAnnouncement: true,
     depositRefundSafeDays: undefined,
     restrictedProductIds: '',
@@ -462,6 +462,34 @@ function clearSelectedProducts() {
             active-text="有"
             inactive-text="无"
           />
+        </el-form-item>
+        <el-form-item label="查看已申请退款订单用户手机号" prop="canViewRefundPhone">
+          <el-switch
+            v-model="formData.canViewRefundPhone"
+            :active-value="true"
+            :inactive-value="false"
+            active-text="有"
+            inactive-text="无"
+          />
+        </el-form-item>
+        <el-form-item label="查看未退款订单用户手机号" prop="canViewUnrefundedPhone">
+          <el-switch
+            v-model="formData.canViewUnrefundedPhone"
+            :active-value="true"
+            :inactive-value="false"
+            active-text="有"
+            inactive-text="无"
+          />
+        </el-form-item>
+        <el-form-item label="查看未退款订单用户手机号天数" prop="viewPhoneDaysLimit">
+          <el-input-number
+            v-model="formData.viewPhoneDaysLimit"
+            :min="-1"
+            placeholder="请输入天数，-1 表示不限制"
+            controls-position="right"
+            class="!w-full"
+          />
+          <span class="ml-2 text-xs text-gray-400">-1 表示不限制</span>
         </el-form-item>
         <el-form-item label="限制升级人数名额" prop="upgradeSlotLimit">
           <el-input v-model="formData.upgradeSlotLimit" placeholder="请输入名额，0 表示不限制" />

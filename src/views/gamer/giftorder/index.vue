@@ -147,6 +147,7 @@ onMounted(() => {
       <el-form-item label="赠送人" prop="senderId">
         <UserMultiSelectInput
           v-model="queryParams.senderId"
+          :multiple="false"
           placeholder="请选择用户"
           @change="handleQuery"
         />
@@ -154,6 +155,7 @@ onMounted(() => {
       <el-form-item label="被赠送人" prop="receiverId" label-width="100px">
         <UserMultiSelectInput
           v-model="queryParams.receiverId"
+          :multiple="false"
           placeholder="请选择用户"
           @change="handleQuery"
         />

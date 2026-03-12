@@ -126,28 +126,12 @@ onMounted(() => {
 <template>
   <ContentWrap>
     <!-- 搜索工作栏 -->
-    <el-form
-      ref="queryFormRef"
-      class="-mb-[15px]"
-      :model="queryParams"
-      :inline="true"
-      label-width="68px"
-    >
+    <el-form ref="queryFormRef" class="-mb-[15px]" :model="queryParams" :inline="true" label-width="68px">
       <el-form-item label="等级名称" prop="levelName">
-        <el-input
-          v-model="queryParams.levelName"
-          placeholder="请输入等级名称"
-          clearable
-          class="!w-[240px]"
-        />
+        <el-input v-model="queryParams.levelName" placeholder="请输入等级名称" clearable class="!w-[240px]" />
       </el-form-item>
       <el-form-item label="级别号" prop="levelNumber">
-        <el-input
-          v-model="queryParams.levelNumber"
-          placeholder="请输入级别号"
-          clearable
-          class="!w-[240px]"
-        />
+        <el-input v-model="queryParams.levelNumber" placeholder="请输入级别号" clearable class="!w-[240px]" />
       </el-form-item>
 
       <el-form-item>
@@ -157,21 +141,11 @@ onMounted(() => {
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
         </el-button>
-        <el-button
-          v-hasPermi="['gamer:level-config:create']"
-          type="primary"
-          plain
-          @click="openForm('create')"
-        >
+        <el-button v-hasPermi="['gamer:level-config:create']" type="primary" plain @click="openForm('create')">
           <Icon icon="ep:plus" class="mr-[5px]" /> 新增
         </el-button>
-        <el-button
-          v-hasPermi="['gamer:level-config:delete']"
-          type="danger"
-          plain
-          :disabled="isEmpty(checkedIds)"
-          @click="handleDeleteBatch"
-        >
+        <el-button v-hasPermi="['gamer:level-config:delete']" type="danger" plain :disabled="isEmpty(checkedIds)"
+          @click="handleDeleteBatch">
           <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
         </el-button>
       </el-form-item>
@@ -180,14 +154,8 @@ onMounted(() => {
 
   <!-- 列表 -->
   <ContentWrap>
-    <el-table
-      v-loading="loading"
-      row-key="id"
-      :data="list"
-      :stripe="true"
-      :show-overflow-tooltip="true"
-      @selection-change="handleRowCheckboxChange"
-    >
+    <el-table v-loading="loading" row-key="id" :data="list" :stripe="true" :show-overflow-tooltip="true"
+      @selection-change="handleRowCheckboxChange">
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" width="80" />
       <el-table-column label="等级名称" align="center" prop="levelName" width="150" />
@@ -236,13 +204,13 @@ onMounted(() => {
             <div class="feature-item">
               打赏金额抽成：{{ row.rewardCommissionRate }}%
             </div>
-            <!--   <div class="feature-item">
+            <div class="feature-item">
               可自主取消接单订单：{{ permissionText(row.canCancelOrder) }}
             </div>
             <div class="feature-item">
               可自主退款接单订单：{{ permissionText(row.canRefundOrder) }}
             </div>
-          <div class="feature-item">
+            <div class="feature-item">
               查看已申请退款订单用户手机号：{{ permissionText(row.canViewRefundPhone) }}
             </div>
             <div class="feature-item">
@@ -250,8 +218,8 @@ onMounted(() => {
             </div>
             <div class="feature-item">
               查看未退款订单用户手机号天数：{{ row.viewPhoneDaysLimit === -1 ? '不限制' : `${row.viewPhoneDaysLimit
-              }天` }}
-            </div> -->
+                }天` }}
+            </div>
             <div class="feature-item">
               设置用户公告内容权限：{{ permissionText(row.canSetAnnouncement) }}
             </div>
@@ -267,7 +235,7 @@ onMounted(() => {
             </div>
             <div class="feature-item">
               限制同时可接单数：{{ row.simultaneousOrderLimit === 0 ? '不限制' : `${row.simultaneousOrderLimit
-              }单` }}
+                }单` }}
             </div>
             <div class="feature-item">
               接单验证类型：{{ verifyTypeText(row.orderVerificationType) }}
@@ -285,30 +253,19 @@ onMounted(() => {
       <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
-          <el-button
-            v-hasPermi="['gamer:level-config:update']"
-            link
-            type="primary"
-            @click="openForm('update', scope.row.id)"
-          >
+          <el-button v-hasPermi="['gamer:level-config:update']" link type="primary"
+            @click="openForm('update', scope.row.id)">
             编辑
           </el-button>
-          <el-button
-            v-hasPermi="['gamer:level-config:delete']"
-            link
-            type="danger"
-            @click="handleDelete(scope.row.id)"
-          >
+          <el-button v-hasPermi="['gamer:level-config:delete']" link type="danger" @click="handleDelete(scope.row.id)">
             删除
           </el-button>
         </template>
       </el-table-column>
     </el-table>
     <!-- 分页 -->
-    <Pagination
-      v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" :total="total"
-      @pagination="getList"
-    />
+    <Pagination v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" :total="total"
+      @pagination="getList" />
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->

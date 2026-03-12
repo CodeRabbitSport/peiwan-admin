@@ -896,8 +896,15 @@ async function openOrderConversationByOrderId(orderId: number) {
                   查看聊天记录
                 </el-dropdown-item>
                 <!-- 完成订单 -->
-                <el-dropdown-item
+                <!-- <el-dropdown-item
                   v-if="scope.row.completeTime && !scope.row.confirmTime"
+                  v-hasPermi="['gamer:service-order:update']"
+                  @click="handleAuditOrderComplete(scope.row)"
+                >
+                  完成订单
+                </el-dropdown-item> -->
+                <el-dropdown-item
+                  v-if="scope.row.orderStatus === 1 && scope.row.payStatus === 1 && scope.row.acceptorList?.length !== 0"
                   v-hasPermi="['gamer:service-order:update']"
                   @click="handleAuditOrderComplete(scope.row)"
                 >
@@ -925,7 +932,7 @@ async function openOrderConversationByOrderId(orderId: number) {
                   立即退款
                 </el-dropdown-item> -->
                 <el-dropdown-item
-                  v-if="scope.row.orderStatus === 1 && scope.row.payStatus === 1"
+                  v-if="scope.row.orderStatus === 1 && scope.row.payStatus === 1 && scope.row.acceptorList?.length !== 0"
                   v-hasPermi="['gamer:service-order:cancel-accept']"
                   @click="handleCancelOrder(scope.row)"
                 >
