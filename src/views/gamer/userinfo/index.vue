@@ -2,6 +2,7 @@
 import type { UserInfo } from '@/api/gamer/userinfo'
 import { UserInfoApi } from '@/api/gamer/userinfo'
 import { fenToYuan } from '@/utils'
+import { formatDate } from '@/utils/formatTime'
 import UserBalanceUpdateForm from '@/views/member/user/components/UserBalanceUpdateForm.vue'
 
 import UserIncomeExpenseDetail from '../userincomeexpensedetail/index.vue'
@@ -9,7 +10,6 @@ import UserMoment from '../usermoment/index.vue'
 import UserMomentBrowse from '../usermomentbrowse/index.vue'
 import UserMomentComment from '../usermomentcomment/index.vue'
 import UserMomentLike from '../usermomentlike/index.vue'
-import UserInfoForm from './UserInfoForm.vue'
 import UserStatDialog from './UserStatDialog.vue'
 
 /** 用户信息 列表 */
@@ -49,6 +49,38 @@ const queryParams = reactive({
 const queryFormRef = ref() // 搜索的表单
 const UpdateBalanceFormRef = ref() // 修改用户余额表单
 
+function formatMoney(value?: number | string | null) {
+  return fenToYuan(Number(value ?? 0))
+}
+
+function formatGrowthValue(value?: number | string | null) {
+  return fenToYuan(Number(value ?? 0) * 100)
+}
+
+function formatDateTime(value?: string | number | Date | null) {
+  return value ? formatDate(value as Date) : '--'
+}
+
+function getUserTypeLabel(row: any) {
+  if (row.levelApply?.levelName) return row.levelApply.levelName
+  if (row.accompanyLevelApply?.levelName) return row.accompanyLevelApply.levelName
+  return '普通用户'
+}
+
+function getUserTypeTag(row: any) {
+  if (row.levelApply?.levelName) return 'success'
+  if (row.accompanyLevelApply?.levelName) return 'warning'
+  return 'info'
+}
+
+function getCreateTime(row: any) {
+  return row.createTime || row.create_date || row.createDate
+}
+
+function getActiveTime(row: any) {
+  return row.login_date || row.loginDate || row.activeTime
+}
+
 /** 查询列表 */
 async function getList() {
   loading.value = true
@@ -83,14 +115,7 @@ function resetQuery() {
   handleQuery()
 }
 
-/** 添加/修改操作 */
-const formRef = ref()
-function openForm(type: string, id?: number) {
-  formRef.value.open(type, id)
-}
-
-async function handleToggleUserStatus(row: any, e: any) {
-  console.log(row, e)
+async function handleToggleUserStatus(row: any) {
   try {
     await UserInfoApi.toggleUserStatus({ userId: row.id })
     getList()
@@ -144,26 +169,6 @@ async function handleDelete(id: number) {
   }
   catch { }
 }
-
-const checkedIds = ref<number[]>([])
-function handleRowCheckboxChange(records: UserInfo[]) {
-  checkedIds.value = records.map(item => item.id)
-}
-
-/** 导出按钮操作（已隐藏按钮，保留逻辑以备后用） */
-// async function handleExport() {
-//   try {
-//     await message.exportConfirm()
-//     exportLoading.value = true
-//     const data = await UserInfoApi.exportUserInfo(queryParams)
-//     download.excel(data, '用户信息.xls')
-//   }
-//   catch {
-//   }
-//   finally {
-//     exportLoading.value = false
-//   }
-// }
 
 /** 初始化 */
 onMounted(() => {
@@ -227,26 +232,6 @@ onMounted(() => {
           type="number"
         />
       </el-form-item>
-      <!--  <el-form-item label="城市" prop="city">
-        <el-input
-          v-model="queryParams.city"
-          placeholder="请输入城市"
-          clearable
-          class="!w-[240px]"
-        />
-      </el-form-item>
-      <el-form-item label="语音审核状态" prop="voiceAuditStatus">
-        <el-select
-          v-model="queryParams.voiceAuditStatus"
-          placeholder="请选择语音审核状态"
-          clearable
-          class="!w-[240px]"
-        >
-          <el-option label="审核通过" value="1" />
-          <el-option label="审核失败" value="0" />
-        </el-select>
-      </el-form-item> -->
-
       <el-form-item>
         <el-button @click="handleQuery">
           <Icon icon="ep:search" class="mr-[5px]" /> 搜索
@@ -254,14 +239,6 @@ onMounted(() => {
         <el-button @click="resetQuery">
           <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
         </el-button>
-        <!-- <el-button
-          v-hasPermi="['gamer:user-info:create']"
-          type="primary"
-          plain
-          @click="openForm('create')"
-        >
-          <Icon icon="ep:plus" class="mr-[5px]" /> 新增
-        </el-button> -->
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -270,176 +247,139 @@ onMounted(() => {
   <ContentWrap>
     <el-table
       v-loading="loading"
+      class="userinfo-table"
       row-key="id"
       :data="list"
-      :stripe="true"
       :show-overflow-tooltip="true"
-      @selection-change="handleRowCheckboxChange"
     >
-      <el-table-column type="selection" width="55" />
-      <el-table-column label="用户ID" align="center" prop="id" />
-      <el-table-column label="手机号" align="center" prop="mobile" width="120" />
-      <el-table-column label="用户昵称" align="center" prop="nickname" width="120" />
-      <el-table-column label="用户头像" align="center" prop="avatar">
+      <el-table-column label="ID" align="center" prop="id" width="90" />
+      <el-table-column label="用户信息" min-width="250">
         <template #default="scope">
-          <el-image
-            v-if="scope.row.avatar"
-            :src="scope.row.avatar"
-            :preview-src-list="[scope.row.avatar]"
-            preview-teleported
-            fit="cover"
-            style="width: 40px; height: 40px"
-          />
+          <div class="user-info-cell">
+            <div class="user-info-name">
+              {{ scope.row.nickname || '--' }}
+            </div>
+            <el-image
+              v-if="scope.row.avatar"
+              class="user-avatar"
+              :src="scope.row.avatar"
+              :preview-src-list="[scope.row.avatar]"
+              preview-teleported
+              fit="cover"
+            />
+            <div v-else class="user-avatar user-avatar--empty">
+              {{ (scope.row.nickname || '?').slice(0, 1) }}
+            </div>
+            <div class="user-info-meta">
+              <span class="user-info-label">当前积分数:</span>
+              <span>{{ formatMoney(scope.row.wallet?.totalExperience) }}</span>
+            </div>
+            <div class="user-info-meta">
+              <span class="user-info-label">当前等级:</span>
+              <span>{{ scope.row?.userGradeInfo?.levelName || '无等级' }}</span>
+            </div>
+          </div>
         </template>
       </el-table-column>
-      <!-- <el-table-column label="头像" align="center" prop="trueHead">
+      <el-table-column label="手机号" align="center" min-width="180">
         <template #default="scope">
-          <el-image
-            v-if="scope.row.trueHead"
-            :src="scope.row.trueHead"
-            :preview-src-list="[scope.row.trueHead]"
-            fit="cover"
-            style="width: 40px; height: 40px"
-          />
+          <div class="table-text-block">
+            {{ scope.row.mobile || scope.row.phone || '--' }}
+          </div>
         </template>
-      </el-table-column> -->
-      <el-table-column label="性别" align="center" prop="sex">
+      </el-table-column>
+      <el-table-column label="时间" align="center" min-width="220">
         <template #default="scope">
-          <el-tag :type="scope.row.sex === 1 ? 'success' : scope.row.sex === 2 ? 'danger' : 'info'">
-            {{ scope.row.sex === 1 ? '男' : scope.row.sex === 2 ? '女' : '未知' }}
+          <div class="table-stack">
+            <div>创建时间：{{ formatDateTime(getCreateTime(scope.row)) }}</div>
+            <div>活跃时间：{{ formatDateTime(getActiveTime(scope.row)) }}</div>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="封禁状态" align="center" width="140">
+        <template #default="scope">
+          <div class="status-switch-wrap">
+            <el-switch
+              v-hasPermi="['gamer:user-info:update']"
+              :model-value="scope.row.status"
+              :active-value="true"
+              inline-prompt
+              :inactive-value="false"
+              style="--el-switch-off-color: #dcdfe6; --el-switch-on-color: #ff4949"
+              active-text="已封禁"
+              inactive-text="未封禁"
+              @change="() => handleToggleUserStatus(scope.row)"
+            />
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="用户类别" align="center" width="140">
+        <template #default="scope">
+          <el-tag :type="getUserTypeTag(scope.row)" effect="plain" round>
+            {{ getUserTypeLabel(scope.row) }}
           </el-tag>
         </template>
       </el-table-column>
-      <!-- <el-table-column label="城市" align="center" prop="city" /> -->
-      <el-table-column label="简介" align="center" prop="signature" />
-      <!-- 用户等级列 -->
-      <el-table-column label="用户等级" align="center" min-width="180px">
+      <el-table-column label="可用余额" align="center" width="120">
         <template #default="scope">
-          <div class="flex flex-col items-center justify-center gap-1">
-            <template v-if="scope.row.levelApply">
-              <el-tag v-if="scope.row.levelApply.levelName" type="success">
-                {{ scope.row.levelApply.levelName }}
-              </el-tag>
-              <div>保证金：{{ fenToYuan(scope.row?.wallet?.depositBalance) ?? 0 }}</div>
-              <div>打手评分：{{ scope.row.contributePoint ?? 0 }}</div>
-              <div>打手自动接单状态：{{ scope.row.serverStatus ? '已开启' : '已关闭' }}</div>
-              <!--   <div v-if="scope.row.levelApply.contact">
-                联系手机号：{{ scope.row.levelApply.contact }}
-              </div> -->
-            </template>
-            <template v-else-if="scope.row.accompanyLevelApply">
-              <el-tag v-if="scope.row.accompanyLevelApply.levelName" type="warning">
-                {{ scope.row.accompanyLevelApply.levelName }}
-              </el-tag>
-            </template>
-            <template v-else>
-              <el-tag>普通用户</el-tag>
-            </template>
-          </div>
+          <span class="amount-text">{{ formatMoney(scope.row.wallet?.balance) }}</span>
         </template>
       </el-table-column>
-
-      <!-- 资产信息列 -->
-      <el-table-column label="资产信息" align="center" min-width="180px">
+      <el-table-column label="冻结余额" align="center" width="120">
         <template #default="scope">
-          <div class="flex flex-col items-start gap-1">
-            <div>余额：{{ fenToYuan(scope.row.wallet?.balance) ?? 0 }}</div>
-            <div>冻结余额：{{ fenToYuan(scope.row.wallet?.freezePrice) ?? 0 }}</div>
-            <div>消费金额：{{ fenToYuan(scope.row.wallet?.totalExpense - scope.row.wallet?.totalWithdraw) ?? 0 }}</div>
-            <!-- <div>财富值：{{ scope.row.wealthVal ?? 0 }}</div>
-            <div>魅力值：{{ scope.row.charmVal ?? 0 }}</div> -->
-          </div>
+          <span class="amount-text">{{ formatMoney(scope.row.wallet?.freezePrice) }}</span>
         </template>
       </el-table-column>
-
-      <!-- 封禁状态 -->
-      <el-table-column label="封禁状态" align="center" width="140">
+      <el-table-column label="保证金" align="center" width="120">
         <template #default="scope">
-          <el-switch
-            v-hasPermi="['gamer:user-info:update']"
-            :model-value="scope.row.status"
-            :active-value="true"
-            inline-prompt
-            :inactive-value="false"
-            style="--el-switch-off-color: #13ce66; --el-switch-on-color: #ff4949"
-            active-text="封禁"
-            inactive-text="正常"
-            @change="(e) => handleToggleUserStatus(scope.row, e)"
-          />
+          <span class="amount-text">{{ formatMoney(scope.row.wallet?.depositBalance) }}</span>
         </template>
       </el-table-column>
-      <!-- <el-table-column label="达人名称" align="center" prop="davName" /> -->
-      <el-table-column label="操作" align="center" width="260px">
+      <el-table-column label="当前积分数" align="center" width="120">
         <template #default="scope">
-          <!-- <el-button
-            v-hasPermi="['gamer:user-info:update']"
-            link
-            type="primary"
-            @click="openForm('update', scope.row.id)"
-          >
-            编辑
-          </el-button>
-          <el-button
-            v-hasPermi="['gamer:user-info:delete']"
-            link
-            type="danger"
-            @click="handleDelete(scope.row.id)"
-          >
-            删除
-          </el-button> -->
-
-          <el-popover placement="bottom-start" trigger="click" :width="240" popper-class="!p-0">
-            <template #reference>
+          <span class="amount-text">{{ formatMoney(scope.row.wallet?.totalExperience) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" align="center" width="180" fixed="right">
+        <template #default="scope">
+          <div class="table-actions">
+            <el-button link type="primary" @click="onUserMenuCommand('userstat', scope.row)">
+              下级用户
+            </el-button>
+            <el-button
+              v-hasPermi="['pay:wallet:update-balance']"
+              link
+              type="primary"
+              @click="() => UpdateBalanceFormRef.open(scope.row.id)"
+            >
+              修改余额
+            </el-button>
+            <el-dropdown trigger="click">
               <el-button link type="info">
                 更多
               </el-button>
-            </template>
-            <el-menu class="border-none" mode="vertical">
-              <!-- 查看下级用户 -->
-              <el-menu-item
-                index="userstat"
-                @click="onUserMenuCommand('userstat', scope.row)"
-              >
-                查看下级用户
-              </el-menu-item>
-
-              <el-menu-item
-                v-hasPermi="['pay:wallet:update-balance']"
-                index="balance"
-                @click="() => UpdateBalanceFormRef.open(scope.row.id)"
-              >
-                修改余额
-              </el-menu-item>
-
-              <el-menu-item index="income" @click="onUserMenuCommand('userincome', scope.row)">
-                收入支出
-              </el-menu-item>
-              <el-sub-menu index="moment">
-                <template #title>
-                  动态管理
-                </template>
-                <el-menu-item v-hasPermi="['gamer:user-info:update']" index="moment-m" @click="onUserMenuCommand('usermoment', scope.row)">
-                  用户动态管理
-                </el-menu-item>
-                <!-- <el-menu-item v-hasPermi="['gamer:user-info:update']" index="moment-b" @click="onUserMenuCommand('usermomentbrowse', scope.row)">
-                  用户浏览记录
-                </el-menu-item>
-                <el-menu-item v-hasPermi="['gamer:user-info:update']" index="moment-c" @click="onUserMenuCommand('usermomentcomment', scope.row)">
-                  用户评论记录
-                </el-menu-item>
-                <el-menu-item v-hasPermi="['gamer:user-info:update']" index="moment-l" @click="onUserMenuCommand('usermomentlike', scope.row)">
-                  用户点赞记录
-                </el-menu-item> -->
-                <!-- 删除 -->
-              </el-sub-menu>
-
-              <el-menu-item v-hasPermi="['gamer:user-info:delete']" index="delete" @click="handleDelete(scope.row.id)">
-                <p class="text-red-500">
-                  删除
-                </p>
-              </el-menu-item>
-            </el-menu>
-          </el-popover>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item @click="onUserMenuCommand('userincome', scope.row)">
+                    收入支出
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-hasPermi="['gamer:user-info:update']"
+                    @click="onUserMenuCommand('usermoment', scope.row)"
+                  >
+                    用户动态管理
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-hasPermi="['gamer:user-info:delete']"
+                    class="!text-red-500"
+                    @click="handleDelete(scope.row.id)"
+                  >
+                    删除
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -461,9 +401,95 @@ onMounted(() => {
     <component :is="activeComponent" v-if="activeComponent" :user-id="selectedUserId" />
   </el-dialog>
 
-  <!-- 表单弹窗：添加/修改 -->
-  <UserInfoForm ref="formRef" @success="getList" />
-
   <!-- 修改用户余额弹窗 -->
   <UserBalanceUpdateForm ref="UpdateBalanceFormRef" @success="getList" />
 </template>
+
+<style scoped lang="scss">
+.userinfo-table {
+  :deep(.el-table__header th) {
+    height: 72px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f2937;
+    background: #fff;
+  }
+
+  :deep(.el-table__row td) {
+    padding: 22px 0;
+    vertical-align: middle;
+  }
+}
+
+.user-info-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.user-info-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.user-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 9999px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.user-avatar--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 24px;
+  background: linear-gradient(135deg, #60a5fa, #2563eb);
+}
+
+.user-info-meta {
+  width: 100%;
+  color: #303133;
+  word-break: break-word;
+}
+
+.user-info-label {
+  color: #606266;
+}
+
+.table-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  line-height: 1.8;
+}
+
+.table-text-block {
+  line-height: 1.8;
+  color: #303133;
+}
+
+.status-switch-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.amount-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #2563eb;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+</style>

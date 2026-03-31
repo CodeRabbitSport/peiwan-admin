@@ -108,6 +108,7 @@ async function fetchDashboardData() {
       endTime,
     }
     dashboardData.value = await getStaticDashboard(params)
+    console.log('🚀 ~ fetchDashboardData ~  dashboardData.value:', dashboardData.value)
   }
   catch (error) {
     console.error('获取大屏数据失败:', error)
@@ -732,7 +733,7 @@ onActivated(async () => {
             icon="ep:user-filled"
             icon-color="bg-cyan-100"
             icon-bg-color="text-cyan-500"
-            :value="Number(fenToYuan(dashboardData.todayUserCount || 0))"
+            :value="Number(dashboardData.todayUserCount || 0)"
           />
         </el-card>
       </el-col>

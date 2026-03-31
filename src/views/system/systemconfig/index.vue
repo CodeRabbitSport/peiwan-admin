@@ -19,6 +19,7 @@ const KEYS = {
   SITE_CONFIG_APPLY_FIGHTER_REAL_NAME: 'siteConfigApplyFighterRealName',
   SITE_CONFIG_ENABLE_BIND_MOBILE: 'siteConfigEnableBindMobile',
   SITE_HISTORY_ACCEPTORS: 'siteHistoryAcceptors',
+  ENABLE_ALGO_CAPTCHA: 'siteConfigEnableAlgoCaptcha',
   // 话题配置
   HOT_TOPIC_LIST: 'topicConfigHotTopicList',
   CUSTOMER_SERVICE_LINK: 'siteConfigCustomerServiceLink',
@@ -83,6 +84,7 @@ const formData = reactive<any>({
   siteConfigApplyFighterRealName: false,
   siteConfigEnableBindMobile: false,
   siteHistoryAcceptors: false,
+  siteConfigEnableAlgoCaptcha: false,
   canCancelOrder: false,
   canRefundOrder: false,
   canCheckApplyRefundUserMobile: false,
@@ -210,6 +212,9 @@ async function loadAll() {
           break
         case KEYS.SITE_HISTORY_ACCEPTORS:
           formData.siteHistoryAcceptors = toBool(item.configValue)
+          break
+        case KEYS.ENABLE_ALGO_CAPTCHA:
+          formData.siteConfigEnableAlgoCaptcha = toBool(item.configValue)
           break
         case KEYS.ENABLE_PICK_ORDER_SMS_NOTICE:
           formData.orderNoticeConfigEnablePickOrderSmsNotice = toBool(item.configValue)
@@ -503,170 +508,6 @@ onMounted(() => {
         <!-- 服务配置 -->
         <el-collapse-item name="service" title="服务配置">
           <el-row :gutter="16">
-            <!-- <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="接单保证金">
-                <el-input-number
-                  v-model="formData.pickOrderDeposit"
-                  :min="0"
-                  :step="1"
-                  @change="(val: any) => handleSave(KEYS.PICK_ORDER_DEPOSIT, 'number', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="每日接单次数">
-                <el-input-number
-                  v-model="formData.dailyPickOrderCount"
-                  :min="0"
-                  :step="1"
-                  @change="(val: any) => handleSave(KEYS.DAILY_PICK_ORDER_COUNT, 'number', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="接单延迟时间(秒)">
-                <el-input-number
-                  v-model="formData.pickOrderDelayTime"
-                  :min="0"
-                  :step="1"
-                  @change="(val: any) => handleSave(KEYS.PICK_ORDER_DELAY_TIME, 'number', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="提现手续费率(%)">
-                <el-input-number
-                  v-model="formData.withdrawFeeRate"
-                  :min="0"
-                  :max="100"
-                  @change="(val: any) => handleSave(KEYS.FEE_RATE, 'number', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="订单服务费解冻时间(秒)">
-                <el-input-number
-                  v-model="formData.orderCommissionReleaseTime"
-                  :min="0"
-                  :step="1"
-                  @change="(val: any) => handleSave(KEYS.ORDER_COMMISSION_RELEASE_TIME, 'number', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="打赏金额抽成比例(%)">
-                <el-input-number
-                  v-model="formData.commissionRateOnTips"
-                  :min="0"
-                  :max="100"
-                  :step="1"
-                  @change="(val: any) => handleSave(KEYS.COMMISSION_RATE_ON_TIPS, 'number', val)"
-                />
-              </el-form-item>
-            </el-col>
-
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="是否可以退款接单订单">
-                <el-switch
-                  v-model="formData.canRefundOrder"
-                  @change="(val: any) => handleSave(KEYS.CAN_REFUND, 'boolean', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="是否可以查看申请退款用户手机号" label-width="250px">
-                <el-switch
-                  v-model="formData.canCheckApplyRefundUserMobile"
-                  @change="(val: any) => handleSave(KEYS.CAN_CHECK_APPLY_REFUND_USER_MOBILE, 'boolean', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="是否可以查看未退款用户手机号" label-width="250px">
-                <el-switch
-                  v-model="formData.canCheckNotRefundUserMobile"
-                  @change="(val: any) => handleSave(KEYS.CAN_CHECK_NOT_REFUND_USER_MOBILE, 'boolean', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="查看未退款用户手机号天数">
-                <el-input-number
-                  v-model="formData.canCheckNotRefundUserMobileTime"
-                  :min="-1"
-                  :step="1"
-                  @change="(val: any) => handleSave(KEYS.CAN_CHECK_NOT_REFUND_USER_MOBILE_TIME, 'number', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="保证金退还安全期限(天)">
-                <el-input-number
-                  v-model="formData.depositReturnSafeDays"
-                  :min="0"
-                  :step="1"
-                  @change="(val: any) => handleSave(KEYS.DEPOSIT_RETURN_SAFE_DAYS, 'number', val)"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :lg="8">
-              <el-form-item label="限制指定接单商品编号列表">
-                <el-input
-                  :model-value="selectedProductNamesDisplay"
-                  placeholder="点击选择商品"
-                  readonly
-                  @click="openProductSelector"
-                >
-                  <template #suffix>
-                    <el-button link type="danger" @click.stop="clearSelectedProducts">
-                      清空
-                    </el-button>
-                  </template>
-</el-input>
-</el-form-item>
-</el-col>
-<el-col :xs="24" :sm="12" :md="8" :lg="8">
-  <el-form-item label="限制每日接单缴费金额">
-    <el-input-number v-model="formData.limitPickOrderFee" :min="0" :step="1"
-      @change="(val: any) => handleSave(KEYS.LIMIT_PICK_ORDER_FEE, 'number', val)" />
-  </el-form-item>
-</el-col>
-<el-col :xs="24" :sm="12" :md="8" :lg="8">
-  <el-form-item label="限制同一时间段接单单数">
-    <el-input-number v-model="formData.limitSameTimePickOrderCount" :min="0" :step="1"
-      @change="(val: any) => handleSave(KEYS.LIMIT_SAME_TIME_PICK_ORDER_COUNT, 'number', val)" />
-  </el-form-item>
-</el-col>
-<el-col :xs="24" :sm="12" :md="8" :lg="8">
-  <el-form-item label="是否可以设置用户公告">
-    <el-switch v-model="formData.canSetUserNotice"
-      @change="(val: any) => handleSave(KEYS.CAN_SET_USER_NOTICE, 'boolean', val)" />
-  </el-form-item>
-</el-col>
-<el-col :xs="24" :sm="12" :md="8" :lg="8">
-  <el-form-item label="接单验证类型">
-    <el-switch v-model="formData.pickOrderVerify"
-      @change="(val: any) => handleSave(KEYS.PICK_ORDER_VERIFY, 'boolean', val)" />
-  </el-form-item>
-</el-col>
-<el-col :xs="24" :sm="12" :md="8" :lg="8">
-  <el-form-item label="限制升级人数名额">
-    <el-input-number v-model="formData.limitUpgradePeopleCount" :min="0" :step="1"
-      @change="(val: any) => handleSave(KEYS.LIMIT_UPGRADE_PEOPLE_COUNT, 'number', val)" />
-  </el-form-item>
-</el-col>
-<el-col :xs="24" :sm="12" :md="8" :lg="8">
-  <el-form-item label="允许订单抵扣保证金">
-    <el-switch v-model="formData.allowRechargeDeposit"
-      @change="(val: any) => handleSave(KEYS.ALLOW_RECHARGE_DEPOSIT, 'boolean', val)" />
-  </el-form-item>
-</el-col>
-<el-col :xs="24" :sm="12" :md="8" :lg="8">
-  <el-form-item label="是否可以取消接单订单">
-    <el-switch v-model="formData.canCancelOrder"
-      @change="(val: any) => handleSave(KEYS.CAN_CANCEL_ORDER, 'boolean', val)" />
-  </el-form-item>
-</el-col> -->
             <!-- 订单超时时间 -->
             <el-col :xs="24" :sm="12" :md="8" :lg="8">
               <el-form-item label="订单超时时间">
@@ -694,14 +535,7 @@ onMounted(() => {
                 />
               </el-form-item>
             </el-col>
-            <el-col :xs="24" :sm="12" :md="4" :lg="4">
-              <el-form-item label="申请打手是否需要先实名认证" label-width="200px">
-                <el-switch
-                  v-model="formData.siteConfigApplyFighterRealName"
-                  @change="(val: any) => handleSave(KEYS.SITE_CONFIG_APPLY_FIGHTER_REAL_NAME, 'boolean', val)"
-                />
-              </el-form-item>
-            </el-col>
+
             <el-col :xs="24" :sm="12" :md="4" :lg="4">
               <el-form-item label="是否开启强制绑定手机号" label-width="200px">
                 <el-switch
@@ -711,10 +545,28 @@ onMounted(() => {
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="4" :lg="4">
+              <el-form-item label="申请打手是否需要先实名认证" label-width="200px">
+                <el-switch
+                  v-model="formData.siteConfigApplyFighterRealName"
+                  @change="(val: any) => handleSave(KEYS.SITE_CONFIG_APPLY_FIGHTER_REAL_NAME, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="16">
+            <el-col :xs="24" :sm="12" :md="4" :lg="4">
               <el-form-item label="是否开启指定陪玩" label-width="200px">
                 <el-switch
                   v-model="formData.siteHistoryAcceptors"
                   @change="(val: any) => handleSave(KEYS.SITE_HISTORY_ACCEPTORS, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="4" :lg="4">
+              <el-form-item label="是否开启算术验证码" label-width="200px">
+                <el-switch
+                  v-model="formData.siteConfigEnableAlgoCaptcha"
+                  @change="(val: any) => handleSave(KEYS.ENABLE_ALGO_CAPTCHA, 'boolean', val)"
                 />
               </el-form-item>
             </el-col>
@@ -813,10 +665,7 @@ onMounted(() => {
             </el-col>
             <el-col :xs="24" :sm="12" :md="8" :lg="6">
               <el-form-item label="是否开启自动接单模式">
-                <el-switch
-                  v-model="formData.enableAutoPickOrder"
-                  @change="handleSaveAutoPickOrder"
-                />
+                <el-switch v-model="formData.enableAutoPickOrder" @change="handleSaveAutoPickOrder" />
               </el-form-item>
             </el-col>
           </el-row>

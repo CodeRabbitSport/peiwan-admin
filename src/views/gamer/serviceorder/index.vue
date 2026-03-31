@@ -787,7 +787,7 @@ async function openOrderConversationByOrderId(orderId: number) {
               type="warning"
               effect="plain"
             >
-              打手已完成
+              待结单
             </el-tag>
             <el-tag
               :type="formatPayStatus(scope.row.payStatus).color"
