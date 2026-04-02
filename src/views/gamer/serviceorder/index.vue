@@ -5,7 +5,7 @@ import { ElMessageBox } from 'element-plus'
 import { OrderConversationApi } from '@/api/gamer/orderconversation'
 import { ProductApi } from '@/api/gamer/product'
 import type { ServiceOrder } from '@/api/gamer/serviceorder'
-import { acceptOrder, ServiceOrder_auditOrderComplete, ServiceOrder_cancelAcceptOrder, ServiceOrder_updateOrderRefunded, ServiceOrderApi } from '@/api/gamer/serviceorder'
+import { acceptOrder, ServiceOrder_auditOrderComplete, ServiceOrder_cancelAcceptOrder, ServiceOrder_updateOrderRefunded, ServiceOrderApi, transferOrder } from '@/api/gamer/serviceorder'
 import PaginationSelect from '@/components/PaginationSelect/index.vue'
 import ResponsiveFold from '@/components/ResponsiveFold/index.vue'
 import UserSelectInput from '@/components/UserSelectInput/index.vue'
@@ -381,31 +381,53 @@ onDeactivated(() => {
 
 // 指定接单人
 const assignPickerRef = ref<InstanceType<typeof UserInfoPickerDialog> | null>(null)
-const currentAssignOrderId = ref<number | null>(null)
+const currentPickerOrderId = ref<number | null>(null)
+const currentPickerAction = ref<'assign' | 'transfer' | null>(null)
 
 function openAssignPicker(row: ServiceOrder) {
-  currentAssignOrderId.value = row.id
+  currentPickerOrderId.value = row.id
+  currentPickerAction.value = 'assign'
+  assignPickerRef.value?.open(undefined, row.categoryType, row.categoryId)
+}
+
+function openTransferPicker(row: ServiceOrder) {
+  if (row.orderStatus !== 1) {
+    message.warning('仅订单状态为进行中时可转单')
+    return
+  }
+  currentPickerOrderId.value = row.id
+  currentPickerAction.value = 'transfer'
   assignPickerRef.value?.open(undefined, row.categoryType, row.categoryId)
 }
 
 async function handleAssignConfirm(user: any) {
-  if (!currentAssignOrderId.value) return
+  if (currentPickerOrderId.value == null || !currentPickerAction.value) return
   try {
-    await acceptOrder({
-      captchaVerification: undefined,
-      orderId: currentAssignOrderId.value,
-      teamId: undefined,
-      remark: '指定接单人',
-      userId: user.id,
-    })
-    message.success('指定接单人成功')
+    if (currentPickerAction.value === 'assign') {
+      await acceptOrder({
+        captchaVerification: undefined,
+        orderId: currentPickerOrderId.value,
+        teamId: undefined,
+        remark: '指定接单人',
+        userId: user.id,
+      })
+      message.success('指定接单人成功')
+    }
+    else {
+      await transferOrder({
+        orderId: currentPickerOrderId.value,
+        userId: user.id,
+      })
+      message.success('转单成功')
+    }
     await getList()
   }
   catch {
-    message.error('指定接单人失败')
+    message.error(currentPickerAction.value === 'assign' ? '指定接单人失败' : '转单失败')
   }
   finally {
-    currentAssignOrderId.value = null
+    currentPickerOrderId.value = null
+    currentPickerAction.value = null
   }
 }
 
@@ -881,6 +903,13 @@ async function openOrderConversationByOrderId(orderId: number) {
                   @click="openQuickEditDialog(scope.row)"
                 >
                   编辑
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-hasPermi="['gamer:service-order:update']"
+                  :disabled="scope.row.orderStatus !== 1"
+                  @click="openTransferPicker(scope.row)"
+                >
+                  转单
                 </el-dropdown-item>
                 <el-dropdown-item
                   v-hasPermi="['gamer:service-order:update']"

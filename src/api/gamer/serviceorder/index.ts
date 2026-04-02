@@ -48,17 +48,29 @@ export interface ServiceOrder {
 
 /**
  * 指定接单人接受订单
- * @param {object} params 指定服务订单接单人的接受参数
- * @param {string} params.captchaVerification 验证码，验证码开启时，需要传递
- * @param {number} params.orderId 订单ID
- * @param {number} params.teamId 队伍ID（组队接单时必填）
- * @param {string} params.remark 备注信息
- * @param {number} params.userId 接单人的用户编号
- * @returns
+ * @param {object} data 指定服务订单接单人的接受参数
+ * @param {string} data.captchaVerification 验证码，验证码开启时，需要传递
+ * @param {number} data.orderId 订单ID
+ * @param {number} data.teamId 队伍ID（组队接单时必填）
+ * @param {string} data.remark 备注信息
+ * @param {number} data.userId 接单人的用户编号
+ * @returns {Promise<any>} 请求结果
  */
 export function acceptOrder(data: any) {
   return request.post({ url: `/gamer/service-order/accept-order`, data })
 }
+
+/**
+ * 转单
+ * @param {object} data 转单参数
+ * @param {number} data.orderId 订单ID
+ * @param {number} data.userId 接单人的用户编号
+ * @returns {Promise<any>} 请求结果
+ */
+export function transferOrder(data: any) {
+  return request.post({ url: `/gamer/service-order/transfer-order`, data })
+}
+
 // 用户订单 API
 export const ServiceOrderApi = {
   // 查询用户订单分页
@@ -100,39 +112,37 @@ export const ServiceOrderApi = {
   auditRefund: async (data: { orderId: number, auditStatus: 1 | 2, auditReason?: string }) => {
     return await request.post({ url: `/gamer/service-order/audit-refund`, data })
   },
-
 }
 
 /**
  * 更新订单为已退款
- * @param {object} params PayRefundNotifyReqDTO
- * @param {string} params.merchantOrderId
- * @param {string} params.merchantRefundId
- * @param {number} params.payRefundId
- * @returns
+ * @param {object} data PayRefundNotifyReqDTO
+ * @param {string} data.merchantOrderId
+ * @param {string} data.merchantRefundId
+ * @param {number} data.payRefundId
+ * @returns {Promise<any>} 请求结果
  */
 export function ServiceOrder_updateOrderRefunded(data: any) {
   return request.post({ url: `/gamer/service-order/refund-order`, data })
 }
 
-
-/** 
+/**
  * 取消接单
- * @param {object} params CancelAcceptOrderVO
- * @param {number} params.orderId 订单编号
- * @returns
+ * @param {object} data CancelAcceptOrderVO
+ * @param {number} data.orderId 订单编号
+ * @returns {Promise<any>} 请求结果
  */
 export function ServiceOrder_cancelAcceptOrder(data: any) {
   return request.post({ url: `/gamer/service-order/cancel-accept-order`, data })
 }
 
-/** 
+/**
  * 审核订单完成
  * @param {object} params RestoreOrderReqVO
  * @param {number} params.orderId 订单编号
  * @param {boolean} params.retoreToUnComplete 是否恢复到打手未完成状态
- * @returns
+ * @returns {Promise<any>} 请求结果
  */
 export function ServiceOrder_auditOrderComplete(params: any) {
-  return request.post({ url: `/gamer/service-order/audit-order-complete`, data: params });
+  return request.post({ url: `/gamer/service-order/audit-order-complete`, data: params })
 }

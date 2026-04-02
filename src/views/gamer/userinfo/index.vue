@@ -3,6 +3,7 @@ import type { UserInfo } from '@/api/gamer/userinfo'
 import { UserInfoApi } from '@/api/gamer/userinfo'
 import { fenToYuan } from '@/utils'
 import { formatDate } from '@/utils/formatTime'
+import { checkPermi } from '@/utils/permission'
 import UserBalanceUpdateForm from '@/views/member/user/components/UserBalanceUpdateForm.vue'
 
 import UserIncomeExpenseDetail from '../userincomeexpensedetail/index.vue'
@@ -10,6 +11,8 @@ import UserMoment from '../usermoment/index.vue'
 import UserMomentBrowse from '../usermomentbrowse/index.vue'
 import UserMomentComment from '../usermomentcomment/index.vue'
 import UserMomentLike from '../usermomentlike/index.vue'
+import UserDepositBalanceUpdateForm from './UserDepositBalanceUpdateForm.vue'
+import UserExperienceUpdateForm from './UserExperienceUpdateForm.vue'
 import UserStatDialog from './UserStatDialog.vue'
 
 /** 用户信息 列表 */
@@ -48,13 +51,11 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const UpdateBalanceFormRef = ref() // 修改用户余额表单
+const updateDepositBalanceFormRef = ref() // 修改用户保证金表单
+const updateExperienceFormRef = ref() // 修改用户积分表单
 
 function formatMoney(value?: number | string | null) {
   return fenToYuan(Number(value ?? 0))
-}
-
-function formatGrowthValue(value?: number | string | null) {
-  return fenToYuan(Number(value ?? 0) * 100)
 }
 
 function formatDateTime(value?: string | number | Date | null) {
@@ -79,6 +80,21 @@ function getCreateTime(row: any) {
 
 function getActiveTime(row: any) {
   return row.login_date || row.loginDate || row.activeTime
+}
+
+function openBalanceUpdate(userId?: number) {
+  if (userId == null) return
+  UpdateBalanceFormRef.value?.open(userId)
+}
+
+function openExperienceUpdate(userId?: number) {
+  if (userId == null) return
+  updateExperienceFormRef.value?.open(userId)
+}
+
+function openDepositBalanceUpdate(userId?: number) {
+  if (userId == null) return
+  updateDepositBalanceFormRef.value?.open(userId)
 }
 
 /** 查询列表 */
@@ -272,7 +288,18 @@ onMounted(() => {
             </div>
             <div class="user-info-meta">
               <span class="user-info-label">当前积分数:</span>
-              <span>{{ formatMoney(scope.row.wallet?.totalExperience) }}</span>
+              <el-button
+                v-if="checkPermi(['pay:wallet:update-balance'])"
+                link
+                type="primary"
+                class="amount-button amount-button--inline"
+                @click="openExperienceUpdate(scope.row.id)"
+              >
+                {{ formatMoney(scope.row.wallet?.totalExperience) }}
+              </el-button>
+              <span v-else class="amount-text amount-text--inline">
+                {{ formatMoney(scope.row.wallet?.totalExperience) }}
+              </span>
             </div>
             <div class="user-info-meta">
               <span class="user-info-label">当前等级:</span>
@@ -322,7 +349,16 @@ onMounted(() => {
       </el-table-column>
       <el-table-column label="可用余额" align="center" width="120">
         <template #default="scope">
-          <span class="amount-text">{{ formatMoney(scope.row.wallet?.balance) }}</span>
+          <el-button
+            v-if="checkPermi(['pay:wallet:update-balance'])"
+            link
+            type="primary"
+            class="amount-button"
+            @click="openBalanceUpdate(scope.row.id)"
+          >
+            {{ formatMoney(scope.row.wallet?.balance) }}
+          </el-button>
+          <span v-else class="amount-text">{{ formatMoney(scope.row.wallet?.balance) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="冻结余额" align="center" width="120">
@@ -332,12 +368,30 @@ onMounted(() => {
       </el-table-column>
       <el-table-column label="保证金" align="center" width="120">
         <template #default="scope">
-          <span class="amount-text">{{ formatMoney(scope.row.wallet?.depositBalance) }}</span>
+          <el-button
+            v-if="checkPermi(['pay:wallet:update-balance'])"
+            link
+            type="primary"
+            class="amount-button"
+            @click="openDepositBalanceUpdate(scope.row.id)"
+          >
+            {{ formatMoney(scope.row.wallet?.depositBalance) }}
+          </el-button>
+          <span v-else class="amount-text">{{ formatMoney(scope.row.wallet?.depositBalance) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="当前积分数" align="center" width="120">
+      <el-table-column label="积分数" align="center" width="120">
         <template #default="scope">
-          <span class="amount-text">{{ formatMoney(scope.row.wallet?.totalExperience) }}</span>
+          <el-button
+            v-if="checkPermi(['pay:wallet:update-balance'])"
+            link
+            type="primary"
+            class="amount-button"
+            @click="openExperienceUpdate(scope.row.id)"
+          >
+            {{ formatMoney(scope.row.wallet?.totalExperience) }}
+          </el-button>
+          <span v-else class="amount-text">{{ formatMoney(scope.row.wallet?.totalExperience) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" width="180" fixed="right">
@@ -346,14 +400,14 @@ onMounted(() => {
             <el-button link type="primary" @click="onUserMenuCommand('userstat', scope.row)">
               下级用户
             </el-button>
-            <el-button
+            <!-- <el-button
               v-hasPermi="['pay:wallet:update-balance']"
               link
               type="primary"
-              @click="() => UpdateBalanceFormRef.open(scope.row.id)"
+              @click="openBalanceUpdate(scope.row.id)"
             >
               修改余额
-            </el-button>
+            </el-button> -->
             <el-dropdown trigger="click">
               <el-button link type="info">
                 更多
@@ -403,6 +457,8 @@ onMounted(() => {
 
   <!-- 修改用户余额弹窗 -->
   <UserBalanceUpdateForm ref="UpdateBalanceFormRef" @success="getList" />
+  <UserDepositBalanceUpdateForm ref="updateDepositBalanceFormRef" @success="getList" />
+  <UserExperienceUpdateForm ref="updateExperienceFormRef" @success="getList" />
 </template>
 
 <style scoped lang="scss">
@@ -484,6 +540,21 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 500;
   color: #2563eb;
+}
+
+.amount-text--inline {
+  font-size: inherit;
+}
+
+.amount-button {
+  height: auto;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.amount-button--inline {
+  font-size: inherit;
 }
 
 .table-actions {

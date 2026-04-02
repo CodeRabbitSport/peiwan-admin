@@ -24,6 +24,11 @@ export interface UserInfo {
   isSeeFans: boolean // 是否允许查看粉丝 0否 1是
 }
 
+export interface UserWalletAmountUpdateReqVO {
+  userId: number
+  balance: number
+}
+
 // 用户信息 API
 export const UserInfoApi = {
   // 查询用户信息分页
@@ -50,6 +55,16 @@ export const UserInfoApi = {
     return await request.put({ url: `/gamer/user-info/update`, data })
   },
 
+  // 修改用户积分
+  updateUserExperience: async (data: UserWalletAmountUpdateReqVO) => {
+    return await request.put({ url: `/gamer/user-info/update-experience`, data })
+  },
+
+  // 修改用户保证金
+  updateUserDepositBalance: async (data: UserWalletAmountUpdateReqVO) => {
+    return await request.put({ url: `/gamer/user-info/update-deposit-balance`, data })
+  },
+
   // 删除用户信息
   deleteUserInfo: async (id: number) => {
     return await request.delete({ url: `/gamer/user-info/delete?id=${id}` })
@@ -69,46 +84,7 @@ export const UserInfoApi = {
   },
 }
 
-/**
- * 获得用户统计信息
- * @param {string} id 用户编号
- * @param {string} nickname 昵称
- * @param {string} parentId 上级编号
- * @param {string} parentNickname 上级昵称
- * @param {string} pageNo 页码，从 1 开始
- * @param {string} pageSize 每页条数，最大值为 100
- * @returns
- * {
-    /*总量 */
-  //   total: number;
-
-  //   /*数据 */
-  //   list: {
-  //     /*用户编号 */
-  //     id: number;
-
-  //     /*昵称 */
-  //     nickname: string;
-
-  //     /*头像 */
-  //     avatar: string;
-
-  //     /*上级编号 */
-  //     parentId: number;
-
-  //     /*上级昵称 */
-  //     parentNickname: string;
-
-  //     /*上级头像 */
-  //     parentAvatar: string;
-
-  //     /*下单量 */
-  //     totalOrderCount: number;
-
-  //     /*下单金额 */
-  //     totalOrderAmount: number;
-  //   }[];
-  // };
+/** 获得用户统计信息 */
 export function getUserStatPage(params) {
   return request.get({ url: `/gamer/user-info/get-user-stat`, params })
 }
