@@ -150,8 +150,8 @@ async function submitForm() {
   formLoading.value = true
   try {
     const data = formData.value as unknown as LevelConfig
-    data.depositFee = data.depositFee ? data.depositFee * 100 : undefined
-    data.dailyOrderFeeLimit = data.dailyOrderFeeLimit ? data.dailyOrderFeeLimit * 100 : undefined
+    data.depositFee = typeof data.depositFee === 'number' ? data.depositFee * 100 : undefined
+    data.dailyOrderFeeLimit = typeof data.dailyOrderFeeLimit === 'number' ? data.dailyOrderFeeLimit * 100 : undefined
     // 单价：元转分（仅陪玩）
     if (props.categoryType === 1 && data.unitPrice) {
       data.unitPrice = data.unitPrice * 100

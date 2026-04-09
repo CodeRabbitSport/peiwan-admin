@@ -20,6 +20,7 @@ const KEYS = {
   SITE_CONFIG_ENABLE_BIND_MOBILE: 'siteConfigEnableBindMobile',
   SITE_HISTORY_ACCEPTORS: 'siteHistoryAcceptors',
   ENABLE_ALGO_CAPTCHA: 'siteConfigEnableAlgoCaptcha',
+  ENABLE_DISPATCH_ORDERLIST: 'siteConfigEnableDispatchingOrder',
   // 话题配置
   HOT_TOPIC_LIST: 'topicConfigHotTopicList',
   CUSTOMER_SERVICE_LINK: 'siteConfigCustomerServiceLink',
@@ -215,6 +216,9 @@ async function loadAll() {
           break
         case KEYS.ENABLE_ALGO_CAPTCHA:
           formData.siteConfigEnableAlgoCaptcha = toBool(item.configValue)
+          break
+        case KEYS.ENABLE_DISPATCH_ORDERLIST:
+          formData.siteConfigEnableDispatchingOrder = toBool(item.configValue)
           break
         case KEYS.ENABLE_PICK_ORDER_SMS_NOTICE:
           formData.orderNoticeConfigEnablePickOrderSmsNotice = toBool(item.configValue)
@@ -567,6 +571,14 @@ onMounted(() => {
                 <el-switch
                   v-model="formData.siteConfigEnableAlgoCaptcha"
                   @change="(val: any) => handleSave(KEYS.ENABLE_ALGO_CAPTCHA, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="4" :lg="4">
+              <el-form-item label="是否开启订单列表延迟" label-width="200px">
+                <el-switch
+                  v-model="formData.siteConfigEnableDispatchingOrder"
+                  @change="(val: any) => handleSave(KEYS.ENABLE_DISPATCH_ORDERLIST, 'boolean', val)"
                 />
               </el-form-item>
             </el-col>

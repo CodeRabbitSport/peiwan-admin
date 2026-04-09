@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { UserInfoApi } from '@/api/gamer/userinfo'
 import * as WalletApi from '@/api/pay/wallet/balance'
-import { convertToInteger, formatToFraction } from '@/utils'
+import { convertToInteger, fenToYuan, formatToFraction } from '@/utils'
 
 /** 修改用户积分表单 */
 defineOptions({ name: 'UserExperienceUpdateForm' })
@@ -35,7 +35,7 @@ async function open(id?: number) {
       const wallet = await WalletApi.getWallet({ userId: user.id || 0 })
       formData.value.id = user.id
       formData.value.nickname = user.nickname
-      formData.value.experience = formatToFraction(wallet.totalExperience)
+      formData.value.experience = fenToYuan(wallet.totalExperience || 0)
       formData.value.changeType = 1
       formData.value.changeBalance = 0
     }

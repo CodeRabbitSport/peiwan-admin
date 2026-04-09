@@ -6,6 +6,7 @@ import { formatDate } from '@/utils/formatTime'
 import { checkPermi } from '@/utils/permission'
 import UserBalanceUpdateForm from '@/views/member/user/components/UserBalanceUpdateForm.vue'
 
+import GamerExperienceRecord from '../experiencerecord/index.vue'
 import UserIncomeExpenseDetail from '../userincomeexpensedetail/index.vue'
 import UserMoment from '../usermoment/index.vue'
 import UserMomentBrowse from '../usermomentbrowse/index.vue'
@@ -147,13 +148,14 @@ async function handleToggleUserStatus(row: any) {
 const userViewDialogVisible = ref(false)
 const selectedUserId = ref<number | undefined>(undefined)
 const userViewTitle = ref('')
-const activeView = ref<'usermoment' | 'usermomentbrowse' | 'usermomentcomment' | 'usermomentlike' | 'userincome' | 'userstat' | ''>('')
+const activeView = ref<'usermoment' | 'usermomentbrowse' | 'usermomentcomment' | 'usermomentlike' | 'userincome' | 'userexperience' | 'userstat' | ''>('')
 const viewMap = {
   usermoment: UserMoment,
   usermomentbrowse: UserMomentBrowse,
   usermomentcomment: UserMomentComment,
   usermomentlike: UserMomentLike,
   userincome: UserIncomeExpenseDetail,
+  userexperience: GamerExperienceRecord,
   userstat: UserStatDialog,
 } as const
 const activeComponent = computed(() => (activeView.value ? viewMap[activeView.value] : null))
@@ -163,6 +165,7 @@ const titleMap: Record<string, string> = {
   usermomentcomment: '用户评论记录',
   usermomentlike: '用户点赞记录',
   userincome: '用户收入支出记录',
+  userexperience: '用户积分流水记录',
   userstat: '下级用户统计',
 }
 function onUserMenuCommand(cmd: keyof typeof viewMap, row: UserInfo) {
@@ -416,6 +419,9 @@ onMounted(() => {
                 <el-dropdown-menu>
                   <el-dropdown-item @click="onUserMenuCommand('userincome', scope.row)">
                     收入支出
+                  </el-dropdown-item>
+                  <el-dropdown-item @click="onUserMenuCommand('userexperience', scope.row)">
+                    积分流水
                   </el-dropdown-item>
                   <el-dropdown-item
                     v-hasPermi="['gamer:user-info:update']"
