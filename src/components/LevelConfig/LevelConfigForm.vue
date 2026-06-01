@@ -41,7 +41,7 @@ const formData = ref<Partial<LevonelConfig>>({
   upgradeDays: undefined,
   isDefault: undefined,
   canUpgrade: undefined,
-  depositFee: undefined,
+  depositFee: 0,
   dailyOrderLimit: undefined,
   newOrderDelaySeconds: undefined,
   withdrawalFeeRate: undefined,
@@ -193,7 +193,7 @@ function resetForm() {
     upgradeDays: undefined,
     isDefault: false,
     canUpgrade: true,
-    depositFee: undefined,
+    depositFee: 0,
     dailyOrderLimit: undefined,
     newOrderDelaySeconds: undefined,
     withdrawalFeeRate: undefined,
@@ -210,7 +210,7 @@ function resetForm() {
     dailyOrderFeeLimit: undefined,
     simultaneousOrderLimit: undefined,
     orderVerificationType: 0,
-    upgradeSlotLimit: undefined,
+    upgradeSlotLimit: 0,
     allowDepositRecharge: false,
     remark: '',
   }
@@ -351,24 +351,24 @@ function clearSelectedProducts() {
           <el-input v-model="formData.levelName" placeholder="请输入等级名称" />
         </el-form-item>
         <el-form-item label="级别号" prop="levelNumber">
-          <el-input v-model="formData.levelNumber" placeholder="请输入级别号" />
+          <el-input-number v-model="formData.levelNumber" placeholder="请输入级别号" />
         </el-form-item>
         <el-form-item label="接单保证金" prop="depositFee">
-          <el-input v-model="formData.depositFee" placeholder="请输入接单保证金">
+          <el-input-number v-model="formData.depositFee" placeholder="请输入接单保证金">
             <template #append>
               元
             </template>
-          </el-input>
+          </el-input-number>
         </el-form-item>
         <el-form-item label="允许订单抵扣保证金" prop="allowDepositRecharge">
           <el-switch v-model="formData.allowDepositRecharge" active-text="允许" inactive-text="不允许" />
         </el-form-item>
         <el-form-item label="每日接单数" prop="dailyOrderLimit">
-          <el-input v-model="formData.dailyOrderLimit" placeholder="请输入每日接单数，0 表示不限制">
+          <el-input-number v-model="formData.dailyOrderLimit" placeholder="请输入每日接单数，0 表示不限制">
             <template #append>
               单
             </template>
-          </el-input>
+          </el-input-number>
         </el-form-item>
         <el-form-item label="新待接订单延迟接单时间" prop="newOrderDelaySeconds">
           <el-input-number v-model="formData.newOrderDelaySeconds" placeholder="请输入延迟接单时间">
@@ -378,35 +378,35 @@ function clearSelectedProducts() {
           </el-input-number>
         </el-form-item>
         <el-form-item label="提现手续费" prop="withdrawalFeeRate">
-          <el-input v-model="formData.withdrawalFeeRate" placeholder="请输入提现手续费">
+          <el-input-number v-model="formData.withdrawalFeeRate" placeholder="请输入提现手续费">
             <template #append>
               %
             </template>
-          </el-input>
+          </el-input-number>
         </el-form-item>
         <el-form-item label="订单服务费解冻时间" prop="orderFeeUnfreezeSeconds">
-          <el-input v-model="formData.orderFeeUnfreezeSeconds" placeholder="请输入解冻时间">
+          <el-input-number v-model="formData.orderFeeUnfreezeSeconds" placeholder="请输入解冻时间">
             <template #append>
               秒
             </template>
-          </el-input>
+          </el-input-number>
         </el-form-item>
         <el-form-item label="打赏金额抽成比例" prop="rewardCommissionRate">
-          <el-input v-model="formData.rewardCommissionRate" placeholder="请输入打赏金额抽成比例">
+          <el-input-number v-model="formData.rewardCommissionRate" placeholder="请输入打赏金额抽成比例">
             <template #append>
               %
             </template>
-          </el-input>
+          </el-input-number>
         </el-form-item>
         <el-form-item label="设置用户公告内容" prop="canSetAnnouncement">
           <el-switch v-model="formData.canSetAnnouncement" active-text="有" inactive-text="无" />
         </el-form-item>
         <el-form-item label="自主申请保证金退还安全期限" prop="depositRefundSafeDays">
-          <el-input v-model="formData.depositRefundSafeDays" placeholder="请输入安全期限">
+          <el-input-number v-model="formData.depositRefundSafeDays" placeholder="请输入安全期限">
             <template #append>
               天
             </template>
-          </el-input>
+          </el-input-number>
         </el-form-item>
         <el-form-item label="限制指定接单商品编号列表" prop="restrictedProductIds">
           <el-input
@@ -423,18 +423,18 @@ function clearSelectedProducts() {
           </el-input>
         </el-form-item>
         <el-form-item label="限制每日接单缴费金额" prop="dailyOrderFeeLimit">
-          <el-input v-model="formData.dailyOrderFeeLimit" placeholder="请输入每日缴费金额上限">
+          <el-input-number v-model="formData.dailyOrderFeeLimit" placeholder="请输入每日缴费金额上限">
             <template #append>
               元
             </template>
-          </el-input>
+          </el-input-number>
         </el-form-item>
         <el-form-item label="限制同时可接单数" prop="simultaneousOrderLimit">
-          <el-input v-model="formData.simultaneousOrderLimit" placeholder="请输入数量，0 表示不限制">
+          <el-input-number v-model="formData.simultaneousOrderLimit" placeholder="请输入数量，0 表示不限制">
             <template #append>
               单
             </template>
-          </el-input>
+          </el-input-number>
         </el-form-item>
         <el-form-item label="接单验证类型" prop="orderVerificationType">
           <el-switch
@@ -492,7 +492,7 @@ function clearSelectedProducts() {
           <span class="ml-2 text-xs text-gray-400">-1 表示不限制</span>
         </el-form-item>
         <el-form-item label="限制升级人数名额" prop="upgradeSlotLimit">
-          <el-input v-model="formData.upgradeSlotLimit" placeholder="请输入名额，0 表示不限制" />
+          <el-input-number v-model="formData.upgradeSlotLimit" placeholder="请输入名额，0 表示不限制" />
         </el-form-item>
 
         <el-form-item label="备注" prop="remark">

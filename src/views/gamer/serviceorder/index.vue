@@ -858,7 +858,7 @@ async function openOrderConversationByOrderId(orderId: number) {
             <div v-for="acceptor in scope.row.acceptorList" :key="acceptor.id" class="flex flex-col items-center">
               <el-avatar
                 :src="acceptor.avatar" size="small" class="cursor-pointer"
-                @click="handleViewUserInfo(acceptor.userId)"
+                @click="handleViewUserInfo(acceptor.acceptorId)"
               />
               <el-link type="primary" @click="handleViewUserInfo(acceptor.acceptorId)">
                 {{ acceptor.nickname || '无' }}
