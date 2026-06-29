@@ -44,16 +44,8 @@ defineExpose({
 
 <template>
   <PaginationSelect
-    ref="paginationSelectRef"
-    v-model="selectedValue"
-    :placeholder="placeholder"
-    :clearable="clearable"
-    :disabled="disabled"
-    :multiple="multiple"
-    :api="ProductCategoryApi.getProductCategoryPage"
-    label-key="categoryName"
-    value-key="id"
-    :page-size="10"
-    class="w-full"
+    ref="paginationSelectRef" v-model="selectedValue" :placeholder="placeholder" :clearable="clearable"
+    :disabled="disabled" :multiple="multiple" :api="ProductCategoryApi.getProductCategoryPage" label-key="categoryName"
+    search-key="categoryName" value-key="id" :page-size="10" class="w-full"
   />
 </template>

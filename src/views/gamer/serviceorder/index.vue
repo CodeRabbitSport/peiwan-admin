@@ -568,6 +568,8 @@ async function openOrderConversationByOrderId(orderId: number) {
             v-model="queryParams.productName"
             placeholder="请选择商品名称"
             clearable
+            filterable
+            search-key="productTitle"
             :api="ProductApi.getProductPage"
             label-key="productTitle"
             value-key="productTitle"

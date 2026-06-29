@@ -16,6 +16,8 @@ const props = defineProps<{
   pageSize?: number
   extraParams?: Record<string, any>
   width?: string
+  filterable?: boolean
+  searchKey?: string
 }>()
 
 const emit = defineEmits<{

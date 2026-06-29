@@ -17,6 +17,8 @@ const props = withDefaults(defineProps<Props>(), {
   pageSize: 20,
   extraParams: () => ({}),
   width: '240px',
+  filterable: false,
+  searchKey: 'keyword',
 })
 
 const emit = defineEmits<{
@@ -42,6 +44,10 @@ interface Props {
   extraParams?: Record<string, any>
   // 下拉框宽度
   width?: string
+  // 是否可搜索
+  filterable?: boolean
+  // 搜索参数的键名
+  searchKey?: string
 }
 
 const options = ref<any[]>([])
@@ -50,6 +56,8 @@ const hasMore = ref(true)
 const currentPage = ref(1)
 const total = ref(0)
 const visible = ref(false)
+const searchQuery = ref('')
+const searchTimer = ref<any>(null)
 
 // 内部存储当前选中的值，用于立即显示，不依赖父组件的异步更新
 const _selectedValue = ref<number | string | number[] | string[] | null>(props.modelValue ?? null)
@@ -112,6 +120,10 @@ async function loadPageData(pageNo: number) {
     pageNo,
     pageSize: props.pageSize,
     ...props.extraParams,
+  }
+  // 如果开启搜索且有搜索关键词，添加搜索参数
+  if (props.filterable && searchQuery.value) {
+    params[props.searchKey] = searchQuery.value
   }
   const data = await props.api(params)
   return {
@@ -227,6 +239,25 @@ function isSelected(option: any) {
   }
 }
 
+// 处理搜索输入
+function handleSearchInput(value: string) {
+  searchQuery.value = value
+  // 清除之前的定时器
+  if (searchTimer.value) {
+    clearTimeout(searchTimer.value)
+  }
+  // 防抖：300ms 后执行搜索
+  searchTimer.value = setTimeout(() => {
+    loadData(true)
+  }, 300)
+}
+
+// 清空搜索
+function clearSearch() {
+  searchQuery.value = ''
+  loadData(true)
+}
+
 // 组件挂载时加载数据
 onMounted(() => {
   loadData(true)
@@ -245,6 +276,12 @@ watch(
 watch(visible, (val) => {
   if (val) {
     loadData(true)
+  }
+  else {
+    // 关闭时清空搜索
+    if (props.filterable) {
+      searchQuery.value = ''
+    }
   }
 })
 
@@ -332,6 +369,16 @@ defineExpose({
           </span>
         </div>
       </template>
+      <div v-if="filterable" class="pagination-select-search">
+        <el-input
+          v-model="searchQuery"
+          placeholder="请输入搜索关键词"
+          clearable
+          size="small"
+          @input="handleSearchInput"
+          @clear="clearSearch"
+        />
+      </div>
       <el-scrollbar height="300px" @end-reached="handleEndReached">
         <div class="pagination-select-options">
           <div
@@ -474,6 +521,11 @@ defineExpose({
   text-align: center;
   color: var(--el-text-color-placeholder);
   font-size: 12px;
+}
+
+.pagination-select-search {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 </style>
 

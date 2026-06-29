@@ -195,6 +195,8 @@ onMounted(() => {
           clearable
           :api="ProductCategoryApi.getProductCategoryPage"
           label-key="categoryName"
+                      search-key="categoryName"
+
           value-key="id"
           :page-size="10"
           width="240px"
@@ -207,6 +209,8 @@ onMounted(() => {
           clearable
           :api="ProductTypeApi.getProductTypePage"
           label-key="typeName"
+                      search-key="typeName"
+
           value-key="id"
           :page-size="10"
           width="240px"
