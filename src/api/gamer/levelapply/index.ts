@@ -14,6 +14,7 @@ export interface LevelApply {
   attachment: string // 附件
   gameRegion: string // 附件
   auditStatus: number // 审核状态(0待审核1通过2拒绝)
+  isRecommended?: boolean // 是否推荐
 }
 
 // 打手/陪玩等级申请 API

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Delete as ElIconDelete, Plus as ElIconPlus } from '@element-plus/icons-vue'
+
 import type { LevelConfig } from '@/api/gamer/levelconfig'
 import { LevelConfigApi } from '@/api/gamer/levelconfig'
 import type { Product } from '@/api/gamer/product'
@@ -61,7 +63,11 @@ const formData = ref<Partial<LevonelConfig>>({
   upgradeSlotLimit: undefined,
   allowDepositRecharge: undefined,
   remark: undefined,
+  orderReceivingStatus: false, // 是否启用游戏区服（仅陪玩使用）
+  orderReceivingRegion: undefined, // 游戏区服价差配置（仅陪玩使用）
 })
+// 游戏区服价差动态表单字段（仅陪玩使用）
+const orderReceivingRegionFields = ref<Array<{ region: string, price: number }>>([{ region: '', price: 0 }])
 // 动态验证规则
 const formRules = computed(() => ({
   categoryType: [{ required: true, message: '分类类型不能为空', trigger: 'change' }],
@@ -130,10 +136,62 @@ async function open(type: string, id?: number) {
       if (props.categoryType === 1 && formData.value.unitPrice) {
         formData.value.unitPrice = formData.value.unitPrice / 100
       }
+      // 初始化游戏区服价差字段（仅陪玩）
+      if (props.categoryType === 1) {
+        initOrderReceivingRegionFields()
+      }
     }
     finally {
       formLoading.value = false
     }
+  }
+  else if (props.categoryType === 1) {
+    orderReceivingRegionFields.value = [{ region: '', price: 0 }]
+  }
+}
+
+// 解析游戏区服价差配置（JSON 字符串 -> 表单字段，价格分转元）
+function initOrderReceivingRegionFields() {
+  const value = formData.value.orderReceivingRegion as unknown as string
+  if (value) {
+    try {
+      const parsed = JSON.parse(value)
+      const parsedList = Array.isArray(parsed) ? parsed : []
+      const mapped = parsedList.map((it: any) => ({
+        region: it?.region ?? '',
+        price: Number(it?.price ?? 0) / 100,
+      }))
+      if (mapped.length > 0) {
+        orderReceivingRegionFields.value = mapped
+        return
+      }
+    }
+    catch {
+      // ignore json parse error
+    }
+  }
+  orderReceivingRegionFields.value = [{ region: '', price: 0 }]
+}
+
+// 序列化游戏区服价差配置（表单字段 -> JSON 字符串，价格元转分）
+function updateOrderReceivingRegionData() {
+  const filtered = orderReceivingRegionFields.value
+    .map(it => ({
+      region: (it.region || '').trim(),
+      price: Math.round(Number(it.price ?? 0) * 100),
+    }))
+    .filter(it => it.region !== '')
+  formData.value.orderReceivingRegion = filtered.length > 0 ? JSON.stringify(filtered) : undefined
+}
+
+function addOrderReceivingRegionField() {
+  orderReceivingRegionFields.value.push({ region: '', price: 0 })
+}
+
+function removeOrderReceivingRegionField(index: number) {
+  if (orderReceivingRegionFields.value.length > 1) {
+    orderReceivingRegionFields.value.splice(index, 1)
+    updateOrderReceivingRegionData()
   }
 }
 defineExpose({ open }) // 定义 success 事件，用于操作成功后的回调
@@ -155,6 +213,30 @@ async function submitForm() {
     // 单价：元转分（仅陪玩）
     if (props.categoryType === 1 && data.unitPrice) {
       data.unitPrice = data.unitPrice * 100
+    }
+    // 游戏区服价差配置（仅陪玩）
+    if (props.categoryType === 1) {
+      updateOrderReceivingRegionData()
+      data.orderReceivingRegion = formData.value.orderReceivingRegion
+      if (data.orderReceivingStatus === true) {
+        const regions = orderReceivingRegionFields.value
+          .map(it => (it.region || '').trim())
+          .filter((n: string) => n !== '')
+        const seen = new Set<string>()
+        let dupName: string | null = null
+        for (const n of regions) {
+          if (seen.has(n)) {
+            dupName = n
+            break
+          }
+          seen.add(n)
+        }
+        if (dupName) {
+          message.error(`游戏区服存在重复的区服名称：${dupName}`)
+          formLoading.value = false
+          return
+        }
+      }
     }
     data.categoryType = props.categoryType // 强制设置为对应类型
     // 提交前为隐藏字段补默认值（若未设置）
@@ -213,7 +295,10 @@ function resetForm() {
     upgradeSlotLimit: 0,
     allowDepositRecharge: false,
     remark: '',
+    orderReceivingStatus: false,
+    orderReceivingRegion: undefined,
   }
+  orderReceivingRegionFields.value = [{ region: '', price: 0 }]
   formRef.value?.resetFields()
 }
 
@@ -346,6 +431,38 @@ function clearSelectedProducts() {
               %
             </template>
           </el-input>
+        </el-form-item>
+        <el-form-item v-if="props.categoryType === 1" label="是否启用游戏区服" prop="orderReceivingStatus">
+          <el-switch v-model="formData.orderReceivingStatus" active-text="启用" inactive-text="不启用" />
+        </el-form-item>
+        <el-form-item v-if="props.categoryType === 1 && formData.orderReceivingStatus" label="游戏区服价差配置" prop="orderReceivingRegion">
+          <div class="dynamic-form w-full">
+            <div v-for="(item, index) in orderReceivingRegionFields" :key="index" class="mb-2">
+              <div class="flex items-center gap-x-2">
+                <span>区服</span>
+                <el-input v-model="item.region" placeholder="请输入区服名称" class="!w-[160px]" />
+                <span class="mx-2">加价</span>
+                <el-input-number
+                  v-model="item.price" :min="0" :step="0.01" :precision="2"
+                  @change="updateOrderReceivingRegionData"
+                >
+                  <template #suffix>
+                    元
+                  </template>
+                </el-input-number>
+                <el-button
+                  type="danger"
+                  :icon="ElIconDelete"
+                  size="small"
+                  :disabled="orderReceivingRegionFields.length <= 1"
+                  @click="removeOrderReceivingRegionField(index)"
+                />
+              </div>
+            </div>
+            <el-button type="primary" :icon="ElIconPlus" size="small" class="mt-2" @click="addOrderReceivingRegionField">
+              添加区服
+            </el-button>
+          </div>
         </el-form-item>
         <el-form-item label="等级名称" prop="levelName">
           <el-input v-model="formData.levelName" placeholder="请输入等级名称" />

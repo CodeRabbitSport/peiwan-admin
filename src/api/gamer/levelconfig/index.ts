@@ -33,6 +33,8 @@ export interface LevelConfig {
   upgradeSlotLimit?: number // 限制升级人数名额(0表示不限制)
   allowDepositRecharge?: boolean // 单低充值保证金(0:不允许, 1:允许)
   remark: string // 备注
+  orderReceivingStatus?: boolean // 是否启用游戏区服(0:否, 1:是，陪玩使用)
+  orderReceivingRegion?: string // 游戏区服价差配置(JSON字符串，陪玩使用)
 }
 
 // 打手等级配置 API

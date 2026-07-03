@@ -163,6 +163,7 @@ const queryParams = reactive({
   productCategoryId: undefined,
   levelType: 1, // 陪玩类型
   level: undefined,
+  isRecommended: undefined,
   createTime: [],
 })
 const queryFormRef = ref() // 搜索的表单
@@ -196,6 +197,21 @@ function resetQuery() {
 const formRef = ref()
 function openForm(type: string, id?: number) {
   formRef.value.open(type, id)
+}
+
+async function handleRecommendedChange(row: LevelApply, isRecommended: boolean) {
+  const originalRecommended = Boolean(row.isRecommended)
+  try {
+    await LevelApplyApi.updateLevelApply({
+      ...row,
+      isRecommended,
+    })
+    row.isRecommended = isRecommended
+    message.success(isRecommended ? '已推荐' : '已取消推荐')
+  }
+  catch {
+    row.isRecommended = originalRecommended
+  }
 }
 
 async function handleToggleAuditStatus(row: LevelApply, status: number) {
@@ -303,6 +319,17 @@ onMounted(() => {
           v-model="queryParams.productCategoryId"
           class="!w-[240px]"
         />
+      </el-form-item>
+      <el-form-item label="是否推荐" prop="isRecommended">
+        <el-select
+          v-model="queryParams.isRecommended"
+          placeholder="请选择是否推荐"
+          clearable
+          class="!w-[160px]"
+        >
+          <el-option label="是" :value="true" />
+          <el-option label="否" :value="false" />
+        </el-select>
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
@@ -440,6 +467,16 @@ onMounted(() => {
             <audio :src="scope.row.attachment" controls style="max-width: 180px; height: 32px;" />
           </div>
           <span v-else>-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="是否推荐" align="center" prop="isRecommended" width="100">
+        <template #default="scope">
+          <el-switch
+            :model-value="Boolean(scope.row.isRecommended)"
+            :active-value="true"
+            :inactive-value="false"
+            @change="value => handleRecommendedChange(scope.row, Boolean(value))"
+          />
         </template>
       </el-table-column>
       <el-table-column label="审核状态" align="center" prop="auditStatus" width="160">

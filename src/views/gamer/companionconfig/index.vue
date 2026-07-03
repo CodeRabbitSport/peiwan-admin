@@ -52,6 +52,17 @@ function verifyTypeText(val: number | undefined) {
       return '验证码验证'
   }
 }
+// 解析游戏区服价差配置 JSON 字符串
+function parseRegionList(value: string | undefined): Array<{ region: string, price: number }> {
+  if (!value) return []
+  try {
+    const parsed = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed : []
+  }
+  catch {
+    return []
+  }
+}
 
 /** 查询列表 */
 async function getList() {
@@ -144,8 +155,10 @@ onMounted(() => {
         <el-button v-hasPermi="['gamer:level-config:create']" type="primary" plain @click="openForm('create')">
           <Icon icon="ep:plus" class="mr-[5px]" /> 新增
         </el-button>
-        <el-button v-hasPermi="['gamer:level-config:delete']" type="danger" plain :disabled="isEmpty(checkedIds)"
-          @click="handleDeleteBatch">
+        <el-button
+          v-hasPermi="['gamer:level-config:delete']" type="danger" plain :disabled="isEmpty(checkedIds)"
+          @click="handleDeleteBatch"
+        >
           <Icon icon="ep:delete" class="mr-[5px]" /> 批量删除
         </el-button>
       </el-form-item>
@@ -154,8 +167,10 @@ onMounted(() => {
 
   <!-- 列表 -->
   <ContentWrap>
-    <el-table v-loading="loading" row-key="id" :data="list" :stripe="true" :show-overflow-tooltip="true"
-      @selection-change="handleRowCheckboxChange">
+    <el-table
+      v-loading="loading" row-key="id" :data="list" :stripe="true" :show-overflow-tooltip="true"
+      @selection-change="handleRowCheckboxChange"
+    >
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" width="80" />
       <el-table-column label="等级名称" align="center" prop="levelName" width="150" />
@@ -163,6 +178,18 @@ onMounted(() => {
       <el-table-column label="陪玩费用" align="center" prop="unitPrice" width="180">
         <template #default="{ row }">
           {{ row.unitPrice ? fenToYuan(row.unitPrice) : '--' }}元/小时
+        </template>
+      </el-table-column>
+      <el-table-column label="游戏区服价差" align="center" min-width="220">
+        <template #default="{ row }">
+          <template v-if="row.orderReceivingStatus && parseRegionList(row.orderReceivingRegion).length">
+            <div class="feature-list">
+              <div v-for="(item, idx) in parseRegionList(row.orderReceivingRegion)" :key="idx" class="feature-item">
+                {{ item.region }}：+{{ fenToYuan(item.price) }}元/小时
+              </div>
+            </div>
+          </template>
+          <span v-else>--</span>
         </template>
       </el-table-column>
       <!-- <el-table-column label="自助升级天数" align="center" prop="upgradeDays" width="120" /> -->
@@ -218,7 +245,7 @@ onMounted(() => {
             </div>
             <div class="feature-item">
               查看未退款订单用户手机号天数：{{ row.viewPhoneDaysLimit === -1 ? '不限制' : `${row.viewPhoneDaysLimit
-                }天` }}
+              }天` }}
             </div>
             <div class="feature-item">
               设置用户公告内容权限：{{ permissionText(row.canSetAnnouncement) }}
@@ -235,7 +262,7 @@ onMounted(() => {
             </div>
             <div class="feature-item">
               限制同时可接单数：{{ row.simultaneousOrderLimit === 0 ? '不限制' : `${row.simultaneousOrderLimit
-                }单` }}
+              }单` }}
             </div>
             <div class="feature-item">
               接单验证类型：{{ verifyTypeText(row.orderVerificationType) }}
@@ -253,8 +280,10 @@ onMounted(() => {
       <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
-          <el-button v-hasPermi="['gamer:level-config:update']" link type="primary"
-            @click="openForm('update', scope.row.id)">
+          <el-button
+            v-hasPermi="['gamer:level-config:update']" link type="primary"
+            @click="openForm('update', scope.row.id)"
+          >
             编辑
           </el-button>
           <el-button v-hasPermi="['gamer:level-config:delete']" link type="danger" @click="handleDelete(scope.row.id)">
@@ -264,8 +293,10 @@ onMounted(() => {
       </el-table-column>
     </el-table>
     <!-- 分页 -->
-    <Pagination v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" :total="total"
-      @pagination="getList" />
+    <Pagination
+      v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" :total="total"
+      @pagination="getList"
+    />
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
