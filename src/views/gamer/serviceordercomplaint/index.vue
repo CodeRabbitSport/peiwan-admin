@@ -2,6 +2,7 @@
 import { ServiceOrderApi } from '@/api/gamer/serviceorder'
 import type { ServiceOrderComplaint } from '@/api/gamer/serviceordercomplaint'
 import { ServiceOrderComplaintApi } from '@/api/gamer/serviceordercomplaint'
+import UserMultiSelectInput from '@/components/UserSelectInput/UserMultiSelectInput.vue'
 import { useUserStore } from '@/store/modules/user'
 import { fenToYuan } from '@/utils'
 import download from '@/utils/download'
@@ -298,11 +299,11 @@ onMounted(() => {
         />
       </el-form-item>
       <el-form-item label="用户ID" prop="userId">
-        <el-input
+        <UserMultiSelectInput
           v-model="queryParams.userId"
-          placeholder="用户ID"
-          clearable
-          class="!w-[240px]"
+          :multiple="false"
+          placeholder="请选择用户"
+          @change="handleQuery"
         />
       </el-form-item>
       <el-form-item label="投诉状态" prop="userType">

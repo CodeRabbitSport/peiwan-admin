@@ -2,6 +2,18 @@ import type { Dayjs } from 'dayjs'
 
 import request from '@/config/axios'
 
+export interface ServiceOrderAcceptorView {
+  id: number // 接单记录 ID
+  orderId?: number // 订单 ID
+  acceptorId?: number // 接单人用户 ID
+  avatar?: string // 接单人头像
+  nickname?: string // 接单人昵称
+  mobile?: string // 接单人手机号
+  confirmTime?: string | Dayjs // 确认接单时间
+  completeTime?: string | Dayjs // 接单人完成时间
+  acceptorAmount?: number // 接单人获得金额
+}
+
 /** 用户订单信息 */
 export interface ServiceOrder {
   id: number // 订单ID，主键
@@ -44,6 +56,7 @@ export interface ServiceOrder {
   refundAmount: number // 退款金额
   refundTime: string | Dayjs // 退款时间
   payRefundId: number // 退款订单ID
+  acceptorList?: ServiceOrderAcceptorView[] // 接单信息
 }
 
 /**

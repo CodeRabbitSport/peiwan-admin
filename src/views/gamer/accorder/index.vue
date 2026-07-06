@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ElMessageBox } from 'element-plus'
 
-import type { AccOrder } from '@/api/gamer/accorder'
+import type { AccOrder, AccOrderAcceptor } from '@/api/gamer/accorder'
 import { AccOrder_acceptOrder, AccOrder_auditOrderComplete, AccOrder_cancelAcceptOrder, AccOrder_updateOrderRefunded, AccOrderApi } from '@/api/gamer/accorder'
 import { AccOrderConversationApi } from '@/api/gamer/accorderconversation'
+import { UserInfoApi } from '@/api/gamer/userinfo'
 import ResponsiveFold from '@/components/ResponsiveFold/index.vue'
 import UserSelectInput from '@/components/UserSelectInput/index.vue'
 import UserInfoPickerDialog from '@/components/UserSelectInput/UserInfoPickerDialog.vue'
@@ -42,6 +43,15 @@ const queryParams = reactive<any>({
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 const selectedOrderStatus = ref<string | number | undefined>(undefined)
+const acceptorUserMap = ref<Record<number, any>>({})
+
+type AccOrderWithAcceptor = AccOrder & {
+  captainAvatar?: string
+  captainNickname?: string
+  captainMobile?: string
+}
+
+const displayList = computed(() => list.value.map(normalizeAccOrderAcceptor))
 
 const refundDialogVisible = ref(false)
 const refundFormLoading = ref(false)
@@ -75,6 +85,63 @@ async function submitRefundAudit() {
   }
 }
 
+function getAcceptorUserId(row: AccOrder): number | undefined {
+  const acceptor = Array.isArray(row.acceptorList) ? row.acceptorList[0] : undefined
+  return acceptor?.acceptorId || row.captainId
+}
+
+function normalizeAccOrderAcceptor(row: AccOrder): AccOrder {
+  if (Array.isArray(row.acceptorList) && row.acceptorList.length) return row
+
+  const userId = getAcceptorUserId(row)
+  if (!userId) return row
+
+  const userInfo = acceptorUserMap.value[userId]
+  const rowWithAcceptor = row as AccOrderWithAcceptor
+  const acceptor: AccOrderAcceptor = {
+    id: userId,
+    orderId: row.id,
+    acceptorId: userId,
+    avatar: rowWithAcceptor.captainAvatar || userInfo?.avatar,
+    nickname: rowWithAcceptor.captainNickname || userInfo?.nickname,
+    mobile: rowWithAcceptor.captainMobile || userInfo?.mobile || userInfo?.phone,
+    confirmTime: row.acceptConfirmTime,
+    completeTime: row.completeTime,
+    acceptorAmount: row.acceptorAmount,
+  }
+
+  return {
+    ...row,
+    acceptorList: [acceptor],
+  }
+}
+
+async function fillAcceptorUserMap(rows: AccOrder[]) {
+  const ids = Array.from(new Set(
+    rows
+      .filter(row => !Array.isArray(row.acceptorList) || row.acceptorList.length === 0)
+      .map(getAcceptorUserId)
+      .filter((id): id is number => id != null),
+  )).filter(id => !acceptorUserMap.value[id])
+
+  if (!ids.length) return
+
+  const users = await Promise.all(ids.map(async (id) => {
+    try {
+      const data = await UserInfoApi.getUserInfoPage({ pageNo: 1, pageSize: 1, id })
+      return [id, data?.list?.[0]] as const
+    }
+    catch {
+      return [id, null] as const
+    }
+  }))
+
+  acceptorUserMap.value = {
+    ...acceptorUserMap.value,
+    ...Object.fromEntries(users.filter(([, user]) => !!user)),
+  }
+}
+
 /** 查询列表 */
 async function getList() {
   loading.value = true
@@ -82,6 +149,7 @@ async function getList() {
     const data = await AccOrderApi.getAccOrderPage(queryParams)
     list.value = data.list
     total.value = data.total
+    await fillAcceptorUserMap(data.list || [])
   }
   finally {
     loading.value = false
@@ -456,7 +524,7 @@ async function openAccOrderConversationByOrderId(orderId: number) {
     <el-table
       v-loading="loading"
       row-key="id"
-      :data="list"
+      :data="displayList"
       :stripe="true"
       @selection-change="handleRowCheckboxChange"
     >
@@ -603,19 +671,6 @@ async function openAccOrderConversationByOrderId(orderId: number) {
 
               <div>接单人获得金额：{{ scope.row.acceptorAmount != null ? (scope.row.acceptorAmount / 100) : '无' }}</div>
             </div>
-          </div>
-          <div v-else-if="scope.row.captainId" class="flex flex-col items-center">
-            <span>接单人：{{ scope.row.captainId }}</span>
-            <span>
-              接单时间：{{ formatDate(scope.row.acceptConfirmTime) || '无' }}
-            </span>
-            <span>
-              接单人完成时间：{{ formatDate(scope.row.completeTime) || '无' }}
-            </span>
-            <span>
-              用户确认完成：{{ formatDate(scope.row.confirmTime) || '无' }}
-            </span>
-            <div>接单人获得金额：{{ scope.row.acceptorAmount != null ? (scope.row.acceptorAmount / 100) : '无' }}</div>
           </div>
           <div v-else class="flex items-center justify-center">
             <el-button

@@ -4,6 +4,7 @@ import { LevelApply_syncUserGameRegion, LevelApplyApi } from '@/api/gamer/levela
 import { LevelConfigApi } from '@/api/gamer/levelconfig'
 import { ProductCategoryApi } from '@/api/gamer/productcategory'
 import CategorySelect from '@/components/CategorySelect/index.vue'
+import UserMultiSelectInput from '@/components/UserSelectInput/UserMultiSelectInput.vue'
 import { dateFormatter } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
 
@@ -283,11 +284,11 @@ onMounted(() => {
       label-width="68px"
     >
       <el-form-item label="用户ID" prop="userId">
-        <el-input
+        <UserMultiSelectInput
           v-model="queryParams.userId"
-          placeholder="请输入用户ID"
-          clearable
-          class="!w-[240px]"
+          :multiple="false"
+          placeholder="请选择用户"
+          @change="handleQuery"
         />
       </el-form-item>
       <el-form-item label="用户昵称" prop="userNickname">

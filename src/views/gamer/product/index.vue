@@ -195,8 +195,7 @@ onMounted(() => {
           clearable
           :api="ProductCategoryApi.getProductCategoryPage"
           label-key="categoryName"
-                      search-key="categoryName"
-
+          search-key="categoryName"
           value-key="id"
           :page-size="10"
           width="240px"
@@ -207,10 +206,10 @@ onMounted(() => {
           v-model="queryParams.typeId"
           placeholder="请选择商品类型"
           clearable
+          filterable
           :api="ProductTypeApi.getProductTypePage"
           label-key="typeName"
-                      search-key="typeName"
-
+          search-key="typeName"
           value-key="id"
           :page-size="10"
           width="240px"
