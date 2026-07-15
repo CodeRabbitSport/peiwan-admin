@@ -2,6 +2,7 @@ import request from '@/config/axios'
 
 export interface SmsLogVO {
   id: number | null
+  tenantId?: number
   channelId: number | null
   channelCode: string
   templateId: number | null

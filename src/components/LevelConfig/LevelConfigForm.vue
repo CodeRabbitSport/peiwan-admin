@@ -31,7 +31,7 @@ const dialogVisible = ref(false) // 弹窗的是否展示
 const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
-const formData = ref<Partial<LevonelConfig>>({
+const formData = ref<Partial<LevelConfig>>({
   id: undefined,
   categoryType: props.categoryType,
   categoryId: undefined, // 商品分类ID（仅陪玩使用）
@@ -39,6 +39,7 @@ const formData = ref<Partial<LevonelConfig>>({
   commissionRate: undefined, // 佣金抽成比率（陪玩使用，%）
   levelName: undefined,
   levelNumber: undefined,
+  levelIcon: '',
   upgradeFee: undefined,
   upgradeDays: undefined,
   isDefault: undefined,
@@ -271,6 +272,7 @@ function resetForm() {
     commissionRate: undefined,
     levelName: undefined,
     levelNumber: undefined,
+    levelIcon: '',
     upgradeFee: undefined,
     upgradeDays: undefined,
     isDefault: false,
@@ -466,6 +468,9 @@ function clearSelectedProducts() {
         </el-form-item>
         <el-form-item label="等级名称" prop="levelName">
           <el-input v-model="formData.levelName" placeholder="请输入等级名称" />
+        </el-form-item>
+        <el-form-item label="等级图标" prop="levelIcon">
+          <UploadImg v-model="formData.levelIcon" height="80px" width="80px" />
         </el-form-item>
         <el-form-item label="级别号" prop="levelNumber">
           <el-input-number v-model="formData.levelNumber" placeholder="请输入级别号" />

@@ -133,6 +133,17 @@ export function AccOrder_acceptOrder(data: any) {
 }
 
 /**
+ * 转单
+ * @param {object} data 转单参数
+ * @param {number} data.orderId 订单ID
+ * @param {number} data.userId 接单人的用户编号
+ * @returns {Promise<any>} 请求结果
+ */
+export function AccOrder_transferOrder(data: any) {
+  return request.post({ url: `/gamer/acc-order/transfer-order`, data })
+}
+
+/**
  * 更新订单为已退款
  * @param {object} params PayRefundNotifyReqDTO
  * @param {string} params.merchantOrderId

@@ -217,7 +217,7 @@ const queryParams = reactive({
   userNickname: undefined,
   userId: undefined,
   productCategoryId: undefined,
-  levelType: undefined,
+  levelType: 2,
   level: undefined,
   createTime: [],
 })
@@ -227,6 +227,8 @@ const queryFormRef = ref() // 搜索的表单
 async function getList() {
   loading.value = true
   try {
+    console.log('%c🤪 ~ file: index.vue:230 [] -> queryParams : ', 'color: #21c1f2', queryParams)
+
     const data = await LevelApplyApi.getLevelApplyPage(queryParams)
     list.value = data.list
     total.value = data.total
@@ -354,7 +356,7 @@ onMounted(() => {
           class="!w-[240px]"
         />
       </el-form-item>
-      <el-form-item label="身份类型" prop="levelType">
+      <!-- <el-form-item label="身份类型" prop="levelType">
         <el-select
           v-model="queryParams.levelType"
           placeholder="全部"
@@ -364,7 +366,7 @@ onMounted(() => {
           <el-option label="陪玩" :value="1" />
           <el-option label="打手" :value="2" />
         </el-select>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="商品分类" prop="productCategoryId">
         <CategorySelect
           v-model="queryParams.productCategoryId"
@@ -450,7 +452,7 @@ onMounted(() => {
       </el-table-column>
       <el-table-column label="用户信息" align="center" prop="userNickname" min-width="180">
         <template #default="scope">
-          <div class="flex items-center justify-center gap-3">
+          <div class="flex flex-col items-center justify-center gap-3">
             <el-avatar :size="44" :src="scope.row.userAvatar">
               {{ (scope.row.userNickname || '?').slice(0, 1) }}
             </el-avatar>
@@ -487,13 +489,13 @@ onMounted(() => {
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="身份类型" align="center" prop="levelType" width="100">
+      <!-- <el-table-column label="身份类型" align="center" prop="levelType" width="100">
         <template #default="scope">
           <el-tag :type="scope.row.levelType === 1 ? 'success' : 'warning'">
             {{ scope.row.levelType === 1 ? '陪玩' : '打手' }}
           </el-tag>
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="等级" align="center" prop="levelName" min-width="140">
         <template #default="scope">
           <div class="flex flex-col items-center gap-1">
@@ -588,6 +590,7 @@ onMounted(() => {
             v-hasPermi="['gamer:level-apply:update']"
             link
             type="primary"
+            :disabled="scope.row.auditStatus !== 1"
             @click="openVoteDialog(scope.row)"
           >
             调整票数

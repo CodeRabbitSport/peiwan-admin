@@ -91,23 +91,6 @@
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-[5px]" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-[5px]" /> 重置</el-button>
         <el-button
-          type="primary"
-          plain
-          @click="openForm('create')"
-          v-hasPermi="['system:sms-template:create']"
-        >
-          <Icon icon="ep:plus" class="mr-[5px]" />新增
-        </el-button>
-        <el-button
-          type="danger"
-          plain
-          :disabled="checkedIds.length === 0"
-          @click="handleDeleteBatch"
-          v-hasPermi="['system:sms-template:delete']"
-        >
-          <Icon icon="ep:delete" class="mr-[5px]" />批量删除
-        </el-button>
-        <el-button
           type="success"
           plain
           @click="handleExport"
@@ -122,8 +105,7 @@
 
   <!-- 列表 -->
   <ContentWrap>
-    <el-table v-loading="loading" :data="list" @selection-change="handleRowCheckboxChange">
-      <el-table-column type="selection" width="55" />
+    <el-table v-loading="loading" :data="list">
       <el-table-column
         label="模板编码"
         align="center"
@@ -183,7 +165,7 @@
           <el-button
             link
             type="primary"
-            @click="openForm('update', scope.row.id)"
+            @click="openForm(scope.row.id)"
             v-hasPermi="['system:sms-template:update']"
           >
             修改
@@ -195,14 +177,6 @@
             v-hasPermi="['system:sms-template:send-sms']"
           >
             测试
-          </el-button>
-          <el-button
-            link
-            type="danger"
-            @click="handleDelete(scope.row.id)"
-            v-hasPermi="['system:sms-template:delete']"
-          >
-            删除
           </el-button>
         </template>
       </el-table-column>
@@ -216,7 +190,7 @@
     />
   </ContentWrap>
 
-  <!-- 表单弹窗：添加/修改 -->
+  <!-- 表单弹窗：修改状态和渠道 -->
   <SmsTemplateForm ref="formRef" @success="getList" />
   <!-- 表单弹窗：测试发送 -->
   <SmsTemplateSendForm ref="sendFormRef" />
@@ -233,7 +207,6 @@ import SmsTemplateSendForm from './SmsTemplateSendForm.vue'
 defineOptions({ name: 'SystemSmsTemplate' })
 
 const message = useMessage() // 消息弹窗
-const { t } = useI18n() // 国际化
 
 const loading = ref(false) // 列表的加载中
 const total = ref(0) // 列表的总页数
@@ -277,48 +250,16 @@ const resetQuery = () => {
   handleQuery()
 }
 
-/** 添加/修改操作 */
+/** 修改状态和渠道 */
 const formRef = ref()
-const openForm = (type: string, id?: number) => {
-  formRef.value.open(type, id)
+const openForm = (id: number) => {
+  formRef.value.open('update', id)
 }
 
 /** 发送短信按钮 */
 const sendFormRef = ref()
 const openSendForm = (id: number) => {
   sendFormRef.value.open(id)
-}
-
-/** 删除按钮操作 */
-const handleDelete = async (id: number) => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await SmsTemplateApi.deleteSmsTemplate(id)
-    message.success(t('common.delSuccess'))
-    // 刷新列表
-    await getList()
-  } catch {}
-}
-
-/** 批量删除按钮操作 */
-const checkedIds = ref<number[]>([])
-const handleRowCheckboxChange = (rows: SmsTemplateApi.SmsTemplateVO[]) => {
-  checkedIds.value = rows.map((row) => row.id!)
-}
-
-const handleDeleteBatch = async () => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起批量删除
-    await SmsTemplateApi.deleteSmsTemplateList(checkedIds.value)
-    checkedIds.value = []
-    message.success(t('common.delSuccess'))
-    // 刷新列表
-    await getList()
-  } catch {}
 }
 
 /** 导出按钮操作 */
@@ -338,6 +279,7 @@ const handleExport = async () => {
 
 /** 初始化 **/
 onMounted(async () => {
+  await SmsTemplateApi.initializeFixedSmsTemplates()
   await getList()
   // 加载渠道列表
   channelList.value = await SmsChannelApi.getSimpleSmsChannelList()

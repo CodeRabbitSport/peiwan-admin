@@ -8,6 +8,7 @@ export interface LevelConfig {
   unitPrice?: number // 单价/每小时（分，陪玩使用）
   levelName?: string // 等级名称
   levelNumber?: number // 级别号
+  levelIcon?: string // 等级图标
   upgradeFee?: number // 自助升级费用
   upgradeDays?: number // 自助升级天数
   isDefault?: boolean // 是否默认等级(0:否, 1:是)

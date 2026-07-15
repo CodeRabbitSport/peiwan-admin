@@ -21,6 +21,8 @@ const KEYS = {
   SITE_HISTORY_ACCEPTORS: 'siteHistoryAcceptors',
   ENABLE_ALGO_CAPTCHA: 'siteConfigEnableAlgoCaptcha',
   ENABLE_DISPATCH_ORDERLIST: 'siteConfigEnableDispatchingOrder',
+  ENABLE_MOBILE_REGION: 'siteConfigEnableMobileRegion',
+  ENABLE_COMPUTER_REGION: 'siteConfigEnableComputerRegion',
   // 话题配置
   HOT_TOPIC_LIST: 'topicConfigHotTopicList',
   CUSTOMER_SERVICE_LINK: 'siteConfigCustomerServiceLink',
@@ -51,12 +53,14 @@ const KEYS = {
   CONTINUE_POINT_ADD: 'pointConfigContinuePointAdd',
   COMPLAINT_POINT_SUB: 'pointConfigComplaintPointSub',
   CONSUME_AMOUNT_PER_VOTE: 'pointConfigConsumeAmountPerVote',
+  ENABLE_COMPANION_RANK: 'pointConfigEnableCompanionRank',
   // 礼物/商品商店配置
   GIFT_COMMISSION_RATE: 'itemShopConfigGiftCommissionRate',
   TOP_CARD_PRICE: 'itemShopConfigTopCardPrice',
   REFRESH_CARD_PRICE: 'itemShopConfigRefreshCardPrice',
   ENABLE_PICK_ORDER_SMS_NOTICE: 'orderNoticeConfigEnablePickOrderSmsNotice',
   ENABLE_FIGHTER_COMPLETE_ORDER_SMS_NOTICE: 'orderNoticeConfigEnableFighterCompleteOrderSmsNotice',
+  ENABLE_CUSTOM_SMS: 'smsConfigEnableCustomSms',
   // 分佣配置
   COMMISSION_RATE: 'commissionConfigCommissionRate',
   // 应用配置
@@ -87,6 +91,9 @@ const formData = reactive<any>({
   siteConfigEnableBindMobile: false,
   siteHistoryAcceptors: false,
   siteConfigEnableAlgoCaptcha: false,
+  siteConfigEnableDispatchingOrder: false,
+  siteConfigEnableMobileRegion: true,
+  siteConfigEnableComputerRegion: true,
   canCancelOrder: false,
   canRefundOrder: false,
   canCheckApplyRefundUserMobile: false,
@@ -104,12 +111,14 @@ const formData = reactive<any>({
   continuePointAdd: 0,
   complaintPointSub: 0,
   consumeAmountPerVote: 0,
+  enableCompanionRank: false,
   // 礼物/商品商店配置
   giftCommissionRate: 0,
   topCardPrice: 0,
   refreshCardPrice: 0,
   orderNoticeConfigEnablePickOrderSmsNotice: false,
   orderNoticeConfigEnableFighterCompleteOrderSmsNotice: false,
+  smsConfigEnableCustomSms: false,
   // 分佣配置
   commissionRate: 0,
   // 应用配置
@@ -128,7 +137,7 @@ const formData = reactive<any>({
 const existingIdMap = ref<Record<string, number>>({})
 
 const loadingAll = ref(false)
-const activeGroups = ref<string[]>(['topic', 'order', 'service', 'point', 'itemShop', 'sms', 'commission', 'app'])
+const activeGroups = ref<string[]>(['topic', 'order', 'service', 'region', 'point', 'itemShop', 'sms', 'commission', 'app'])
 const tenantDomain = ref<string>('')
 
 // 工具：字符串转布尔
@@ -222,11 +231,20 @@ async function loadAll() {
         case KEYS.ENABLE_DISPATCH_ORDERLIST:
           formData.siteConfigEnableDispatchingOrder = toBool(item.configValue)
           break
+        case KEYS.ENABLE_MOBILE_REGION:
+          formData.siteConfigEnableMobileRegion = item.configValue === '' || toBool(item.configValue)
+          break
+        case KEYS.ENABLE_COMPUTER_REGION:
+          formData.siteConfigEnableComputerRegion = item.configValue === '' || toBool(item.configValue)
+          break
         case KEYS.ENABLE_PICK_ORDER_SMS_NOTICE:
           formData.orderNoticeConfigEnablePickOrderSmsNotice = toBool(item.configValue)
           break
         case KEYS.ENABLE_FIGHTER_COMPLETE_ORDER_SMS_NOTICE:
           formData.orderNoticeConfigEnableFighterCompleteOrderSmsNotice = toBool(item.configValue)
+          break
+        case KEYS.ENABLE_CUSTOM_SMS:
+          formData.smsConfigEnableCustomSms = toBool(item.configValue)
           break
         case KEYS.CAN_CANCEL_ORDER:
           formData.canCancelOrder = toBool(item.configValue)
@@ -280,6 +298,9 @@ async function loadAll() {
           break
         case KEYS.CONSUME_AMOUNT_PER_VOTE:
           formData.consumeAmountPerVote = Number(item.configValue || 0)
+          break
+        case KEYS.ENABLE_COMPANION_RANK:
+          formData.enableCompanionRank = toBool(item.configValue)
           break
         case KEYS.GIFT_COMMISSION_RATE:
           formData.giftCommissionRate = Number(item.configValue || 0)
@@ -614,6 +635,28 @@ onMounted(() => {
           </el-row>
         </el-collapse-item>
 
+        <!-- 区服配置 -->
+        <el-collapse-item name="region" title="区服配置">
+          <el-row :gutter="16">
+            <el-col :xs="24" :sm="12" :md="8" :lg="6">
+              <el-form-item label="是否开启手机端">
+                <el-switch
+                  v-model="formData.siteConfigEnableMobileRegion"
+                  @change="(val: any) => handleSave(KEYS.ENABLE_MOBILE_REGION, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="6">
+              <el-form-item label="是否开启电脑端">
+                <el-switch
+                  v-model="formData.siteConfigEnableComputerRegion"
+                  @change="(val: any) => handleSave(KEYS.ENABLE_COMPUTER_REGION, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-collapse-item>
+
         <!-- 积分配置 -->
         <el-collapse-item name="point" title="积分配置">
           <el-row :gutter="16">
@@ -658,12 +701,31 @@ onMounted(() => {
                 </div>
               </el-form-item>
             </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="是否开启陪玩排行榜">
+                <el-switch
+                  v-model="formData.enableCompanionRank"
+                  @change="(val: any) => handleSave(KEYS.ENABLE_COMPANION_RANK, 'boolean', val)"
+                />
+              </el-form-item>
+            </el-col>
           </el-row>
         </el-collapse-item>
 
         <!-- 短信配置 -->
         <el-collapse-item name="sms" title="短信配置">
           <el-row :gutter="16">
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="是否自定义短信">
+                <el-switch
+                  v-model="formData.smsConfigEnableCustomSms"
+                  @change="(val: any) => handleSave(KEYS.ENABLE_CUSTOM_SMS, 'boolean', val)"
+                />
+                <div class="ml-2 text-xs text-gray-500">
+                  关闭时使用系统短信渠道
+                </div>
+              </el-form-item>
+            </el-col>
             <el-col :xs="24" :sm="12" :md="8" :lg="8">
               <el-form-item label="开启接单短信提醒">
                 <el-switch

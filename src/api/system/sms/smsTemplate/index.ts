@@ -2,6 +2,7 @@ import request from '@/config/axios'
 
 export interface SmsTemplateVO {
   id?: number
+  tenantId?: number
   type?: number
   status: number
   code: string
@@ -15,51 +16,63 @@ export interface SmsTemplateVO {
   createTime?: Date
 }
 
+export interface SmsTemplateConfigUpdateReqVO {
+  id?: number
+  status: number
+  channelId?: number
+  apiTemplateId?: string
+}
+
 export interface SendSmsReqVO {
   mobile: string
   templateCode: string
-  templateParams: Map<String, Object>
+  templateParams: Map<string, object>
+}
+
+// 补齐当前租户的四个固定短信模板
+export function initializeFixedSmsTemplates() {
+  return request.post({ url: '/system/sms-template/initialize-fixed' })
 }
 
 // 查询短信模板列表
-export const getSmsTemplatePage = (params: PageParam) => {
+export function getSmsTemplatePage(params: PageParam) {
   return request.get({ url: '/system/sms-template/page', params })
 }
 
 // 查询短信模板详情
-export const getSmsTemplate = (id: number) => {
-  return request.get({ url: '/system/sms-template/get?id=' + id })
+export function getSmsTemplate(id: number) {
+  return request.get({ url: `/system/sms-template/get?id=${id}` })
 }
 
 // 新增短信模板
-export const createSmsTemplate = (data: SmsTemplateVO) => {
+export function createSmsTemplate(data: SmsTemplateVO) {
   return request.post({ url: '/system/sms-template/create', data })
 }
 
 // 修改短信模板
-export const updateSmsTemplate = (data: SmsTemplateVO) => {
+export function updateSmsTemplate(data: SmsTemplateConfigUpdateReqVO) {
   return request.put({ url: '/system/sms-template/update', data })
 }
 
 // 删除短信模板
-export const deleteSmsTemplate = (id: number) => {
-  return request.delete({ url: '/system/sms-template/delete?id=' + id })
+export function deleteSmsTemplate(id: number) {
+  return request.delete({ url: `/system/sms-template/delete?id=${id}` })
 }
 
 // 批量删除短信模板
-export const deleteSmsTemplateList = (ids: number[]) => {
+export function deleteSmsTemplateList(ids: number[]) {
   return request.delete({ url: '/system/sms-template/delete-list', params: { ids: ids.join(',') } })
 }
 
 // 导出短信模板
-export const exportSmsTemplate = (params) => {
+export function exportSmsTemplate(params) {
   return request.download({
     url: '/system/sms-template/export-excel',
-    params
+    params,
   })
 }
 
 // 发送短信
-export const sendSms = (data: SendSmsReqVO) => {
+export function sendSms(data: SendSmsReqVO) {
   return request.post({ url: '/system/sms-template/send-sms', data })
 }

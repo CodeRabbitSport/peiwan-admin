@@ -2,6 +2,7 @@ import request from '@/config/axios'
 
 export interface SmsChannelVO {
   id: number
+  tenantId?: number
   code: string
   status: number
   signature: string

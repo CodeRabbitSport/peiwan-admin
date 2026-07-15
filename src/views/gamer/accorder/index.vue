@@ -2,7 +2,7 @@
 import { ElMessageBox } from 'element-plus'
 
 import type { AccOrder, AccOrderAcceptor } from '@/api/gamer/accorder'
-import { AccOrder_acceptOrder, AccOrder_auditOrderComplete, AccOrder_cancelAcceptOrder, AccOrder_updateOrderRefunded, AccOrderApi } from '@/api/gamer/accorder'
+import { AccOrder_acceptOrder, AccOrder_auditOrderComplete, AccOrder_cancelAcceptOrder, AccOrder_transferOrder, AccOrder_updateOrderRefunded, AccOrderApi } from '@/api/gamer/accorder'
 import { AccOrderConversationApi } from '@/api/gamer/accorderconversation'
 import { UserInfoApi } from '@/api/gamer/userinfo'
 import ResponsiveFold from '@/components/ResponsiveFold/index.vue'
@@ -53,9 +53,31 @@ type AccOrderWithAcceptor = AccOrder & {
 
 const displayList = computed(() => list.value.map(normalizeAccOrderAcceptor))
 
+const orderStatusOptions = [
+  { label: '待支付', value: 0 },
+  { label: '进行中', value: 1 },
+  { label: '已完成', value: 2 },
+  { label: '已取消', value: 3 },
+  { label: '退款中', value: 4 },
+  { label: '已退款', value: 5 },
+]
+const payStatusOptions = [
+  { label: '未支付', value: 0 },
+  { label: '已支付', value: 1 },
+  { label: '已退款', value: 2 },
+]
+
 const refundDialogVisible = ref(false)
 const refundFormLoading = ref(false)
 const refundForm = reactive<{ orderId?: number, auditStatus?: 1 | 2, auditReason?: string }>({})
+const quickEditDialogVisible = ref(false)
+const quickEditFormLoading = ref(false)
+const quickEditForm = ref<any>({
+  id: undefined,
+  orderStatus: undefined,
+  payStatus: undefined,
+  orderRemark: '',
+})
 
 function openRefundDialog(row: any) {
   refundForm.orderId = row.id
@@ -82,6 +104,34 @@ async function submitRefundAudit() {
   }
   finally {
     refundFormLoading.value = false
+  }
+}
+
+function resetQuickEditForm() {
+  quickEditForm.value = {}
+}
+
+function openQuickEditDialog(row: AccOrder) {
+  quickEditForm.value = {
+    ...row,
+    orderStatus: row.orderStatus ?? undefined,
+    payStatus: row.payStatus ?? undefined,
+    orderRemark: row.orderRemark || '',
+  }
+  quickEditDialogVisible.value = true
+}
+
+async function submitQuickEdit() {
+  if (!quickEditForm.value.id) return
+  quickEditFormLoading.value = true
+  try {
+    await AccOrderApi.updateAccOrder(quickEditForm.value as AccOrder)
+    message.success('更新成功')
+    quickEditDialogVisible.value = false
+    await getList()
+  }
+  finally {
+    quickEditFormLoading.value = false
   }
 }
 
@@ -289,34 +339,57 @@ onMounted(() => {
   getList()
 })
 
-// 指定接单人
+// 指定接单人 / 转单
 const assignPickerRef = ref<InstanceType<typeof UserInfoPickerDialog> | null>(null)
-const currentAssignOrderId = ref<number | null>(null)
+const currentPickerOrderId = ref<number | null>(null)
+const currentPickerAction = ref<'assign' | 'transfer' | null>(null)
 
 function openAssignPicker(row: AccOrder) {
-  currentAssignOrderId.value = row.id
+  currentPickerOrderId.value = row.id
+  currentPickerAction.value = 'assign'
+  // categoryType=1 代表陪玩
+  assignPickerRef.value?.open(undefined, 1, row.categoryId)
+}
+
+function openTransferPicker(row: AccOrder) {
+  if (row.orderStatus !== 1) {
+    message.warning('仅订单状态为进行中时可转单')
+    return
+  }
+  currentPickerOrderId.value = row.id
+  currentPickerAction.value = 'transfer'
   // categoryType=1 代表陪玩
   assignPickerRef.value?.open(undefined, 1, row.categoryId)
 }
 
 async function handleAssignConfirm(user: any) {
-  if (!currentAssignOrderId.value) return
+  if (currentPickerOrderId.value == null || !currentPickerAction.value) return
   try {
-    await AccOrder_acceptOrder({
-      captchaVerification: undefined,
-      orderId: currentAssignOrderId.value,
-      teamId: undefined,
-      remark: '指定接单人',
-      userId: user.id,
-    })
-    message.success('指定接单人成功')
+    if (currentPickerAction.value === 'assign') {
+      await AccOrder_acceptOrder({
+        captchaVerification: undefined,
+        orderId: currentPickerOrderId.value,
+        teamId: undefined,
+        remark: '指定接单人',
+        userId: user.id,
+      })
+      message.success('指定接单人成功')
+    }
+    else {
+      await AccOrder_transferOrder({
+        orderId: currentPickerOrderId.value,
+        userId: user.id,
+      })
+      message.success('转单成功')
+    }
     await getList()
   }
   catch {
-    message.error('指定接单人失败')
+    message.error(currentPickerAction.value === 'assign' ? '指定接单人失败' : '转单失败')
   }
   finally {
-    currentAssignOrderId.value = null
+    currentPickerOrderId.value = null
+    currentPickerAction.value = null
   }
 }
 
@@ -674,7 +747,7 @@ async function openAccOrderConversationByOrderId(orderId: number) {
           </div>
           <div v-else class="flex items-center justify-center">
             <el-button
-              v-hasPermi="['gamer:acc-order:update']"
+              v-hasPermi="['gamer:acc-order:accept']"
               link
               type="primary"
               @click="openAssignPicker(scope.row)"
@@ -695,48 +768,65 @@ async function openAccOrderConversationByOrderId(orderId: number) {
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item
+                  v-if="!scope.row.payTime"
+                  v-hasPermi="['gamer:acc-order:update']"
+                  @click="openQuickEditDialog(scope.row)"
+                >
+                  编辑
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-hasPermi="['gamer:acc-order:transfer-order']"
+                  :disabled="scope.row.orderStatus !== 1"
+                  @click="openTransferPicker(scope.row)"
+                >
+                  转单
+                </el-dropdown-item>
+                <el-dropdown-item
                   v-hasPermi="['gamer:acc-order:update']"
                   @click="openForm('update', scope.row.id)"
                 >
-                  查看
+                  订单详情
                 </el-dropdown-item>
-                <!-- 查看聊天记录 -->
-                <el-dropdown-item v-if="scope.row.captainId" @click="openAccOrderConversationByOrderId(scope.row.id)">
+
+                <el-dropdown-item
+                  v-if="Array.isArray(scope.row.acceptorList) && scope.row.acceptorList.length"
+                  @click="openAccOrderConversationByOrderId(scope.row.id)"
+                >
                   查看聊天记录
                 </el-dropdown-item>
-                <!-- 完成订单 -->
                 <el-dropdown-item
-                  v-if="scope.row.completeTime && scope.row.orderStatus === 1"
-                  v-hasPermi="['gamer:acc-order:update']"
+                  v-if="scope.row.orderStatus === 1 && scope.row.payStatus === 1 && scope.row.acceptorList?.length !== 0"
+                  v-hasPermi="['gamer:acc-order:audit-complete']"
                   @click="handleAuditOrderComplete(scope.row)"
                 >
                   完成订单
                 </el-dropdown-item>
                 <el-dropdown-item
                   v-if="scope.row.orderStatus === 4"
-                  v-hasPermi="['gamer:acc-order:update']"
+                  v-hasPermi="['gamer:acc-order:audit-refund']"
                   @click="openRefundDialog(scope.row)"
                 >
                   退款审核
                 </el-dropdown-item>
                 <el-dropdown-item
-                  v-if="scope.row.payStatus === 1 && (!Array.isArray(scope.row.acceptorList) || scope.row.acceptorList.length === 0) && !scope.row.captainId"
+                  v-if="scope.row.payStatus === 1 && [1, 2].includes(scope.row.orderStatus)"
                   v-hasPermi="['gamer:acc-order:refund']"
                   @click="handleImmediateRefund(scope.row)"
                 >
                   立即退款
                 </el-dropdown-item>
                 <el-dropdown-item
-                  v-if="scope.row.orderStatus === 1"
+                  v-if="scope.row.orderStatus === 1 && scope.row.payStatus === 1 && scope.row.acceptorList?.length !== 0"
                   v-hasPermi="['gamer:acc-order:cancel-accept']"
                   @click="handleCancelOrder(scope.row)"
                 >
-                  取消订单
+                  取消接单
                 </el-dropdown-item>
                 <el-dropdown-item @click="openVoucherPreview(scope.row)">
                   查看结单证明
                 </el-dropdown-item>
                 <!-- <el-dropdown-item
+                  v-if="scope.row.orderStatus === 3"
                   v-hasPermi="['gamer:acc-order:delete']"
                   @click="handleDelete(scope.row.id)"
                 >
@@ -786,6 +876,38 @@ async function openAccOrderConversationByOrderId(orderId: number) {
         type="primary"
         :disabled="!refundForm.auditStatus || (refundForm.auditStatus === 2 && !refundForm.auditReason)"
         @click="submitRefundAudit"
+      >
+        确 定
+      </el-button>
+    </template>
+  </Dialog>
+
+  <!-- 快速编辑弹窗 -->
+  <Dialog v-model="quickEditDialogVisible" title="编辑订单" width="480px" @closed="resetQuickEditForm">
+    <el-form :model="quickEditForm" label-width="100px">
+      <el-form-item label="订单状态">
+        <el-select v-model="quickEditForm.orderStatus" placeholder="请选择订单状态" clearable>
+          <el-option v-for="item in orderStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="支付状态">
+        <el-select v-model="quickEditForm.payStatus" placeholder="请选择支付状态" clearable>
+          <el-option v-for="item in payStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="订单备注">
+        <el-input v-model="quickEditForm.orderRemark" type="textarea" placeholder="请输入订单备注" :rows="3" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="quickEditDialogVisible = false">
+        取 消
+      </el-button>
+      <el-button
+        type="primary"
+        :loading="quickEditFormLoading"
+        :disabled="!quickEditForm.id"
+        @click="submitQuickEdit"
       >
         确 定
       </el-button>
