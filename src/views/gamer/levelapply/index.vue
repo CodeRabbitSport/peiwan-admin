@@ -37,6 +37,19 @@ const currentEditLevelRow = ref<LevelApply | null>(null)
 const selectedLevelId = ref<number | undefined>(undefined)
 const levelOptions = ref<any[]>([])
 
+// 人工调整票数弹窗
+const voteDialogVisible = ref(false)
+const voteSubmitting = ref(false)
+const currentVoteRow = ref<LevelApply | null>(null)
+const voteChangeType = ref<'add' | 'subtract'>('add')
+const voteChangeCount = ref(1)
+const adjustedVoteCount = computed(() => {
+  const current = Number(currentVoteRow.value?.voteCount || 0)
+  return voteChangeType.value === 'add'
+    ? current + voteChangeCount.value
+    : current - voteChangeCount.value
+})
+
 // 打开修改区服弹窗
 async function handleEditRegion(row: LevelApply) {
   currentEditRow.value = row
@@ -102,10 +115,10 @@ async function handleEditLevel(row: LevelApply) {
   // 设置当前等级
   selectedLevelId.value = row.level
 
-  // 获取打手等级配置列表 (categoryType=2 代表打手)
+  // 根据当前身份类型获取对应等级配置
   try {
     const data = await LevelConfigApi.getLevelConfigPage({
-      categoryType: 2,
+      categoryType: row.levelType,
       categoryId: row.productCategoryId,
       pageNo: 1,
       pageSize: 100,
@@ -153,6 +166,48 @@ async function confirmEditLevel() {
   }
 }
 
+function openVoteDialog(row: LevelApply) {
+  currentVoteRow.value = row
+  voteChangeType.value = 'add'
+  voteChangeCount.value = 1
+  voteDialogVisible.value = true
+}
+
+async function confirmAdjustVoteCount() {
+  if (!currentVoteRow.value) return
+  const count = Math.trunc(Number(voteChangeCount.value))
+  if (!Number.isFinite(count) || count <= 0) {
+    message.warning('请输入大于0的整数票数')
+    return
+  }
+
+  const isSubtract = voteChangeType.value === 'subtract'
+  const currentCount = Number(currentVoteRow.value.voteCount || 0)
+  if (isSubtract && count > currentCount) {
+    message.warning('减少票数不能超过当前票数')
+    return
+  }
+
+  const actionText = isSubtract ? '减少' : '增加'
+  try {
+    await message.confirm(
+      `确认给“${currentVoteRow.value.userNickname || currentVoteRow.value.userId}”${actionText}${count}张票？`,
+    )
+    voteSubmitting.value = true
+    await LevelApplyApi.adjustVoteCount({
+      id: currentVoteRow.value.id,
+      changeCount: isSubtract ? -count : count,
+    })
+    message.success(`票数${actionText}成功`)
+    voteDialogVisible.value = false
+    await getList()
+  }
+  catch {}
+  finally {
+    voteSubmitting.value = false
+  }
+}
+
 const loading = ref(true) // 列表的加载中
 const list = ref<LevelApply[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
@@ -162,7 +217,7 @@ const queryParams = reactive({
   userNickname: undefined,
   userId: undefined,
   productCategoryId: undefined,
-  levelType: 2, // 打手类型
+  levelType: undefined,
   level: undefined,
   createTime: [],
 })
@@ -299,6 +354,17 @@ onMounted(() => {
           class="!w-[240px]"
         />
       </el-form-item>
+      <el-form-item label="身份类型" prop="levelType">
+        <el-select
+          v-model="queryParams.levelType"
+          placeholder="全部"
+          clearable
+          class="!w-[160px]"
+        >
+          <el-option label="陪玩" :value="1" />
+          <el-option label="打手" :value="2" />
+        </el-select>
+      </el-form-item>
       <el-form-item label="商品分类" prop="productCategoryId">
         <CategorySelect
           v-model="queryParams.productCategoryId"
@@ -382,11 +448,16 @@ onMounted(() => {
           </el-link>
         </template>
       </el-table-column>
-      <el-table-column label="用户昵称" align="center" prop="userNickname">
+      <el-table-column label="用户信息" align="center" prop="userNickname" min-width="180">
         <template #default="scope">
-          <el-link type="primary" @click="handleViewUserInfo(scope.row.userId)">
-            {{ scope.row.userNickname }}
-          </el-link>
+          <div class="flex items-center justify-center gap-3">
+            <el-avatar :size="44" :src="scope.row.userAvatar">
+              {{ (scope.row.userNickname || '?').slice(0, 1) }}
+            </el-avatar>
+            <el-link type="primary" @click="handleViewUserInfo(scope.row.userId)">
+              {{ scope.row.userNickname || '--' }}
+            </el-link>
+          </div>
         </template>
       </el-table-column>
       <el-table-column label="所属分类" align="center" prop="categoryName" />
@@ -416,12 +487,25 @@ onMounted(() => {
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="等级类型" align="center" prop="levelType">
+      <el-table-column label="身份类型" align="center" prop="levelType" width="100">
+        <template #default="scope">
+          <el-tag :type="scope.row.levelType === 1 ? 'success' : 'warning'">
+            {{ scope.row.levelType === 1 ? '陪玩' : '打手' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="等级" align="center" prop="levelName" min-width="140">
         <template #default="scope">
           <div class="flex flex-col items-center gap-1">
-            <el-tag type="warning">
-              {{ scope.row.levelName }}
-            </el-tag>
+            <el-image
+              v-if="scope.row.levelIcon"
+              :src="scope.row.levelIcon"
+              :preview-src-list="[scope.row.levelIcon]"
+              fit="contain"
+              preview-teleported
+              class="h-10 w-10"
+            />
+            <span>{{ scope.row.levelName || '--' }}</span>
             <el-button
               type="primary"
               size="small"
@@ -433,7 +517,12 @@ onMounted(() => {
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="级别" align="center" prop="level" />
+      <el-table-column label="等级编号" align="center" prop="level" width="90" />
+      <el-table-column label="当前票数" align="center" prop="voteCount" width="100">
+        <template #default="scope">
+          <span class="font-medium">{{ scope.row.voteCount || 0 }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="个人介绍" align="center" prop="personalIntroduction" />
       <el-table-column label="驳回原因" align="center" prop="rejectReason" />
       <el-table-column label="联系方式" align="center" prop="contact" />
@@ -493,8 +582,16 @@ onMounted(() => {
         :formatter="dateFormatter"
         width="180px"
       />
-      <el-table-column label="操作" align="center" min-width="120px">
+      <el-table-column label="操作" align="center" min-width="180px" fixed="right">
         <template #default="scope">
+          <el-button
+            v-hasPermi="['gamer:level-apply:update']"
+            link
+            type="primary"
+            @click="openVoteDialog(scope.row)"
+          >
+            调整票数
+          </el-button>
           <el-button
             v-hasPermi="['gamer:level-apply:update']"
             link
@@ -528,6 +625,61 @@ onMounted(() => {
 
   <!-- 用户信息查看弹窗 -->
   <UserInfoViewDialog ref="userInfoDialogRef" />
+
+  <el-dialog
+    v-model="voteDialogVisible"
+    title="调整票数"
+    width="460px"
+    :close-on-click-modal="false"
+  >
+    <el-form label-width="90px">
+      <el-form-item label="打手/陪玩">
+        <div class="flex items-center gap-3">
+          <el-avatar :size="40" :src="currentVoteRow?.userAvatar">
+            {{ (currentVoteRow?.userNickname || '?').slice(0, 1) }}
+          </el-avatar>
+          <span>{{ currentVoteRow?.userNickname || currentVoteRow?.userId }}</span>
+        </div>
+      </el-form-item>
+      <el-form-item label="当前票数">
+        {{ currentVoteRow?.voteCount || 0 }} 张
+      </el-form-item>
+      <el-form-item label="调整方式">
+        <el-radio-group v-model="voteChangeType">
+          <el-radio-button value="add">
+            增加
+          </el-radio-button>
+          <el-radio-button value="subtract">
+            减少
+          </el-radio-button>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="调整数量" required>
+        <el-input-number
+          v-model="voteChangeCount"
+          :min="1"
+          :max="999999999"
+          :precision="0"
+          :step="1"
+          controls-position="right"
+          class="!w-[220px]"
+        />
+      </el-form-item>
+      <el-form-item label="调整后票数">
+        <span :class="adjustedVoteCount < 0 ? 'text-red-500' : 'font-medium'">
+          {{ adjustedVoteCount }} 张
+        </span>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button :disabled="voteSubmitting" @click="voteDialogVisible = false">
+        取消
+      </el-button>
+      <el-button type="primary" :loading="voteSubmitting" @click="confirmAdjustVoteCount">
+        确认调整
+      </el-button>
+    </template>
+  </el-dialog>
 
   <!-- 修改区服弹窗 -->
   <el-dialog

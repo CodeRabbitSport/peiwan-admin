@@ -15,6 +15,16 @@ export interface LevelApply {
   gameRegion: string // 附件
   auditStatus: number // 审核状态(0待审核1通过2拒绝)
   isRecommended?: boolean // 是否推荐
+  userNickname?: string // 用户昵称
+  userAvatar?: string // 用户头像
+  levelName?: string // 等级名称
+  levelIcon?: string // 等级图标
+  voteCount?: number // 当前票数
+}
+
+export interface AdjustVoteCountReqVO {
+  id: number
+  changeCount: number
 }
 
 // 打手/陪玩等级申请 API
@@ -42,6 +52,11 @@ export const LevelApplyApi = {
   // 修改打手/陪玩等级申请
   updateLevelApply: async (data: LevelApply) => {
     return await request.put({ url: `/gamer/level-apply/update`, data })
+  },
+
+  // 人工增加或减少票数，changeCount 正数增加、负数减少
+  adjustVoteCount: async (data: AdjustVoteCountReqVO) => {
+    return await request.put({ url: `/gamer/level-apply/adjust-vote-count`, data })
   },
 
   // 删除打手/陪玩等级申请

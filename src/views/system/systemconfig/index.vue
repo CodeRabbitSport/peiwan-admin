@@ -50,6 +50,7 @@ const KEYS = {
   FAVORABLE_COMMENT_POINT_ADD: 'pointConfigFavorableCommentPointAdd',
   CONTINUE_POINT_ADD: 'pointConfigContinuePointAdd',
   COMPLAINT_POINT_SUB: 'pointConfigComplaintPointSub',
+  CONSUME_AMOUNT_PER_VOTE: 'pointConfigConsumeAmountPerVote',
   // 礼物/商品商店配置
   GIFT_COMMISSION_RATE: 'itemShopConfigGiftCommissionRate',
   TOP_CARD_PRICE: 'itemShopConfigTopCardPrice',
@@ -102,6 +103,7 @@ const formData = reactive<any>({
   favorableCommentPointAdd: 0,
   continuePointAdd: 0,
   complaintPointSub: 0,
+  consumeAmountPerVote: 0,
   // 礼物/商品商店配置
   giftCommissionRate: 0,
   topCardPrice: 0,
@@ -275,6 +277,9 @@ async function loadAll() {
           break
         case KEYS.COMPLAINT_POINT_SUB:
           formData.complaintPointSub = Number(item.configValue || 0)
+          break
+        case KEYS.CONSUME_AMOUNT_PER_VOTE:
+          formData.consumeAmountPerVote = Number(item.configValue || 0)
           break
         case KEYS.GIFT_COMMISSION_RATE:
           formData.giftCommissionRate = Number(item.configValue || 0)
@@ -634,6 +639,23 @@ onMounted(() => {
                   v-model="formData.complaintPointSub" :step="1" :min="-1000000"
                   @change="(val: any) => handleSave(KEYS.COMPLAINT_POINT_SUB, 'number', val)"
                 />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8">
+              <el-form-item label="消费多少送1张票">
+                <div class="flex items-center gap-2">
+                  <el-input-number
+                    v-model="formData.consumeAmountPerVote"
+                    :min="0"
+                    :precision="2"
+                    :step="1"
+                    @change="(val: any) => handleSave(KEYS.CONSUME_AMOUNT_PER_VOTE, 'number', val)"
+                  />
+                  <span>元</span>
+                </div>
+                <div class="ml-2 text-xs text-gray-500">
+                  每消费指定金额赠送1张票，0表示关闭
+                </div>
               </el-form-item>
             </el-col>
           </el-row>
