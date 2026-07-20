@@ -32,7 +32,8 @@ const formData = ref({
   skilledPosition: undefined,
   accompanyTypeStatus: undefined,
   accompanyType: undefined,
-  sortOrder: undefined,
+  isShow: true,
+  sortOrder: 0,
   gameType: undefined,
 })
 
@@ -238,7 +239,8 @@ function resetForm() {
     skilledPosition: undefined,
     accompanyTypeStatus: undefined,
     accompanyType: undefined,
-    sortOrder: undefined,
+    isShow: true,
+    sortOrder: 0,
     gameType: undefined,
   }
   gameCardFields.value = [{ type: 'text', label: '', value: '', required: false }]
@@ -406,6 +408,16 @@ function resetForm() {
       <el-form-item label="陪玩類型" prop="accompanyType">
         <el-input v-model="formData.accompanyType" type="text-area" placeholder="请输入陪玩類型(多个使用@分割)" />
       </el-form-item> -->
+      <el-form-item label="是否显示" prop="isShow">
+        <el-radio-group v-model="formData.isShow">
+          <el-radio :value="true">
+            显示
+          </el-radio>
+          <el-radio :value="false">
+            隐藏
+          </el-radio>
+        </el-radio-group>
+      </el-form-item>
       <el-form-item label="排序" prop="sortOrder">
         <el-input-number v-model="formData.sortOrder" placeholder="请输入排序" :min="0" class="w-full" />
       </el-form-item>

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 // import { CACHE_KEY, useCache } from '@/hooks/web/useCache'
+import { LevelApplyApi } from '@/api/gamer/levelapply'
 import { ServiceOrderApi } from '@/api/gamer/serviceorder'
 import routerSearch from '@/components/RouterSearch/index.vue'
 import { useDesign } from '@/hooks/web/useDesign'
@@ -26,8 +27,10 @@ const greyMode = computed(() => appStore.getGreyMode)
 // }
 // setDefaultTheme()
 
-// 轮训订单，如果有新订单播放音乐
+// 轮询订单和申请，有新数据时播放提醒
 const firstOrderId = ref<number | null>(null) // 存储第一条订单的 id
+const firstLevelApplyId = ref<number | null>(null) // 存储第一条打手申请的 id
+const firstCompanionApplyId = ref<number | null>(null) // 存储第一条陪玩申请的 id
 const pollOrderInterval = ref<ReturnType<typeof setInterval> | null>(null) // 轮询定时器
 const audio = ref<HTMLAudioElement | null>(null) // 音频对象
 const orderSoundEnabled = ref(false) // 铃声开关状态
@@ -56,7 +59,8 @@ watch(orderSoundEnabled, (enabled) => {
 })
 
 async function enableOrderSound() {
-  await initFirstOrderId()
+  await Promise.all([initFirstOrderId(), initFirstApplyIds()])
+  if (!orderSoundEnabled.value) return
   startPollOrder()
 }
 
@@ -75,6 +79,33 @@ async function initFirstOrderId() {
   catch {
     // 初始化失败，忽略
   }
+}
+
+// 初始化第一条打手、陪玩申请 id
+async function initFirstApplyIds() {
+  try {
+    const [levelApplyData, companionApplyData] = await Promise.all([
+      LevelApplyApi.getLevelApplyPage({ pageNo: 1, pageSize: 1, levelType: 2 }),
+      LevelApplyApi.getLevelApplyPage({ pageNo: 1, pageSize: 1, levelType: 1 }),
+    ])
+    if (levelApplyData.list && levelApplyData.list.length > 0) {
+      firstLevelApplyId.value = levelApplyData.list[0].id
+    }
+    if (companionApplyData.list && companionApplyData.list.length > 0) {
+      firstCompanionApplyId.value = companionApplyData.list[0].id
+    }
+  }
+  catch {
+    // 初始化失败，忽略
+  }
+}
+
+function speakNotification(text: string) {
+  if (!('speechSynthesis' in window)) return
+
+  const utterance = new SpeechSynthesisUtterance(text)
+  utterance.lang = 'zh-CN'
+  window.speechSynthesis.speak(utterance)
 }
 
 // 轮询订单
@@ -106,19 +137,53 @@ async function pollOrder() {
   }
 }
 
+// 轮询打手、陪玩申请
+async function pollApply() {
+  try {
+    const [levelApplyData, companionApplyData] = await Promise.all([
+      LevelApplyApi.getLevelApplyPage({ pageNo: 1, pageSize: 1, levelType: 2 }),
+      LevelApplyApi.getLevelApplyPage({ pageNo: 1, pageSize: 1, levelType: 1 }),
+    ])
+
+    if (levelApplyData.list && levelApplyData.list.length > 0) {
+      const currentFirstLevelApplyId = levelApplyData.list[0].id
+      if (currentFirstLevelApplyId > (firstLevelApplyId.value ?? 0)) {
+        speakNotification('您有新的打手申请，请及时处理')
+      }
+      firstLevelApplyId.value = currentFirstLevelApplyId
+    }
+
+    if (companionApplyData.list && companionApplyData.list.length > 0) {
+      const currentFirstCompanionApplyId = companionApplyData.list[0].id
+      if (currentFirstCompanionApplyId > (firstCompanionApplyId.value ?? 0)) {
+        speakNotification('您有新的陪玩申请，请及时处理')
+      }
+      firstCompanionApplyId.value = currentFirstCompanionApplyId
+    }
+  }
+  catch {
+    // 轮询失败，忽略
+  }
+}
+
 // 开始轮询
 function startPollOrder() {
   stopPollOrder()
   pollOrderInterval.value = setInterval(() => {
     pollOrder()
+    pollApply()
   }, 10000)
   pollOrder()
+  pollApply()
 }
 
 function stopPollOrder() {
   if (pollOrderInterval.value) {
     clearInterval(pollOrderInterval.value)
     pollOrderInterval.value = null
+  }
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel()
   }
 }
 

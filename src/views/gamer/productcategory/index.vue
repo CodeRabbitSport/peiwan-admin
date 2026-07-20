@@ -184,11 +184,22 @@ onMounted(() => {
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" />
       <el-table-column label="分类名称" align="center" prop="categoryName" />
+      <el-table-column label="排序" align="center" prop="sortOrder" />
       <!-- <el-table-column label="类型" align="center" prop="categoryType">
         <template #default="scope">
           {{ scope.row.categoryType == 1 ? "陪玩" : "打手" }}
         </template>
       </el-table-column> -->
+      <el-table-column label="是否显示" align="center" prop="isShow">
+        <template #default="scope">
+          <el-tag v-if="scope.row.isShow" type="primary">
+            显示
+          </el-tag>
+          <el-tag v-else type="danger">
+            隐藏
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="图标" align="center" prop="categoryIcon">
         <template #default="scope">
           <el-image

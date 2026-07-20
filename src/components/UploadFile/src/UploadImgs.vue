@@ -16,7 +16,7 @@ const props = defineProps({
   limit: propTypes.number.def(5), // 最大图片上传数 ==> 非必传（默认为 5张）
   multiple: propTypes.bool.def(false),
   fileSize: propTypes.number.def(5), // 图片大小限制 ==> 非必传（默认为 5M）
-  fileType: propTypes.array.def(['image/jpeg', 'image/png', 'image/gif']), // 图片类型限制 ==> 非必传（默认为 ["image/jpeg", "image/png", "image/gif"]）
+  fileType: propTypes.array.def(['image/jpeg', 'image/png', 'image/gif','image/webp']), // 图片类型限制 ==> 非必传（默认为 ["image/jpeg", "image/png", "image/gif"]）
   height: propTypes.string.def('150px'), // 组件高度 ==> 非必传（默认为 150px）
   width: propTypes.string.def('150px'), // 组件宽度 ==> 非必传（默认为 150px）
   borderradius: propTypes.string.def('8px'), // 组件边框圆角 ==> 非必传（默认为 8px）

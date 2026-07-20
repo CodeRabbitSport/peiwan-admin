@@ -15,6 +15,7 @@ export interface ProductCategory {
   skilledPosition: string; // 擅长位置(多个使用@分割)
   accompanyTypeStatus: boolean; // 是否啓用陪玩類型
   accompanyType: string; // 陪玩類型(多個使用@分割)
+  isShow: boolean; // 是否顯示
   sortOrder: number; // 排序
   gameType: number; // 1端游2手游
 }

@@ -85,7 +85,7 @@ export default defineComponent({
             )
           : undefined}
         <div class="h-full flex items-center">
-          <ElTooltip content={orderSoundEnabled.value ? '关闭订单铃声' : '开启订单铃声'} placement="bottom">
+          <ElTooltip content={orderSoundEnabled.value ? '关闭订单和申请提醒' : '开启订单和申请提醒'} placement="bottom">
             <ElSwitch
               class="mr-4"
               modelValue={orderSoundEnabled.value}
