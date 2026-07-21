@@ -361,14 +361,14 @@ onMounted(() => {
           class="!w-[240px]"
         />
       </el-form-item>
-      <el-form-item label="用户昵称" prop="userNickname">
+      <!-- <el-form-item label="用户昵称" prop="userNickname">
         <el-input
           v-model="queryParams.userNickname"
           placeholder="请输入用户昵称"
           clearable
           class="!w-[240px]"
         />
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="商品分类" prop="productCategoryId">
         <CategorySelect
           v-model="queryParams.productCategoryId"
@@ -384,6 +384,18 @@ onMounted(() => {
         >
           <el-option label="是" :value="true" />
           <el-option label="否" :value="false" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="审核状态" prop="auditStatus">
+        <el-select
+          v-model="queryParams.auditStatus"
+          placeholder="请选择审核状态"
+          clearable
+          class="!w-[240px]"
+        >
+          <el-option label="待审核" :value="0" />
+          <el-option label="已通过" :value="1" />
+          <el-option label="已拒绝" :value="2" />
         </el-select>
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">

@@ -181,14 +181,7 @@ const configGroups = [
     count: 4,
     keywords: '短信 自定义短信 接单提醒 完成订单 微信订阅 模板编码 模板ID',
   },
-  {
-    key: 'copywriting',
-    title: '前端文案',
-    description: '首页顶部导航文字',
-    icon: 'ep:edit-pen',
-    count: 3,
-    keywords: '护航 陪玩 排行榜 首页 导航 文字 文案',
-  },
+
   {
     key: 'app',
     title: '应用配置',
@@ -624,7 +617,7 @@ onMounted(() => {
       <header class="config-overview">
         <div>
           <h2>系统配置</h2>
-          <p>{{ configGroups.length }} 个配置分组 · {{ totalConfigCount }} 项配置</p>
+          <p>{{ totalConfigCount }} 项配置，按业务分组管理</p>
         </div>
         <el-button :loading="loadingAll" @click="loadAll">
           <Icon icon="ep:refresh" class="mr-[5px]" />
@@ -643,7 +636,6 @@ onMounted(() => {
               :class="{ active: activeGroup === group.key }"
               @click="activeGroup = group.key"
             >
-              <span class="config-nav-icon"><Icon :icon="group.icon" /></span>
               <span class="config-nav-text">
                 <strong>{{ group.title }}</strong>
                 <small>{{ group.description }}</small>
@@ -661,15 +653,10 @@ onMounted(() => {
         <main v-loading="loadingAll" class="config-main">
           <div class="config-group-header">
             <div class="config-group-heading">
-              <span class="config-group-icon"><Icon :icon="currentGroup.icon" /></span>
-              <div>
-                <h3>{{ currentGroup.title }}</h3>
-                <p>{{ currentGroup.description }}</p>
-              </div>
+              <h3>{{ currentGroup.title }}</h3>
+              <p>{{ currentGroup.description }}</p>
             </div>
-            <el-tag effect="plain" type="info">
-              {{ currentGroup.count }} 项
-            </el-tag>
+            <span class="config-group-count">{{ currentGroup.count }} 项配置</span>
           </div>
 
           <el-form :model="formData" class="config-form" label-position="top">
@@ -952,9 +939,7 @@ onMounted(() => {
                   <div class="config-field-label">
                     <div class="config-label-line">
                       <strong>模板编码</strong>
-                      <el-tag size="small" effect="plain">
-                        按租户生效
-                      </el-tag>
+                      <span class="config-field-note">按租户生效</span>
                     </div>
                     <small>订单被接单或开始服务后，公众号向下单用户发送订阅通知</small>
                   </div>
@@ -1168,11 +1153,11 @@ onMounted(() => {
 
 .config-workspace {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-columns: 220px minmax(0, 1fr);
   min-height: 650px;
   overflow: hidden;
   border: 1px solid var(--el-border-color-light);
-  border-radius: 6px;
+  border-radius: 4px;
   background: var(--el-bg-color);
 }
 
@@ -1195,13 +1180,13 @@ onMounted(() => {
 .config-nav-item {
   position: relative;
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) 26px;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   width: 100%;
-  min-height: 62px;
-  padding: 9px 10px;
+  min-height: 56px;
+  padding: 8px 12px;
   border: 0;
-  border-radius: 5px;
+  border-radius: 2px;
   color: var(--el-text-color-regular);
   text-align: left;
   background: transparent;
@@ -1220,37 +1205,19 @@ onMounted(() => {
 
     &::before {
       position: absolute;
-      top: 12px;
-      bottom: 12px;
+      top: 0;
+      bottom: 0;
       left: 0;
-      width: 3px;
-      border-radius: 0 3px 3px 0;
+      width: 2px;
       background: var(--el-color-primary);
       content: '';
-    }
-
-    .config-nav-icon {
-      color: #fff;
-      background: var(--el-color-primary);
     }
   }
 }
 
-.config-nav-icon,
-.config-group-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 5px;
-  color: var(--el-text-color-secondary);
-  background: var(--el-bg-color);
-}
-
 .config-nav-text {
   min-width: 0;
-  padding-left: 10px;
+  padding-left: 0;
 
   strong,
   small {
@@ -1276,15 +1243,10 @@ onMounted(() => {
 }
 
 .config-nav-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 20px;
-  border-radius: 4px;
+  min-width: 20px;
   color: var(--el-text-color-secondary);
-  font-size: 12px;
-  background: var(--el-fill-color-light);
+  font-size: 11px;
+  text-align: right;
 }
 
 .config-main {
@@ -1306,9 +1268,6 @@ onMounted(() => {
 }
 
 .config-group-heading {
-  display: flex;
-  align-items: center;
-
   h3,
   p {
     margin: 0;
@@ -1328,12 +1287,10 @@ onMounted(() => {
   }
 }
 
-.config-group-icon {
-  width: 38px;
-  height: 38px;
-  margin-right: 12px;
-  color: var(--el-color-primary);
-  background: var(--el-color-primary-light-9);
+.config-group-count,
+.config-field-note {
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
 }
 
 .config-form {
@@ -1450,10 +1407,6 @@ onMounted(() => {
 
   &--template {
     max-width: 760px;
-
-    :deep(.el-input__inner) {
-      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
-    }
   }
 }
 
