@@ -216,6 +216,7 @@
   <AppForm ref="formRef" @success="getList" />
   <AlipayChannelForm ref="alipayFormRef" @success="getList" />
   <WeixinChannelForm ref="weixinFormRef" @success="getList" />
+  <VirtualPaymentChannelForm ref="virtualPaymentFormRef" @success="getList" />
   <MockChannelForm ref="mockFormRef" @success="getList" />
   <WalletChannelForm ref="walletFormRef" @success="getList" />
 </template>
@@ -226,6 +227,7 @@ import AppForm from './components/AppForm.vue'
 import { CommonStatusEnum, PayChannelEnum } from '@/utils/constants'
 import AlipayChannelForm from './components/channel/AlipayChannelForm.vue'
 import WeixinChannelForm from './components/channel/WeixinChannelForm.vue'
+import VirtualPaymentChannelForm from './components/channel/VirtualPaymentChannelForm.vue'
 import MockChannelForm from './components/channel/MockChannelForm.vue'
 import WalletChannelForm from './components/channel/WalletChannelForm.vue'
 
@@ -263,7 +265,8 @@ const wxChannels = [
   PayChannelEnum.WX_APP,
   PayChannelEnum.WX_NATIVE,
   PayChannelEnum.WX_WAP,
-  PayChannelEnum.WX_BAR
+  PayChannelEnum.WX_BAR,
+  PayChannelEnum.WX_VIRTUAL
 ]
 
 /** 查询列表 */
@@ -340,6 +343,7 @@ const isChannelExists = (channels, channelCode) => {
  */
 const alipayFormRef = ref()
 const weixinFormRef = ref()
+const virtualPaymentFormRef = ref()
 const mockFormRef = ref()
 const walletFormRef = ref()
 const channelParam = reactive({
@@ -351,6 +355,10 @@ const openChannelForm = async (row, payCode) => {
   channelParam.payCode = payCode
   if (payCode.indexOf('alipay_') === 0) {
     alipayFormRef.value.open(row.id, payCode)
+    return
+  }
+  if (payCode === PayChannelEnum.WX_VIRTUAL.code) {
+    virtualPaymentFormRef.value.open(row.id, payCode)
     return
   }
   if (payCode.indexOf('wx_') === 0) {

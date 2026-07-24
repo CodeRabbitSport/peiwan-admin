@@ -1,17 +1,16 @@
-import { service } from './service'
-
 import { config } from './config'
+import { service } from './service'
 
 const { default_headers } = config
 
-const request = (option: any) => {
+function request(option: any) {
   const { headersType, headers, ...otherOption } = option
   return service({
     ...otherOption,
     headers: {
       'Content-Type': headersType || default_headers,
-      ...headers
-    }
+      ...headers,
+    },
   })
 }
 export default {
@@ -43,5 +42,5 @@ export default {
     option.headersType = 'multipart/form-data'
     const res = await request({ method: 'POST', ...option })
     return res as unknown as Promise<T>
-  }
+  },
 }

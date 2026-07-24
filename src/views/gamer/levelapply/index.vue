@@ -367,7 +367,7 @@ onMounted(() => {
           <el-option label="打手" :value="2" />
         </el-select>
       </el-form-item> -->
-      <el-form-item label="商品分类" prop="productCategoryId">
+      <el-form-item label="所属分类" prop="productCategoryId">
         <CategorySelect
           v-model="queryParams.productCategoryId"
           class="!w-[240px]"

@@ -1,0 +1,10 @@
+{
+  "name": "peiwan-wechat-mini-program-ci-runner",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Controlled miniprogram-ci runner invoked by p-java",
+  "type": "commonjs",
+  "dependencies": {
+    "miniprogram-ci": "^2.1.0"
+  }
+}

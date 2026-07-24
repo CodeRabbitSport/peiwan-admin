@@ -2,13 +2,12 @@
 import type { UserInfo } from '@/api/gamer/userinfo'
 import { UserInfoApi } from '@/api/gamer/userinfo'
 import { fenToYuan } from '@/utils'
-import UserBalanceUpdateForm from '@/views/member/user/components/UserBalanceUpdateForm.vue'
-
 import UserIncomeExpenseDetail from '../userincomeexpensedetail/index.vue'
 import UserMoment from '../usermoment/index.vue'
 import UserMomentBrowse from '../usermomentbrowse/index.vue'
 import UserMomentComment from '../usermomentcomment/index.vue'
 import UserMomentLike from '../usermomentlike/index.vue'
+import UserBalanceUpdateForm from './UserBalanceUpdateForm.vue'
 import UserInfoForm from './UserInfoForm.vue'
 import UserStatDialog from './UserStatDialog.vue'
 
@@ -258,4 +257,3 @@ defineExpose({ open })
     <UserBalanceUpdateForm ref="UpdateBalanceFormRef" @success="refreshData" />
   </el-dialog>
 </template>
-

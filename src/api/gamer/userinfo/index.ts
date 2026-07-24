@@ -20,6 +20,7 @@ export interface UserInfo {
   charmVal: number // 魅力值
   davName: string // 达人名称
   voiceAuditStatus: number // 语音审核状态
+  availableVoteCount: number // 可用投票数
   isSeeFollow: boolean // 是否允许查看关注 0否 1是
   isSeeFans: boolean // 是否允许查看粉丝 0否 1是
 }

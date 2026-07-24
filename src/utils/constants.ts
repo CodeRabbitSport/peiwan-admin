@@ -101,6 +101,10 @@ export const PayChannelEnum = {
     code: 'wx_lite',
     name: '微信小程序支付'
   },
+  WX_VIRTUAL: {
+    code: 'wx_virtual',
+    name: '微信小程序虚拟支付'
+  },
   WX_APP: {
     code: 'wx_app',
     name: '微信 APP 支付'

@@ -5,10 +5,13 @@ import { TenantNew_getAssessmentCode, TenantNew_refreshAssessmentCode } from '@/
 import UploadImg from '@/components/UploadFile/src/UploadImg.vue'
 import { useAppStore } from '@/store/modules/app'
 
+import MiniProgramRelease from './components/MiniProgramRelease.vue'
+
 defineOptions({ name: 'PageSetting' })
 
 const message = useMessage()
 const appStore = useAppStore()
+const route = useRoute()
 
 const activeSection = ref('site')
 const activeDecorationPage = ref('home')
@@ -22,6 +25,7 @@ const CONFIG_KEYS = {
   sitePrivacyContent: 'siteConfigPrivacyContent',
   siteIndexDialogContent: 'siteConfigIndexDialogContent',
   siteConfigEnableIndexDialog: 'siteConfigEnableIndexDialog',
+  siteIndexDialogFrequency: 'siteConfigIndexDialogFrequency',
   siteEnableRecycle: 'recycleConfigEnableRecycle',
   siteEnableVoiceRoom: 'siteConfigEnableVoiceRoom',
   siteCreateOrderContent: 'siteConfigCreateOrderContent',
@@ -46,6 +50,8 @@ const CONFIG_KEYS = {
   decorationMineBackground: 'decorationConfigMineBackground',
   decorationOrderBackground: 'decorationConfigOrderBackground',
   decorationRankBackground: 'decorationConfigRankBackground',
+  decorationApplyBackground: 'decorationConfigApplyBackground',
+  decorationApplyButton: 'decorationConfigApplyButton',
   escortText: 'copywritingConfigEscortText',
   companionText: 'copywritingConfigCompanionText',
   rankText: 'copywritingConfigRankText',
@@ -75,15 +81,21 @@ const topSections: NavItem[] = [
     label: '首页运营',
     description: '弹窗、公告与功能开关',
     icon: 'ep:house',
-    count: 4,
+    count: 5,
   },
-  { key: 'mine', label: '我的页面', description: '个人中心功能开关', icon: 'ep:user', count: 1 },
+  {
+    key: 'mine',
+    label: '我的页面',
+    description: '个人中心功能开关',
+    icon: 'ep:user',
+    count: 1,
+  },
   {
     key: 'decoration',
     label: '页面装修',
     description: '主题、背景图与页面文案',
     icon: 'ep:brush',
-    count: 8,
+    count: 10,
   },
   {
     key: 'content',
@@ -100,6 +112,13 @@ const topSections: NavItem[] = [
     count: 6,
   },
   {
+    key: 'miniProgram',
+    label: '小程序',
+    description: '统一产物与微信上传',
+    icon: 'ep:promotion',
+    count: 4,
+  },
+  {
     key: 'recycle',
     label: '回收配置',
     description: '回收入口、规则与二维码',
@@ -108,11 +127,26 @@ const topSections: NavItem[] = [
   },
 ]
 
+function getRouteSection() {
+  const metaQuery = route.meta.query as Record<string, unknown> | undefined
+  const section = route.query.section ?? metaQuery?.section
+  return typeof section === 'string' ? section : ''
+}
+
+watch(
+  getRouteSection,
+  (section) => {
+    activeSection.value = topSections.some(item => item.key === section) ? section : 'site'
+  },
+  { immediate: true },
+)
+
 const decorationPages = [
   { key: 'home', label: '首页', description: '顶部视觉与导航文案', icon: 'ep:house' },
   { key: 'mine', label: '我的', description: '个人中心顶部背景', icon: 'ep:user' },
   { key: 'order', label: '陪玩下单', description: '快速派单页面背景', icon: 'ep:shopping-bag' },
   { key: 'rank', label: '排行榜', description: '榜单顶部主视觉', icon: 'ep:trophy' },
+  { key: 'apply', label: '申请接单', description: '小程序招募页素材', icon: 'ep:promotion' },
 ]
 
 const DEFAULT_DECORATION = {
@@ -121,6 +155,8 @@ const DEFAULT_DECORATION = {
   decorationMineBackground: '',
   decorationOrderBackground: '',
   decorationRankBackground: '',
+  decorationApplyBackground: '',
+  decorationApplyButton: '',
   escortText: '护航',
   companionText: '陪玩',
   rankText: '排行榜',
@@ -142,6 +178,8 @@ const previewAssets = {
   mineBalance: `${MOBILE_PREVIEW_ASSET_BASE}/me-redesign/balance.png`,
   mineCoupon: `${MOBILE_PREVIEW_ASSET_BASE}/me-redesign/coupon-round.png`,
   mineOrder: `${MOBILE_PREVIEW_ASSET_BASE}/me-redesign/order-round.png`,
+  applyBackground: 'https://cdnel.ttgongju.com/elongapp_images/shenqing_bg4.png',
+  applyButton: 'https://cdnel.ttgongju.com/elongapp_images/shenqing_button.png',
 }
 const previewRankPlayers = [
   { rank: 2, score: 286, name: '星河', frame: previewAssets.podiumSecond },
@@ -155,6 +193,7 @@ const TITLE_MAP: Record<ConfigKey, string> = {
   [CONFIG_KEYS.sitePrivacyContent]: '隐私协议',
   [CONFIG_KEYS.siteIndexDialogContent]: '首页弹窗图片',
   [CONFIG_KEYS.siteConfigEnableIndexDialog]: '首页弹窗开关',
+  [CONFIG_KEYS.siteIndexDialogFrequency]: '首页弹窗频率',
   [CONFIG_KEYS.siteEnableRecycle]: '首页回收开关',
   [CONFIG_KEYS.siteEnableVoiceRoom]: '语音房开关',
   [CONFIG_KEYS.siteCreateOrderContent]: '下单页面内容',
@@ -179,6 +218,8 @@ const TITLE_MAP: Record<ConfigKey, string> = {
   [CONFIG_KEYS.decorationMineBackground]: '我的页面背景图',
   [CONFIG_KEYS.decorationOrderBackground]: '陪玩下单页背景图',
   [CONFIG_KEYS.decorationRankBackground]: '排行榜背景图',
+  [CONFIG_KEYS.decorationApplyBackground]: '申请接单页背景图',
+  [CONFIG_KEYS.decorationApplyButton]: '申请接单页按钮图',
   [CONFIG_KEYS.escortText]: '护航文字',
   [CONFIG_KEYS.companionText]: '陪玩文字',
   [CONFIG_KEYS.rankText]: '排行榜文字',
@@ -190,6 +231,7 @@ const FIELD_BY_KEY: Record<ConfigKey, FormField> = {
   [CONFIG_KEYS.sitePrivacyContent]: 'sitePrivacyContent',
   [CONFIG_KEYS.siteIndexDialogContent]: 'siteIndexDialogContent',
   [CONFIG_KEYS.siteConfigEnableIndexDialog]: 'siteConfigEnableIndexDialog',
+  [CONFIG_KEYS.siteIndexDialogFrequency]: 'siteIndexDialogFrequency',
   [CONFIG_KEYS.siteEnableRecycle]: 'siteEnableRecycle',
   [CONFIG_KEYS.siteEnableVoiceRoom]: 'siteEnableVoiceRoom',
   [CONFIG_KEYS.siteCreateOrderContent]: 'siteCreateOrderContent',
@@ -214,6 +256,8 @@ const FIELD_BY_KEY: Record<ConfigKey, FormField> = {
   [CONFIG_KEYS.decorationMineBackground]: 'decorationMineBackground',
   [CONFIG_KEYS.decorationOrderBackground]: 'decorationOrderBackground',
   [CONFIG_KEYS.decorationRankBackground]: 'decorationRankBackground',
+  [CONFIG_KEYS.decorationApplyBackground]: 'decorationApplyBackground',
+  [CONFIG_KEYS.decorationApplyButton]: 'decorationApplyButton',
   [CONFIG_KEYS.escortText]: 'escortText',
   [CONFIG_KEYS.companionText]: 'companionText',
   [CONFIG_KEYS.rankText]: 'rankText',
@@ -237,6 +281,7 @@ const SECTION_KEYS: Record<string, ConfigKey[]> = {
   home: [
     CONFIG_KEYS.siteConfigEnableIndexDialog,
     CONFIG_KEYS.siteIndexDialogContent,
+    CONFIG_KEYS.siteIndexDialogFrequency,
     CONFIG_KEYS.orderVirtualCount,
     CONFIG_KEYS.siteConfigBlindBoxAnnouncement,
   ],
@@ -247,6 +292,8 @@ const SECTION_KEYS: Record<string, ConfigKey[]> = {
     CONFIG_KEYS.decorationMineBackground,
     CONFIG_KEYS.decorationOrderBackground,
     CONFIG_KEYS.decorationRankBackground,
+    CONFIG_KEYS.decorationApplyBackground,
+    CONFIG_KEYS.decorationApplyButton,
     CONFIG_KEYS.escortText,
     CONFIG_KEYS.companionText,
     CONFIG_KEYS.rankText,
@@ -271,6 +318,7 @@ const SECTION_KEYS: Record<string, ConfigKey[]> = {
     CONFIG_KEYS.recyclingRuleDetail,
     CONFIG_KEYS.recyclingQrCode,
   ],
+  miniProgram: [],
 }
 
 const form = reactive({
@@ -283,6 +331,7 @@ const form = reactive({
   orderVirtualCount: '',
   siteIndexDialogContent: '',
   siteConfigEnableIndexDialog: false,
+  siteIndexDialogFrequency: 'daily',
   siteEnableVoiceRoom: false,
   sitePrivacyContent: '',
   userRegistrationAgreement: '',
@@ -318,6 +367,7 @@ const currentDecorationImage = computed(() => {
     mine: form.decorationMineBackground,
     order: form.decorationOrderBackground,
     rank: form.decorationRankBackground,
+    apply: form.decorationApplyBackground || form.decorationApplyButton,
   }
   return imageMap[activeDecorationPage.value] || ''
 })
@@ -328,6 +378,7 @@ const currentDecorationImageFallback = computed(() => {
     mine: '内置渐变背景',
     order: '内置渐变背景',
     rank: '/static/rank/rank-top-background.png',
+    apply: '内置申请页素材',
   }
   return fallbackMap[activeDecorationPage.value]
 })
@@ -338,6 +389,7 @@ const currentDecorationPreviewBackground = computed(() => {
     mine: form.decorationMineBackground,
     order: form.decorationOrderBackground,
     rank: form.decorationRankBackground || previewAssets.rankBackground,
+    apply: form.decorationApplyBackground || previewAssets.applyBackground,
   }
   return backgroundMap[activeDecorationPage.value] || ''
 })
@@ -483,7 +535,9 @@ function clearDecorationImage(
     | 'decorationHomeBackground'
     | 'decorationMineBackground'
     | 'decorationOrderBackground'
-    | 'decorationRankBackground',
+    | 'decorationRankBackground'
+    | 'decorationApplyBackground'
+    | 'decorationApplyButton',
 ) {
   form[field] = ''
 }
@@ -502,11 +556,10 @@ onMounted(() => {
   <ContentWrap>
     <div class="setting-page">
       <header class="setting-overview">
-        <div>
+        <div class="setting-overview-copy">
           <h2>客户端设置</h2>
-          <p>管理客户端品牌、页面内容和移动端装修。</p>
         </div>
-        <div class="setting-overview-actions">
+        <div v-if="activeSection !== 'miniProgram'" class="setting-overview-actions">
           <el-button :loading="loading" @click="fetchAll">
             <Icon icon="ep:refresh" />
             重新加载
@@ -518,713 +571,773 @@ onMounted(() => {
         </div>
       </header>
 
-      <div class="setting-workspace">
-        <nav aria-label="客户端设置分组" class="setting-nav" role="tablist">
+      <main v-loading="activeSection !== 'miniProgram' && loading" class="setting-main">
+        <nav aria-label="客户端设置分组" class="setting-tabs" role="tablist">
           <button
             v-for="item in topSections"
             :key="item.key"
             type="button"
             role="tab"
-            class="setting-nav-item"
+            class="setting-tab"
             :class="{ active: activeSection === item.key }"
             :aria-selected="activeSection === item.key"
+            :title="item.description"
             @click="activeSection = item.key"
           >
-            <Icon :icon="item.icon" aria-hidden="true" class="setting-nav-icon" />
-            <span class="setting-nav-copy">
-              <strong>{{ item.label }}</strong>
-              <small>{{ item.description }}</small>
-            </span>
-            <span class="setting-nav-count">{{ item.count }}</span>
+            {{ item.label }}
           </button>
         </nav>
 
-        <main v-loading="loading" class="setting-main">
-          <!-- <div class="setting-group-header">
-            <div class="setting-group-title">
-              <h3>{{ currentSection.label }}</h3>
-              <p>{{ currentSection.description }}</p>
+        <div class="setting-main-body">
+          <MiniProgramRelease v-if="activeSection === 'miniProgram'" />
+          <section v-if="activeSection === 'site'" class="setting-section">
+            <div class="section-heading">
+              <h4>品牌识别</h4>
+              <p>站点基础信息会同步用于后台标题和客户端展示。</p>
             </div>
-            <span class="setting-group-count">{{ currentSection.count }} 项配置</span>
-          </div> -->
-
-          <div class="setting-main-body">
-            <section v-if="activeSection === 'site'" class="setting-section">
-              <div class="section-heading">
-                <h4>品牌识别</h4>
-                <p>站点基础信息会同步用于后台标题和客户端展示。</p>
-              </div>
-              <div class="field-grid field-grid--two">
-                <article class="field-card field-card--media">
-                  <div class="field-copy">
-                    <strong>客户端 LOGO</strong>
-                    <small>建议使用透明底 PNG，尺寸不小于 256 × 256 px</small>
-                  </div>
-                  <UploadImg
-                    v-model="form.siteLogoUrl"
-                    aria-label="上传客户端 LOGO"
-                    height="112px"
-                    width="112px"
-                  />
-                </article>
-                <article class="field-card">
-                  <div class="field-copy">
-                    <strong>网站名称</strong>
-                    <small>用于客户端标题与浏览器页签</small>
-                  </div>
-                  <el-input
-                    v-model="form.siteName"
-                    aria-label="网站名称"
-                    autocomplete="off"
-                    maxlength="24"
-                    show-word-limit
-                    placeholder="请输入网站名称…"
-                  />
-                </article>
-                <article class="field-card field-card--media">
-                  <div class="field-copy">
-                    <strong>商品全局底部图</strong>
-                    <small>商品详情页底部的统一宣传图</small>
-                  </div>
-                  <UploadImg
-                    v-model="form.siteConfigGlobalProductPlacementMap"
-                    aria-label="上传商品全局底部图"
-                    height="112px"
-                    width="180px"
-                  />
-                </article>
-              </div>
-
-              <div class="section-heading section-heading--secondary">
-                <h4>考核入口</h4>
-                <p>控制申请接单前的考核码验证流程。</p>
-              </div>
-              <div class="field-grid field-grid--two">
-                <article class="field-card field-card--switch">
-                  <div class="field-copy">
-                    <strong>启用考核码</strong>
-                    <small>关闭后申请接单将跳过考核码校验</small>
-                  </div>
-                  <el-switch
-                    v-model="form.siteConfigEnableAssessmentCode"
-                    aria-label="启用考核码"
-                  />
-                </article>
-                <article class="field-card field-card--media">
-                  <div class="field-copy">
-                    <strong>考核群二维码</strong>
-                    <small>用户在考核指引中扫码进群</small>
-                  </div>
-                  <UploadImg
-                    v-model="form.siteConfigAssessmentGroupQrCode"
-                    aria-label="上传考核群二维码"
-                    height="112px"
-                    width="112px"
-                  />
-                </article>
-                <article class="field-card field-card--span-2">
-                  <div class="field-copy">
-                    <strong>当前考核码</strong>
-                    <small>进入页面只读取当前值，点击“生成新码”才会刷新</small>
-                  </div>
-                  <div class="inline-control">
-                    <el-input v-model="assessmentCode" aria-label="当前考核码" readonly />
-                    <el-button @click="fetchAssessmentCode(true)">
-                      生成新码
-                    </el-button>
-                  </div>
-                </article>
-              </div>
-            </section>
-
-            <section v-else-if="activeSection === 'home'" class="setting-section">
-              <div class="section-heading">
-                <h4>首页运营位</h4>
-                <p>配置首页弹窗、滚动通知和活动公告。</p>
-              </div>
-              <div class="field-grid field-grid--two">
-                <article class="field-card field-card--switch">
-                  <div class="field-copy">
-                    <strong>启用首页弹窗</strong>
-                    <small>新内容会在用户下次进入首页时展示</small>
-                  </div>
-                  <el-switch
-                    v-model="form.siteConfigEnableIndexDialog"
-                    aria-label="启用首页弹窗"
-                  />
-                </article>
-                <article class="field-card field-card--media">
-                  <div class="field-copy">
-                    <strong>首页弹窗图片</strong>
-                    <small>也兼容历史富文本内容；新配置建议上传竖版图片</small>
-                  </div>
-                  <UploadImg
-                    v-model="form.siteIndexDialogContent"
-                    aria-label="上传首页弹窗图片"
-                    height="148px"
-                    width="116px"
-                  />
-                </article>
-                <article class="field-card field-card--span-2">
-                  <div class="field-copy">
-                    <strong>首页滚动通知</strong>
-                    <small>展示在首页游戏分类上方，支持富文本内容</small>
-                  </div>
-                  <Editor
-                    v-model="form.orderVirtualCount"
-                    aria-label="首页滚动通知"
-                    height="260px"
-                  />
-                </article>
-                <article class="field-card field-card--span-2 field-card--editor">
-                  <div class="field-copy">
-                    <strong>盲盒公告</strong>
-                    <small>用于盲盒活动的规则与公告说明</small>
-                  </div>
-                  <Editor
-                    v-model="form.siteConfigBlindBoxAnnouncement"
-                    aria-label="盲盒公告"
-                    height="260px"
-                  />
-                </article>
-              </div>
-            </section>
-
-            <section v-else-if="activeSection === 'mine'" class="setting-section">
-              <div class="section-heading">
-                <h4>个人中心功能</h4>
-                <p>控制“我的”页面中按租户开放的功能入口。</p>
-              </div>
-              <div class="field-grid field-grid--two">
-                <article class="field-card field-card--switch">
-                  <div class="field-copy">
-                    <strong>语音房功能</strong>
-                    <small>开启后客户端展示语音房相关入口</small>
-                  </div>
-                  <el-switch v-model="form.siteEnableVoiceRoom" aria-label="语音房功能" />
-                </article>
-              </div>
-            </section>
-
-            <section
-              v-else-if="activeSection === 'decoration'"
-              class="setting-section decoration-section"
-            >
-              <div class="decoration-toolbar">
-                <div class="theme-control">
-                  <span>主题色</span>
-                  <el-color-picker
-                    v-model="form.decorationThemeColor"
-                    aria-label="客户端主题色"
-                    :predefine="['#AA884E', '#3E7D4E', '#5D5FEF', '#D14D72', '#111827']"
-                  />
-                  <el-input
-                    v-model="form.decorationThemeColor"
-                    aria-label="主题色十六进制值"
-                    autocomplete="off"
-                    maxlength="7"
-                    @blur="
-                      form.decorationThemeColor = normalizeThemeColor(form.decorationThemeColor)
-                    "
-                  />
+            <div class="field-grid field-grid--two">
+              <article class="field-card field-card--media">
+                <div class="field-copy">
+                  <strong>客户端 LOGO</strong>
+                  <small>建议使用透明底 PNG，尺寸不小于 256 × 256 px</small>
                 </div>
-                <el-button @click="resetDecorationToDefault">
-                  <Icon icon="ep:refresh-left" />
-                  恢复默认
-                </el-button>
-              </div>
+                <UploadImg
+                  v-model="form.siteLogoUrl"
+                  aria-label="上传客户端 LOGO"
+                  height="112px"
+                  width="112px"
+                />
+              </article>
+              <article class="field-card">
+                <div class="field-copy">
+                  <strong>网站名称</strong>
+                  <small>用于客户端标题与浏览器页签</small>
+                </div>
+                <el-input
+                  v-model="form.siteName"
+                  aria-label="网站名称"
+                  autocomplete="off"
+                  maxlength="24"
+                  show-word-limit
+                  placeholder="请输入网站名称…"
+                />
+              </article>
+              <article class="field-card field-card--media">
+                <div class="field-copy">
+                  <strong>商品全局底部图</strong>
+                  <small>商品详情页底部的统一宣传图</small>
+                </div>
+                <UploadImg
+                  v-model="form.siteConfigGlobalProductPlacementMap"
+                  aria-label="上传商品全局底部图"
+                  height="112px"
+                  width="180px"
+                />
+              </article>
+            </div>
 
-              <div class="decoration-workbench">
-                <div class="page-selector" role="tablist" aria-label="装修页面">
-                  <button
-                    v-for="page in decorationPages"
-                    :key="page.key"
-                    type="button"
-                    role="tab"
-                    class="page-selector-item"
-                    :class="{ active: activeDecorationPage === page.key }"
-                    :aria-selected="activeDecorationPage === page.key"
-                    @click="activeDecorationPage = page.key"
-                  >
-                    <strong>{{ page.label }}</strong>
-                    <small>{{ page.description }}</small>
-                  </button>
+            <div class="section-heading section-heading--secondary">
+              <h4>考核入口</h4>
+              <p>控制申请接单前的考核码验证流程。</p>
+            </div>
+            <div class="field-grid field-grid--two">
+              <article class="field-card field-card--switch">
+                <div class="field-copy">
+                  <strong>启用考核码</strong>
+                  <small>关闭后申请接单将跳过考核码校验</small>
+                </div>
+                <el-switch
+                  v-model="form.siteConfigEnableAssessmentCode"
+                  aria-label="启用考核码"
+                />
+              </article>
+              <article class="field-card field-card--media">
+                <div class="field-copy">
+                  <strong>考核群二维码</strong>
+                  <small>用户在考核指引中扫码进群</small>
+                </div>
+                <UploadImg
+                  v-model="form.siteConfigAssessmentGroupQrCode"
+                  aria-label="上传考核群二维码"
+                  height="112px"
+                  width="112px"
+                />
+              </article>
+              <article class="field-card field-card--span-2">
+                <div class="field-copy">
+                  <strong>当前考核码</strong>
+                  <small>进入页面只读取当前值，点击“生成新码”才会刷新</small>
+                </div>
+                <div class="inline-control">
+                  <el-input v-model="assessmentCode" aria-label="当前考核码" readonly />
+                  <el-button @click="fetchAssessmentCode(true)">
+                    生成新码
+                  </el-button>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section v-else-if="activeSection === 'home'" class="setting-section">
+            <div class="section-heading">
+              <h4>首页运营位</h4>
+              <p>配置首页弹窗、滚动通知和活动公告。</p>
+            </div>
+            <div class="field-grid field-grid--two">
+              <article class="field-card field-card--switch">
+                <div class="field-copy">
+                  <strong>启用首页弹窗</strong>
+                  <small>新内容会在用户下次进入首页时展示</small>
+                </div>
+                <el-switch
+                  v-model="form.siteConfigEnableIndexDialog"
+                  aria-label="启用首页弹窗"
+                />
+              </article>
+              <article class="field-card field-card--media">
+                <div class="field-copy">
+                  <strong>首页弹窗图片</strong>
+                  <small>也兼容历史富文本内容；新配置建议上传竖版图片</small>
+                </div>
+                <UploadImg
+                  v-model="form.siteIndexDialogContent"
+                  aria-label="上传首页弹窗图片"
+                  height="148px"
+                  width="116px"
+                />
+              </article>
+              <article class="field-card">
+                <div class="field-copy">
+                  <strong>首页弹窗频率</strong>
+                  <small>一天一次按用户关闭时间计算；每次进入平台只在本次会话首次展示</small>
+                </div>
+                <el-select v-model="form.siteIndexDialogFrequency" aria-label="首页弹窗频率">
+                  <el-option label="一天只弹一次" value="daily" />
+                  <el-option label="每次进平台都弹" value="session" />
+                </el-select>
+              </article>
+              <article class="field-card field-card--span-2">
+                <div class="field-copy">
+                  <strong>首页滚动通知</strong>
+                  <small>展示在首页游戏分类上方，支持富文本内容</small>
+                </div>
+                <Editor
+                  v-model="form.orderVirtualCount"
+                  aria-label="首页滚动通知"
+                  height="260px"
+                />
+              </article>
+              <article class="field-card field-card--span-2 field-card--editor">
+                <div class="field-copy">
+                  <strong>盲盒公告</strong>
+                  <small>用于盲盒活动的规则与公告说明</small>
+                </div>
+                <Editor
+                  v-model="form.siteConfigBlindBoxAnnouncement"
+                  aria-label="盲盒公告"
+                  height="260px"
+                />
+              </article>
+            </div>
+          </section>
+
+          <section v-else-if="activeSection === 'mine'" class="setting-section">
+            <div class="section-heading">
+              <h4>个人中心功能</h4>
+              <p>控制“我的”页面中按租户开放的功能入口。</p>
+            </div>
+            <div class="field-grid field-grid--two">
+              <article class="field-card field-card--switch">
+                <div class="field-copy">
+                  <strong>语音房功能</strong>
+                  <small>开启后客户端展示语音房相关入口</small>
+                </div>
+                <el-switch v-model="form.siteEnableVoiceRoom" aria-label="语音房功能" />
+              </article>
+            </div>
+          </section>
+
+          <section
+            v-else-if="activeSection === 'decoration'"
+            class="setting-section decoration-section"
+          >
+            <div class="decoration-toolbar">
+              <div class="theme-control">
+                <span>主题色</span>
+                <el-color-picker
+                  v-model="form.decorationThemeColor"
+                  aria-label="客户端主题色"
+                  :predefine="['#AA884E', '#3E7D4E', '#5D5FEF', '#D14D72', '#111827']"
+                />
+                <el-input
+                  v-model="form.decorationThemeColor"
+                  aria-label="主题色十六进制值"
+                  autocomplete="off"
+                  maxlength="7"
+                  @blur="
+                    form.decorationThemeColor = normalizeThemeColor(form.decorationThemeColor)
+                  "
+                />
+              </div>
+              <el-button @click="resetDecorationToDefault">
+                <Icon icon="ep:refresh-left" />
+                恢复默认
+              </el-button>
+            </div>
+
+            <div class="page-selector" role="tablist" aria-label="装修页面">
+              <button
+                v-for="page in decorationPages"
+                :key="page.key"
+                type="button"
+                role="tab"
+                class="page-selector-item"
+                :class="{ active: activeDecorationPage === page.key }"
+                :aria-selected="activeDecorationPage === page.key"
+                @click="activeDecorationPage = page.key"
+              >
+                <Icon :icon="page.icon" aria-hidden="true" class="page-selector-icon" />
+                <span class="page-selector-copy">
+                  <strong>{{ page.label }}</strong>
+                  <small>{{ page.description }}</small>
+                </span>
+              </button>
+            </div>
+
+            <div class="decoration-workbench">
+              <div class="decoration-editor">
+                <div class="decoration-editor-header">
+                  <div>
+                    <h4>{{ currentDecorationPage.label }}装修</h4>
+                    <p>{{ currentDecorationPage.description }}</p>
+                  </div>
+                  <span class="decoration-status">
+                    {{ currentDecorationImage ? '已上传自定义背景' : '使用内置背景' }}
+                  </span>
                 </div>
 
-                <div class="decoration-editor">
-                  <div class="decoration-editor-header">
-                    <div>
-                      <h4>{{ currentDecorationPage.label }}装修</h4>
-                      <p>{{ currentDecorationPage.description }}</p>
+                <div v-if="activeDecorationPage === 'home'" class="decoration-fields">
+                  <div class="decoration-field decoration-field--image">
+                    <div class="field-copy">
+                      <strong>首页顶部背景图</strong>
+                      <small>建议 750 × 620 px，主体内容避开顶部状态栏</small>
                     </div>
-                    <span class="decoration-status">
-                      {{ currentDecorationImage ? '已上传自定义背景' : '使用内置背景' }}
-                    </span>
-                  </div>
-
-                  <div v-if="activeDecorationPage === 'home'" class="decoration-fields">
-                    <div class="decoration-field decoration-field--image">
-                      <div class="field-copy">
-                        <strong>首页顶部背景图</strong>
-                        <small>建议 750 × 620 px，主体内容避开顶部状态栏</small>
-                      </div>
-                      <div class="image-control">
-                        <UploadImg
-                          v-model="form.decorationHomeBackground"
-                          aria-label="上传首页顶部背景图"
-                          height="150px"
-                          width="240px"
-                        />
-                        <el-button
-                          v-if="form.decorationHomeBackground"
-                          text
-                          type="danger"
-                          @click="clearDecorationImage('decorationHomeBackground')"
-                        >
-                          恢复内置背景
-                        </el-button>
-                      </div>
-                    </div>
-                    <div class="decoration-field decoration-field--span-2">
-                      <div class="field-copy">
-                        <strong>首页顶部导航</strong>
-                        <small>原“系统配置 / 前端文案”中的三个名称已统一迁移到这里维护</small>
-                      </div>
-                      <div class="copywriting-grid">
-                        <el-form-item label="护航入口">
-                          <el-input
-                            v-model="form.escortText"
-                            aria-label="护航入口文案"
-                            autocomplete="off"
-                            maxlength="4"
-                            show-word-limit
-                            placeholder="护航"
-                          />
-                        </el-form-item>
-                        <el-form-item label="陪玩入口">
-                          <el-input
-                            v-model="form.companionText"
-                            aria-label="陪玩入口文案"
-                            autocomplete="off"
-                            maxlength="4"
-                            show-word-limit
-                            placeholder="陪玩"
-                          />
-                        </el-form-item>
-                        <el-form-item label="排行榜入口">
-                          <el-input
-                            v-model="form.rankText"
-                            aria-label="排行榜入口文案"
-                            autocomplete="off"
-                            maxlength="4"
-                            show-word-limit
-                            placeholder="排行榜"
-                          />
-                        </el-form-item>
-                      </div>
+                    <div class="image-control">
+                      <UploadImg
+                        v-model="form.decorationHomeBackground"
+                        aria-label="上传首页顶部背景图"
+                        height="150px"
+                        width="240px"
+                      />
+                      <el-button
+                        v-if="form.decorationHomeBackground"
+                        text
+                        type="danger"
+                        @click="clearDecorationImage('decorationHomeBackground')"
+                      >
+                        恢复内置背景
+                      </el-button>
                     </div>
                   </div>
-
-                  <div v-else-if="activeDecorationPage === 'mine'" class="decoration-fields">
-                    <div class="decoration-field decoration-field--image">
-                      <div class="field-copy">
-                        <strong>我的页面背景图</strong>
-                        <small>建议 750 × 560 px；图片将覆盖页面顶部，并保留浅色页面底色</small>
-                      </div>
-                      <div class="image-control">
-                        <UploadImg
-                          v-model="form.decorationMineBackground"
-                          aria-label="上传我的页面背景图"
-                          height="150px"
-                          width="240px"
-                        />
-                        <el-button
-                          v-if="form.decorationMineBackground"
-                          text
-                          type="danger"
-                          @click="clearDecorationImage('decorationMineBackground')"
-                        >
-                          恢复内置背景
-                        </el-button>
-                      </div>
+                  <div class="decoration-field decoration-field--span-2">
+                    <div class="field-copy">
+                      <strong>首页顶部导航</strong>
+                      <small>原“系统配置 / 前端文案”中的三个名称已统一迁移到这里维护</small>
                     </div>
-                  </div>
-
-                  <div v-else-if="activeDecorationPage === 'order'" class="decoration-fields">
-                    <div class="decoration-field decoration-field--image">
-                      <div class="field-copy">
-                        <strong>陪玩下单背景图</strong>
-                        <small>同时应用于快速派单与商品下单页，建议 750 × 620 px</small>
-                      </div>
-                      <div class="image-control">
-                        <UploadImg
-                          v-model="form.decorationOrderBackground"
-                          aria-label="上传陪玩下单背景图"
-                          height="150px"
-                          width="240px"
+                    <div class="copywriting-grid">
+                      <el-form-item label="护航入口">
+                        <el-input
+                          v-model="form.escortText"
+                          aria-label="护航入口文案"
+                          autocomplete="off"
+                          maxlength="4"
+                          show-word-limit
+                          placeholder="护航"
                         />
-                        <el-button
-                          v-if="form.decorationOrderBackground"
-                          text
-                          type="danger"
-                          @click="clearDecorationImage('decorationOrderBackground')"
-                        >
-                          恢复内置背景
-                        </el-button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div v-else class="decoration-fields">
-                    <div class="decoration-field decoration-field--image">
-                      <div class="field-copy">
-                        <strong>排行榜顶部背景图</strong>
-                        <small>建议 750 × 710 px；仅替换顶部主视觉，三甲装饰仍使用内置资源</small>
-                      </div>
-                      <div class="image-control">
-                        <UploadImg
-                          v-model="form.decorationRankBackground"
-                          aria-label="上传排行榜顶部背景图"
-                          height="150px"
-                          width="240px"
+                      </el-form-item>
+                      <el-form-item label="陪玩入口">
+                        <el-input
+                          v-model="form.companionText"
+                          aria-label="陪玩入口文案"
+                          autocomplete="off"
+                          maxlength="4"
+                          show-word-limit
+                          placeholder="陪玩"
                         />
-                        <el-button
-                          v-if="form.decorationRankBackground"
-                          text
-                          type="danger"
-                          @click="clearDecorationImage('decorationRankBackground')"
-                        >
-                          恢复内置背景
-                        </el-button>
-                      </div>
+                      </el-form-item>
+                      <el-form-item label="排行榜入口">
+                        <el-input
+                          v-model="form.rankText"
+                          aria-label="排行榜入口文案"
+                          autocomplete="off"
+                          maxlength="4"
+                          show-word-limit
+                          placeholder="排行榜"
+                        />
+                      </el-form-item>
                     </div>
                   </div>
                 </div>
 
-                <aside
-                  class="phone-preview"
-                  :style="{ '--preview-theme': form.decorationThemeColor }"
-                >
-                  <div class="phone-shell">
-                    <div class="phone-status">
-                      <span>9:41</span><span>Wi-Fi&nbsp;&nbsp;100%</span>
+                <div v-else-if="activeDecorationPage === 'mine'" class="decoration-fields">
+                  <div class="decoration-field decoration-field--image">
+                    <div class="field-copy">
+                      <strong>我的页面背景图</strong>
+                      <small>建议 750 × 560 px；图片将覆盖页面顶部，并保留浅色页面底色</small>
                     </div>
-                    <div class="phone-screen" :class="`phone-screen--${activeDecorationPage}`">
-                      <template v-if="activeDecorationPage === 'home'">
-                        <div
-                          class="mobile-home-hero"
-                          :style="{ backgroundImage: `url(${currentDecorationPreviewBackground})` }"
-                        >
-                          <div class="mobile-home-nav">
-                            <div class="mobile-home-tabs">
-                              <strong>{{ form.escortText }}</strong>
-                              <span>{{ form.companionText }}</span>
-                              <span>{{ form.rankText }}</span>
-                            </div>
-                            <div class="mobile-home-actions">
-                              <Icon icon="ep:service" />
-                              <Icon icon="ep:search" />
-                            </div>
-                          </div>
-                        </div>
-                        <div class="mobile-home-content">
-                          <div
-                            class="mobile-notice"
-                            :style="{ backgroundImage: `url(${previewAssets.noticeBackground})` }"
-                          >
-                            <Icon icon="ep:bell" />
-                            <span>最新订单通知正在滚动展示</span>
-                          </div>
-                          <div class="mobile-category-list">
-                            <div v-for="label in ['王者荣耀', '英雄联盟', '三角洲', '和平精英']" :key="label">
-                              <i />
-                              <span>{{ label }}</span>
-                            </div>
-                          </div>
-                          <div class="mobile-sub-tabs">
-                            <strong>热门推荐</strong><span>排位上分</span><span>娱乐陪玩</span>
-                          </div>
-                          <div class="mobile-product-list">
-                            <div v-for="index in 2" :key="index" class="mobile-product-card">
-                              <i />
-                              <div><strong>游戏服务推荐</strong><span>专业接单 · 快速响应</span></div>
-                              <b>¥{{ index * 18 + 9 }}</b>
-                            </div>
-                          </div>
-                        </div>
-                      </template>
+                    <div class="image-control">
+                      <UploadImg
+                        v-model="form.decorationMineBackground"
+                        aria-label="上传我的页面背景图"
+                        height="150px"
+                        width="240px"
+                      />
+                      <el-button
+                        v-if="form.decorationMineBackground"
+                        text
+                        type="danger"
+                        @click="clearDecorationImage('decorationMineBackground')"
+                      >
+                        恢复内置背景
+                      </el-button>
+                    </div>
+                  </div>
+                </div>
 
-                      <template v-else-if="activeDecorationPage === 'mine'">
-                        <div
-                          class="mobile-mine-hero"
-                          :class="{ 'mobile-mine-hero--custom': currentDecorationImage }"
-                          :style="
-                            currentDecorationPreviewBackground
-                              ? { backgroundImage: `url(${currentDecorationPreviewBackground})` }
-                              : {}
-                          "
-                        >
-                          <img :src="previewAssets.mineSettings" alt="" width="28" height="28">
-                          <div class="mobile-profile">
-                            <i class="mobile-avatar" />
-                            <div class="mobile-profile-copy">
-                              <strong>用户昵称</strong>
-                              <div>
-                                <span><img :src="previewAssets.mineWealth" alt="" width="18" height="18">财力:88</span>
-                                <span><img :src="previewAssets.mineCharm" alt="" width="22" height="18">魅力:128</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="mobile-member-card">
-                            <span>会员中心<small>享专属特权</small></span>
-                            <img :src="previewAssets.mineCrown" alt="" width="44" height="32">
-                          </div>
-                          <div class="mobile-stats">
-                            <span><strong>12</strong>关注</span>
-                            <span><strong>28</strong>粉丝</span>
-                            <span><strong>96</strong>获赞</span>
-                          </div>
-                        </div>
-                        <div class="mobile-mine-content">
-                          <div class="mobile-mine-card">
-                            <strong>我的资产</strong>
-                            <div class="mobile-assets">
-                              <span><img :src="previewAssets.mineBalance" alt="" width="24" height="24">余额<small>168.00</small></span>
-                              <span><img :src="previewAssets.mineCoupon" alt="" width="24" height="24">优惠券<small>3</small></span>
-                              <span><img :src="previewAssets.mineOrder" alt="" width="24" height="24">订单<small>全部订单</small></span>
-                            </div>
-                          </div>
-                          <div class="mobile-mine-card mobile-function-card">
-                            <strong>常用功能</strong>
-                            <div><span>申请接单</span><span>会员等级</span><span>我的主页</span><span>我点赞的</span></div>
-                          </div>
-                        </div>
-                      </template>
+                <div v-else-if="activeDecorationPage === 'order'" class="decoration-fields">
+                  <div class="decoration-field decoration-field--image">
+                    <div class="field-copy">
+                      <strong>陪玩下单背景图</strong>
+                      <small>同时应用于快速派单与商品下单页，建议 750 × 620 px</small>
+                    </div>
+                    <div class="image-control">
+                      <UploadImg
+                        v-model="form.decorationOrderBackground"
+                        aria-label="上传陪玩下单背景图"
+                        height="150px"
+                        width="240px"
+                      />
+                      <el-button
+                        v-if="form.decorationOrderBackground"
+                        text
+                        type="danger"
+                        @click="clearDecorationImage('decorationOrderBackground')"
+                      >
+                        恢复内置背景
+                      </el-button>
+                    </div>
+                  </div>
+                </div>
 
-                      <template v-else-if="activeDecorationPage === 'order'">
-                        <div
-                          class="mobile-order-hero"
-                          :class="{ 'mobile-order-hero--custom': currentDecorationImage }"
-                          :style="
-                            currentDecorationPreviewBackground
-                              ? { backgroundImage: `url(${currentDecorationPreviewBackground})` }
-                              : {}
-                          "
-                        />
-                        <div class="mobile-order-page">
-                          <div class="mobile-order-nav"><span>‹</span><strong>快速派单</strong><i /></div>
-                          <div class="mobile-order-product">
-                            <i />
-                            <div><strong>王者荣耀排位上分</strong><span>专业认证打手，快速接单</span></div>
-                            <b>29钻</b>
-                          </div>
-                          <div class="mobile-order-options">
-                            <div><strong>区服</strong><span>手机端</span><span>电脑端</span></div>
-                            <div><strong>等级</strong><span class="active">认证打手</span></div>
-                            <div><strong>数量</strong><span>−&nbsp;&nbsp;1&nbsp;&nbsp;+</span></div>
-                          </div>
-                          <div class="mobile-order-row"><strong>游戏名片</strong><span>请选择 ›</span></div>
-                          <div class="mobile-order-row"><strong>优惠券</strong><span>请选择 ›</span></div>
-                        </div>
-                        <div class="mobile-pay-bar">
-                          <span>合计<strong>29钻</strong></span>
-                          <b>支付订单</b>
-                        </div>
-                      </template>
+                <div v-else-if="activeDecorationPage === 'rank'" class="decoration-fields">
+                  <div class="decoration-field decoration-field--image">
+                    <div class="field-copy">
+                      <strong>排行榜顶部背景图</strong>
+                      <small>建议 750 × 710 px；仅替换顶部主视觉，三甲装饰仍使用内置资源</small>
+                    </div>
+                    <div class="image-control">
+                      <UploadImg
+                        v-model="form.decorationRankBackground"
+                        aria-label="上传排行榜顶部背景图"
+                        height="150px"
+                        width="240px"
+                      />
+                      <el-button
+                        v-if="form.decorationRankBackground"
+                        text
+                        type="danger"
+                        @click="clearDecorationImage('decorationRankBackground')"
+                      >
+                        恢复内置背景
+                      </el-button>
+                    </div>
+                  </div>
+                </div>
 
-                      <template v-else>
-                        <div
-                          class="mobile-rank-stage"
-                          :style="{ backgroundImage: `url(${currentDecorationPreviewBackground})` }"
-                        >
-                          <div class="mobile-rank-nav">
-                            <span>{{ form.escortText }}</span>
+                <div v-else class="decoration-fields">
+                  <div class="decoration-field decoration-field--image">
+                    <div class="field-copy">
+                      <strong>申请接单页背景图</strong>
+                      <small>微信小程序申请接单页主背景，建议使用 1125 × 2661 px</small>
+                    </div>
+                    <div class="image-control">
+                      <UploadImg
+                        v-model="form.decorationApplyBackground"
+                        aria-label="上传申请接单页背景图"
+                        height="150px"
+                        width="240px"
+                      />
+                      <el-button
+                        v-if="form.decorationApplyBackground"
+                        text
+                        type="danger"
+                        @click="clearDecorationImage('decorationApplyBackground')"
+                      >
+                        恢复内置背景
+                      </el-button>
+                    </div>
+                  </div>
+                  <div class="decoration-field decoration-field--image">
+                    <div class="field-copy">
+                      <strong>申请接单页按钮图</strong>
+                      <small>叠加在背景图底部的可点击按钮，建议使用 750 × 202 px</small>
+                    </div>
+                    <div class="image-control">
+                      <UploadImg
+                        v-model="form.decorationApplyButton"
+                        aria-label="上传申请接单页按钮图"
+                        height="96px"
+                        width="240px"
+                      />
+                      <el-button
+                        v-if="form.decorationApplyButton"
+                        text
+                        type="danger"
+                        @click="clearDecorationImage('decorationApplyButton')"
+                      >
+                        恢复内置按钮
+                      </el-button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <aside
+                class="phone-preview"
+                :style="{ '--preview-theme': form.decorationThemeColor }"
+              >
+                <div class="phone-shell">
+                  <div class="phone-status">
+                    <span>9:41</span><span>Wi-Fi&nbsp;&nbsp;100%</span>
+                  </div>
+                  <div class="phone-screen" :class="`phone-screen--${activeDecorationPage}`">
+                    <template v-if="activeDecorationPage === 'home'">
+                      <div
+                        class="mobile-home-hero"
+                        :style="{ backgroundImage: `url(${currentDecorationPreviewBackground})` }"
+                      >
+                        <div class="mobile-home-nav">
+                          <div class="mobile-home-tabs">
+                            <strong>{{ form.escortText }}</strong>
                             <span>{{ form.companionText }}</span>
-                            <strong>{{ form.rankText }}</strong>
+                            <span>{{ form.rankText }}</span>
+                          </div>
+                          <div class="mobile-home-actions">
+                            <Icon icon="ep:service" />
                             <Icon icon="ep:search" />
                           </div>
-                          <div
-                            v-for="player in previewRankPlayers"
-                            :key="player.rank"
-                            class="mobile-podium-player"
-                            :class="`mobile-podium-player--${player.rank}`"
-                          >
-                            <b>{{ player.score }}票</b>
-                            <div><i /><img :src="player.frame" alt="" width="80" height="110"></div>
-                            <strong>{{ player.name }}</strong>
-                          </div>
-                          <img class="mobile-rank-podium" :src="previewAssets.rankPodium" alt="" width="250" height="36">
                         </div>
-                        <div class="mobile-ranking-list">
-                          <div v-for="index in 4" :key="index">
-                            <b>0{{ index + 3 }}</b><i /><span><strong>陪玩用户 {{ index }}</strong><small>王者荣耀</small></span><em>{{ 168 - index * 16 }}票</em>
+                      </div>
+                      <div class="mobile-home-content">
+                        <div
+                          class="mobile-notice"
+                          :style="{ backgroundImage: `url(${previewAssets.noticeBackground})` }"
+                        >
+                          <Icon icon="ep:bell" />
+                          <span>最新订单通知正在滚动展示</span>
+                        </div>
+                        <div class="mobile-category-list">
+                          <div v-for="label in ['王者荣耀', '英雄联盟', '三角洲', '和平精英']" :key="label">
+                            <i />
+                            <span>{{ label }}</span>
                           </div>
                         </div>
-                      </template>
-                    </div>
+                        <div class="mobile-sub-tabs">
+                          <strong>热门推荐</strong><span>排位上分</span><span>娱乐陪玩</span>
+                        </div>
+                        <div class="mobile-product-list">
+                          <div v-for="index in 2" :key="index" class="mobile-product-card">
+                            <i />
+                            <div><strong>游戏服务推荐</strong><span>专业接单 · 快速响应</span></div>
+                            <b>¥{{ index * 18 + 9 }}</b>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+
+                    <template v-else-if="activeDecorationPage === 'mine'">
+                      <div
+                        class="mobile-mine-hero"
+                        :class="{ 'mobile-mine-hero--custom': currentDecorationImage }"
+                        :style="
+                          currentDecorationPreviewBackground
+                            ? { backgroundImage: `url(${currentDecorationPreviewBackground})` }
+                            : {}
+                        "
+                      >
+                        <img :src="previewAssets.mineSettings" alt="" width="28" height="28">
+                        <div class="mobile-profile">
+                          <i class="mobile-avatar" />
+                          <div class="mobile-profile-copy">
+                            <strong>用户昵称</strong>
+                            <div>
+                              <span><img :src="previewAssets.mineWealth" alt="" width="18" height="18">财力:88</span>
+                              <span><img :src="previewAssets.mineCharm" alt="" width="22" height="18">魅力:128</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="mobile-member-card">
+                          <span>会员中心<small>享专属特权</small></span>
+                          <img :src="previewAssets.mineCrown" alt="" width="44" height="32">
+                        </div>
+                        <div class="mobile-stats">
+                          <span><strong>12</strong>关注</span>
+                          <span><strong>28</strong>粉丝</span>
+                          <span><strong>96</strong>获赞</span>
+                        </div>
+                      </div>
+                      <div class="mobile-mine-content">
+                        <div class="mobile-mine-card">
+                          <strong>我的资产</strong>
+                          <div class="mobile-assets">
+                            <span><img :src="previewAssets.mineBalance" alt="" width="24" height="24">余额<small>168.00</small></span>
+                            <span><img :src="previewAssets.mineCoupon" alt="" width="24" height="24">优惠券<small>3</small></span>
+                            <span><img :src="previewAssets.mineOrder" alt="" width="24" height="24">订单<small>全部订单</small></span>
+                          </div>
+                        </div>
+                        <div class="mobile-mine-card mobile-function-card">
+                          <strong>常用功能</strong>
+                          <div><span>申请接单</span><span>会员等级</span><span>我的主页</span><span>我点赞的</span></div>
+                        </div>
+                      </div>
+                    </template>
+
+                    <template v-else-if="activeDecorationPage === 'order'">
+                      <div
+                        class="mobile-order-hero"
+                        :class="{ 'mobile-order-hero--custom': currentDecorationImage }"
+                        :style="
+                          currentDecorationPreviewBackground
+                            ? { backgroundImage: `url(${currentDecorationPreviewBackground})` }
+                            : {}
+                        "
+                      />
+                      <div class="mobile-order-page">
+                        <div class="mobile-order-nav">
+                          <span>‹</span><strong>快速派单</strong><i />
+                        </div>
+                        <div class="mobile-order-product">
+                          <i />
+                          <div><strong>王者荣耀排位上分</strong><span>专业认证打手，快速接单</span></div>
+                          <b>29钻</b>
+                        </div>
+                        <div class="mobile-order-options">
+                          <div><strong>区服</strong><span>手机端</span><span>电脑端</span></div>
+                          <div><strong>等级</strong><span class="active">认证打手</span></div>
+                          <div><strong>数量</strong><span>−&nbsp;&nbsp;1&nbsp;&nbsp;+</span></div>
+                        </div>
+                        <div class="mobile-order-row">
+                          <strong>游戏名片</strong><span>请选择 ›</span>
+                        </div>
+                        <div class="mobile-order-row">
+                          <strong>优惠券</strong><span>请选择 ›</span>
+                        </div>
+                      </div>
+                      <div class="mobile-pay-bar">
+                        <span>合计<strong>29钻</strong></span>
+                        <b>支付订单</b>
+                      </div>
+                    </template>
+
+                    <template v-else-if="activeDecorationPage === 'rank'">
+                      <div
+                        class="mobile-rank-stage"
+                        :style="{ backgroundImage: `url(${currentDecorationPreviewBackground})` }"
+                      >
+                        <div class="mobile-rank-nav">
+                          <span>{{ form.escortText }}</span>
+                          <span>{{ form.companionText }}</span>
+                          <strong>{{ form.rankText }}</strong>
+                          <Icon icon="ep:search" />
+                        </div>
+                        <div
+                          v-for="player in previewRankPlayers"
+                          :key="player.rank"
+                          class="mobile-podium-player"
+                          :class="`mobile-podium-player--${player.rank}`"
+                        >
+                          <b>{{ player.score }}票</b>
+                          <div><i /><img :src="player.frame" alt="" width="80" height="110"></div>
+                          <strong>{{ player.name }}</strong>
+                        </div>
+                        <img class="mobile-rank-podium" :src="previewAssets.rankPodium" alt="" width="250" height="36">
+                      </div>
+                      <div class="mobile-ranking-list">
+                        <div v-for="index in 4" :key="index">
+                          <b>0{{ index + 3 }}</b><i /><span><strong>陪玩用户 {{ index }}</strong><small>王者荣耀</small></span><em>{{ 168 - index * 16 }}票</em>
+                        </div>
+                      </div>
+                    </template>
+
+                    <template v-else>
+                      <div class="mobile-apply-poster">
+                        <img :src="currentDecorationPreviewBackground" alt="申请接单页背景">
+                        <img :src="form.decorationApplyButton || previewAssets.applyButton" alt="申请接单按钮">
+                      </div>
+                    </template>
                   </div>
-                  <p>
-                    当前预览 ·
-                    {{ currentDecorationImage ? '自定义背景' : currentDecorationImageFallback }}
-                  </p>
-                </aside>
-              </div>
-            </section>
-
-            <section v-else-if="activeSection === 'content'" class="setting-section">
-              <div class="section-heading">
-                <h4>订单页面</h4><p>客户端将以富文本形式展示以下内容。</p>
-              </div>
-              <div class="editor-stack">
-                <article class="field-card field-card--editor">
-                  <div class="field-copy">
-                    <strong>下单页面内容</strong><small>下单前的说明和注意事项</small>
-                  </div><Editor
-                    v-model="form.siteCreateOrderContent"
-                    aria-label="下单页面内容"
-                    height="300px"
-                  />
-                </article>
-                <article class="field-card field-card--editor">
-                  <div class="field-copy">
-                    <strong>订单详情页内容</strong><small>订单详情中的补充说明</small>
-                  </div><Editor
-                    v-model="form.siteOrderDetailContent"
-                    aria-label="订单详情页内容"
-                    height="300px"
-                  />
-                </article>
-              </div>
-              <div class="section-heading section-heading--secondary">
-                <h4>中心与帮助</h4><p>打手中心、俱乐部中心和帮助中心内容。</p>
-              </div>
-              <div class="editor-stack">
-                <article class="field-card field-card--editor">
-                  <div class="field-copy">
-                    <strong>打手中心页内容</strong>
-                  </div><Editor
-                    v-model="form.siteFighterCenterContent"
-                    aria-label="打手中心页内容"
-                    height="300px"
-                  />
-                </article>
-                <article class="field-card field-card--editor">
-                  <div class="field-copy">
-                    <strong>俱乐部中心页内容</strong>
-                  </div><Editor
-                    v-model="form.siteClubCenterContent"
-                    aria-label="俱乐部中心页内容"
-                    height="300px"
-                  />
-                </article>
-                <article class="field-card field-card--editor">
-                  <div class="field-copy">
-                    <strong>帮助中心页内容</strong>
-                  </div><Editor
-                    v-model="form.siteHelpCenterContent"
-                    aria-label="帮助中心页内容"
-                    height="300px"
-                  />
-                </article>
-              </div>
-            </section>
-
-            <section v-else-if="activeSection === 'agreement'" class="setting-section">
-              <div class="section-heading">
-                <h4>协议与平台说明</h4><p>用户可在客户端设置页和相关业务流程中查看。</p>
-              </div>
-              <el-tabs type="border-card" class="agreement-tabs">
-                <el-tab-pane label="用户注册协议">
-                  <Editor
-                    v-model="form.userRegistrationAgreement"
-                    aria-label="用户注册协议"
-                    height="360px"
-                  />
-                </el-tab-pane>
-                <el-tab-pane label="隐私协议">
-                  <Editor
-                    v-model="form.sitePrivacyContent"
-                    aria-label="隐私协议"
-                    height="360px"
-                  />
-                </el-tab-pane>
-                <el-tab-pane label="未成年人保护">
-                  <Editor
-                    v-model="form.protectionOfMinors"
-                    aria-label="未成年人保护"
-                    height="360px"
-                  />
-                </el-tab-pane>
-                <el-tab-pane label="关于我们">
-                  <Editor
-                    v-model="form.aboutUsContent"
-                    aria-label="关于我们"
-                    height="360px"
-                  />
-                </el-tab-pane>
-                <el-tab-pane label="入职陪玩协议">
-                  <Editor
-                    v-model="form.employmentAgreementContent"
-                    aria-label="入职陪玩协议"
-                    height="360px"
-                  />
-                </el-tab-pane>
-                <el-tab-pane label="接单规则">
-                  <Editor
-                    v-model="form.pickOrderAgreementContent"
-                    aria-label="接单规则"
-                    height="360px"
-                  />
-                </el-tab-pane>
-              </el-tabs>
-            </section>
-
-            <section v-else class="setting-section">
-              <div class="section-heading">
-                <h4>回收业务</h4><p>首页入口开关、规则说明与收款二维码。</p>
-              </div>
-              <div class="field-grid field-grid--two">
-                <article class="field-card field-card--switch">
-                  <div class="field-copy">
-                    <strong>启用回收入口</strong><small>开启后首页顶部显示“回收”入口</small>
-                  </div><el-switch v-model="form.siteEnableRecycle" aria-label="启用回收入口" />
-                </article>
-                <article class="field-card field-card--media">
-                  <div class="field-copy">
-                    <strong>回收二维码</strong><small>用于回收业务联系或收款</small>
-                  </div><UploadImg
-                    v-model="form.recyclingQrCode"
-                    aria-label="上传回收二维码"
-                    height="128px"
-                    width="128px"
-                  />
-                </article>
-                <article class="field-card field-card--span-2 field-card--editor">
-                  <div class="field-copy">
-                    <strong>回收规则详情</strong><small>进入回收页后展示的规则说明</small>
-                  </div><Editor
-                    v-model="form.recyclingRuleDetail"
-                    aria-label="回收规则详情"
-                    height="320px"
-                  />
-                </article>
-              </div>
-            </section>
-          </div>
-
-          <footer class="setting-footer">
-            <span>当前分组：{{ currentSection.label }}</span>
-            <div>
-              <el-button @click="fetchAll">
-                取消更改
-              </el-button>
-              <el-button type="primary" :loading="saving" @click="saveCurrentSection">
-                保存当前分组
-              </el-button>
+                </div>
+                <p>
+                  当前预览 ·
+                  {{ currentDecorationImage ? '自定义背景' : currentDecorationImageFallback }}
+                </p>
+              </aside>
             </div>
-          </footer>
-        </main>
-      </div>
+          </section>
+
+          <section v-else-if="activeSection === 'content'" class="setting-section">
+            <div class="section-heading">
+              <h4>订单页面</h4><p>客户端将以富文本形式展示以下内容。</p>
+            </div>
+            <div class="editor-stack">
+              <article class="field-card field-card--editor">
+                <div class="field-copy">
+                  <strong>下单页面内容</strong><small>下单前的说明和注意事项</small>
+                </div><Editor
+                  v-model="form.siteCreateOrderContent"
+                  aria-label="下单页面内容"
+                  height="300px"
+                />
+              </article>
+              <article class="field-card field-card--editor">
+                <div class="field-copy">
+                  <strong>订单详情页内容</strong><small>订单详情中的补充说明</small>
+                </div><Editor
+                  v-model="form.siteOrderDetailContent"
+                  aria-label="订单详情页内容"
+                  height="300px"
+                />
+              </article>
+            </div>
+            <div class="section-heading section-heading--secondary">
+              <h4>中心与帮助</h4><p>打手中心、俱乐部中心和帮助中心内容。</p>
+            </div>
+            <div class="editor-stack">
+              <article class="field-card field-card--editor">
+                <div class="field-copy">
+                  <strong>打手中心页内容</strong>
+                </div><Editor
+                  v-model="form.siteFighterCenterContent"
+                  aria-label="打手中心页内容"
+                  height="300px"
+                />
+              </article>
+              <article class="field-card field-card--editor">
+                <div class="field-copy">
+                  <strong>俱乐部中心页内容</strong>
+                </div><Editor
+                  v-model="form.siteClubCenterContent"
+                  aria-label="俱乐部中心页内容"
+                  height="300px"
+                />
+              </article>
+              <article class="field-card field-card--editor">
+                <div class="field-copy">
+                  <strong>帮助中心页内容</strong>
+                </div><Editor
+                  v-model="form.siteHelpCenterContent"
+                  aria-label="帮助中心页内容"
+                  height="300px"
+                />
+              </article>
+            </div>
+          </section>
+
+          <section v-else-if="activeSection === 'agreement'" class="setting-section">
+            <div class="section-heading">
+              <h4>协议与平台说明</h4><p>用户可在客户端设置页和相关业务流程中查看。</p>
+            </div>
+            <el-tabs type="border-card" class="agreement-tabs">
+              <el-tab-pane label="用户注册协议">
+                <Editor
+                  v-model="form.userRegistrationAgreement"
+                  aria-label="用户注册协议"
+                  height="360px"
+                />
+              </el-tab-pane>
+              <el-tab-pane label="隐私协议">
+                <Editor
+                  v-model="form.sitePrivacyContent"
+                  aria-label="隐私协议"
+                  height="360px"
+                />
+              </el-tab-pane>
+              <el-tab-pane label="未成年人保护">
+                <Editor
+                  v-model="form.protectionOfMinors"
+                  aria-label="未成年人保护"
+                  height="360px"
+                />
+              </el-tab-pane>
+              <el-tab-pane label="关于我们">
+                <Editor
+                  v-model="form.aboutUsContent"
+                  aria-label="关于我们"
+                  height="360px"
+                />
+              </el-tab-pane>
+              <el-tab-pane label="入职陪玩协议">
+                <Editor
+                  v-model="form.employmentAgreementContent"
+                  aria-label="入职陪玩协议"
+                  height="360px"
+                />
+              </el-tab-pane>
+              <el-tab-pane label="接单规则">
+                <Editor
+                  v-model="form.pickOrderAgreementContent"
+                  aria-label="接单规则"
+                  height="360px"
+                />
+              </el-tab-pane>
+            </el-tabs>
+          </section>
+
+          <section v-else-if="activeSection === 'recycle'" class="setting-section">
+            <div class="section-heading">
+              <h4>回收业务</h4><p>首页入口开关、规则说明与收款二维码。</p>
+            </div>
+            <div class="field-grid field-grid--two">
+              <article class="field-card field-card--switch">
+                <div class="field-copy">
+                  <strong>启用回收入口</strong><small>开启后首页顶部显示“回收”入口</small>
+                </div><el-switch v-model="form.siteEnableRecycle" aria-label="启用回收入口" />
+              </article>
+              <article class="field-card field-card--media">
+                <div class="field-copy">
+                  <strong>回收二维码</strong><small>用于回收业务联系或收款</small>
+                </div><UploadImg
+                  v-model="form.recyclingQrCode"
+                  aria-label="上传回收二维码"
+                  height="128px"
+                  width="128px"
+                />
+              </article>
+              <article class="field-card field-card--span-2 field-card--editor">
+                <div class="field-copy">
+                  <strong>回收规则详情</strong><small>进入回收页后展示的规则说明</small>
+                </div><Editor
+                  v-model="form.recyclingRuleDetail"
+                  aria-label="回收规则详情"
+                  height="320px"
+                />
+              </article>
+            </div>
+          </section>
+        </div>
+
+        <footer v-if="activeSection !== 'miniProgram'" class="setting-footer">
+          <span>当前分组：{{ currentSection.label }}</span>
+          <div>
+            <el-button @click="fetchAll">
+              取消更改
+            </el-button>
+            <el-button type="primary" :loading="saving" @click="saveCurrentSection">
+              保存当前分组
+            </el-button>
+          </div>
+        </footer>
+      </main>
     </div>
   </ContentWrap>
 </template>
@@ -1239,7 +1352,7 @@ onMounted(() => {
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  padding: 4px 2px 22px;
+  padding: 4px 2px 18px;
 
   h2,
   p {
@@ -1272,166 +1385,81 @@ onMounted(() => {
   margin: 0;
 }
 
-.setting-workspace {
+.setting-main {
   display: flex;
-  min-height: 720px;
+  min-width: 0;
+  min-height: 640px;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--el-border-color-light);
-  border-radius: 4px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 12px;
   background: var(--el-bg-color);
 }
 
-.setting-nav {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(132px, 1fr));
+.setting-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  padding: 0 20px;
   overflow-x: auto;
-  border-bottom: 1px solid var(--el-border-color-light);
-  background: var(--el-fill-color-extra-light);
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  background: var(--el-fill-color-blank);
+  scrollbar-width: thin;
 }
 
-.setting-nav-item {
+.setting-tab {
   position: relative;
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  min-width: 132px;
-  min-height: 68px;
-  padding: 10px 12px;
+  flex: none;
+  min-height: 46px;
+  padding: 12px 14px;
   border: 0;
-  border-right: 1px solid var(--el-border-color-lighter);
-  border-radius: 0;
-  color: var(--el-text-color-regular);
-  text-align: left;
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
   background: transparent;
   cursor: pointer;
   touch-action: manipulation;
-  transition:
-    background-color 0.16s ease,
-    color 0.16s ease;
+  transition: color 0.16s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: 14px;
+    bottom: 0;
+    left: 14px;
+    height: 2px;
+    border-radius: 999px;
+    background: transparent;
+    transition: background-color 0.16s ease;
+  }
 
   &:hover {
-    background: var(--el-fill-color-light);
+    color: var(--el-text-color-primary);
   }
 
   &.active {
     color: var(--el-color-primary);
-    background: var(--el-bg-color);
+    font-weight: 600;
+  }
 
-    &::before {
-      position: absolute;
-      right: 12px;
-      bottom: -1px;
-      left: 0;
-      height: 2px;
-      margin-left: 12px;
-      background: var(--el-color-primary);
-      content: '';
-    }
+  &.active::after {
+    background: var(--el-color-primary);
   }
 
   &:focus-visible {
-    z-index: 1;
     outline: 2px solid var(--el-color-primary);
-    outline-offset: -2px;
+    outline-offset: -4px;
+    border-radius: 8px;
   }
-}
-
-.setting-nav-icon {
-  width: 17px;
-  height: 17px;
-  color: var(--el-text-color-secondary);
-}
-
-.setting-nav-item.active .setting-nav-icon {
-  color: currentcolor;
-}
-
-.setting-nav-copy {
-  min-width: 0;
-  padding-left: 0;
-
-  strong,
-  small {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  strong {
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 20px;
-  }
-
-  small {
-    margin-top: 2px;
-    color: var(--el-text-color-secondary);
-    font-size: 12px;
-    line-height: 17px;
-  }
-}
-
-.setting-nav-count {
-  min-width: 14px;
-  color: var(--el-text-color-secondary);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.setting-main {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  background: var(--el-bg-color);
-}
-
-.setting-group-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 76px;
-  gap: 20px;
-  padding: 18px 26px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
-  background: var(--el-bg-color);
-}
-
-.setting-group-title {
-  h3,
-  p {
-    margin: 0;
-  }
-
-  h3 {
-    font-size: 17px;
-    font-weight: 650;
-    line-height: 24px;
-    text-wrap: balance;
-  }
-
-  p {
-    margin-top: 2px;
-    color: var(--el-text-color-secondary);
-    font-size: 12px;
-    line-height: 18px;
-  }
-}
-
-.setting-group-count {
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
 }
 
 .setting-main-body {
-  width: min(100%, 1180px);
+  width: min(100%, 1120px);
   margin: 0 auto;
   flex: 1;
-  padding: 0 26px 32px;
+  padding: 8px 28px 32px;
 }
 
 .setting-section {
@@ -1439,7 +1467,7 @@ onMounted(() => {
 }
 
 .section-heading {
-  padding: 24px 0 12px;
+  padding: 20px 0 12px;
 
   h4,
   p {
@@ -1558,7 +1586,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 22px 0 16px;
+  padding: 22px 0 14px;
 }
 
 .theme-control {
@@ -1570,35 +1598,31 @@ onMounted(() => {
   font-size: 13px;
 }
 
-.decoration-workbench {
-  display: grid;
-  grid-template-columns: 180px minmax(340px, 1fr) 320px;
-  min-height: 650px;
-  overflow: hidden;
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 2px;
-  background: var(--el-fill-color-extra-light);
-}
-
 .page-selector {
-  padding: 10px;
-  border-right: 1px solid var(--el-border-color-lighter);
-  background: var(--el-bg-color);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .page-selector-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: 18px minmax(0, 1fr);
   align-items: center;
-  gap: 2px;
-  width: 100%;
-  padding: 12px 10px;
-  border: 0;
-  border-radius: 3px;
+  gap: 10px;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 12px;
   color: var(--el-text-color-regular);
   text-align: left;
-  background: transparent;
+  background: var(--el-bg-color);
   cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease,
+    box-shadow 0.16s ease,
+    color 0.16s ease;
 
   strong,
   small {
@@ -1607,6 +1631,7 @@ onMounted(() => {
 
   strong {
     font-size: 13px;
+    font-weight: 600;
     line-height: 20px;
   }
 
@@ -1621,19 +1646,45 @@ onMounted(() => {
   }
 
   &:hover {
-    background: var(--el-fill-color-light);
+    border-color: var(--el-border-color);
+    background: var(--el-fill-color-blank);
   }
 
   &:focus-visible {
     outline: 2px solid var(--el-color-primary);
-    outline-offset: -2px;
+    outline-offset: 2px;
   }
 
   &.active {
     color: var(--el-color-primary);
-    background: var(--el-fill-color-light);
-    box-shadow: inset 2px 0 0 var(--el-color-primary);
+    border-color: var(--el-color-primary-light-5);
+    background: var(--el-color-primary-light-9);
+    box-shadow: 0 0 0 1px var(--el-color-primary-light-8);
   }
+}
+
+.page-selector-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--el-text-color-secondary);
+}
+
+.page-selector-item.active .page-selector-icon {
+  color: currentcolor;
+}
+
+.page-selector-copy {
+  min-width: 0;
+}
+
+.decoration-workbench {
+  display: grid;
+  grid-template-columns: minmax(340px, 1fr) 320px;
+  min-height: 650px;
+  overflow: hidden;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 12px;
+  background: var(--el-fill-color-extra-light);
 }
 
 .decoration-editor {
@@ -2110,11 +2161,7 @@ onMounted(() => {
   position: absolute;
   inset: 0 0 auto;
   height: 150px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--preview-theme) 35%, #fff) 0%,
-    #f5f5f5 88%
-  );
+  background: linear-gradient(180deg, color-mix(in srgb, var(--preview-theme) 35%, #fff) 0%, #f5f5f5 88%);
   background-position: center top;
   background-size: cover;
   filter: blur(1px);
@@ -2258,6 +2305,26 @@ onMounted(() => {
 .phone-screen--rank {
   color: #fff;
   background: #050403;
+}
+
+.phone-screen--apply {
+  background: #8c83e7;
+}
+
+.mobile-apply-poster {
+  position: relative;
+
+  img:first-child {
+    display: block;
+    width: 100%;
+  }
+
+  img:last-child {
+    position: absolute;
+    top: 78%;
+    left: 8%;
+    width: 84%;
+  }
 }
 
 .mobile-rank-stage {
@@ -2426,7 +2493,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   min-height: 64px;
-  padding: 10px 22px;
+  padding: 10px 24px;
   border-top: 1px solid var(--el-border-color-lighter);
   color: var(--el-text-color-secondary);
   font-size: 12px;
@@ -2435,24 +2502,29 @@ onMounted(() => {
 
 @media (max-width: 1280px) {
   .decoration-workbench {
-    grid-template-columns: 160px minmax(330px, 1fr);
+    grid-template-columns: minmax(330px, 1fr);
   }
 
   .phone-preview {
-    grid-column: 1 / -1;
     min-height: 610px;
     border-top: 1px solid var(--el-border-color-lighter);
     border-left: 0;
   }
 }
 
+@media (max-width: 1100px) {
+  .page-selector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 960px) {
-  .setting-workspace {
-    min-height: 0;
+  .setting-tabs {
+    padding: 0 12px;
   }
 
-  .setting-nav {
-    grid-template-columns: repeat(7, minmax(148px, 1fr));
+  .setting-tab {
+    padding: 12px 10px;
   }
 
   .field-card,
@@ -2462,13 +2534,6 @@ onMounted(() => {
 
   .decoration-workbench {
     grid-template-columns: 1fr;
-  }
-
-  .page-selector {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    border-right: 0;
-    border-bottom: 1px solid var(--el-border-color-lighter);
   }
 }
 
@@ -2512,12 +2577,6 @@ onMounted(() => {
 
   .setting-main-body {
     padding: 0 14px 24px;
-  }
-
-  .setting-group-header {
-    align-items: flex-start;
-    flex-direction: column;
-    padding: 16px 14px;
   }
 
   .theme-control {

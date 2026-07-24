@@ -4,8 +4,6 @@ import { UserInfoApi } from '@/api/gamer/userinfo'
 import { fenToYuan } from '@/utils'
 import { formatDate } from '@/utils/formatTime'
 import { checkPermi } from '@/utils/permission'
-import UserBalanceUpdateForm from '@/views/member/user/components/UserBalanceUpdateForm.vue'
-
 import GamerExperienceRecord from '../experiencerecord/index.vue'
 import UserIncomeExpenseDetail from '../userincomeexpensedetail/index.vue'
 import UserMoment from '../usermoment/index.vue'
@@ -13,6 +11,7 @@ import UserMomentBrowse from '../usermomentbrowse/index.vue'
 import UserMomentComment from '../usermomentcomment/index.vue'
 import UserMomentLike from '../usermomentlike/index.vue'
 import UserDepositBalanceUpdateForm from './UserDepositBalanceUpdateForm.vue'
+import UserBalanceUpdateForm from './UserBalanceUpdateForm.vue'
 import UserExperienceUpdateForm from './UserExperienceUpdateForm.vue'
 import UserStatDialog from './UserStatDialog.vue'
 
@@ -49,6 +48,8 @@ const queryParams = reactive({
   voiceAuditStatus: undefined,
   isSeeFollow: undefined,
   isSeeFans: undefined,
+  sortField: undefined as string | undefined,
+  sortOrder: undefined as 'asc' | 'desc' | undefined,
 })
 const queryFormRef = ref() // 搜索的表单
 const UpdateBalanceFormRef = ref() // 修改用户余额表单
@@ -130,6 +131,13 @@ function handleQuery() {
 function resetQuery() {
   queryFormRef.value.resetFields()
   handleQuery()
+}
+
+function handleSortChange({ prop, order }: { prop?: string, order?: 'ascending' | 'descending' | null }) {
+  queryParams.sortField = order ? prop : undefined
+  queryParams.sortOrder = order === 'ascending' ? 'asc' : order === 'descending' ? 'desc' : undefined
+  queryParams.pageNo = 1
+  getList()
 }
 
 async function handleToggleUserStatus(row: any) {
@@ -270,6 +278,7 @@ onMounted(() => {
       row-key="id"
       :data="list"
       :show-overflow-tooltip="true"
+      @sort-change="handleSortChange"
     >
       <el-table-column label="ID" align="center" prop="id" width="90" />
       <el-table-column label="用户信息" min-width="250">
@@ -350,7 +359,7 @@ onMounted(() => {
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="可用余额" align="center" width="120">
+      <el-table-column label="可用余额" align="center" prop="balance" width="120" sortable="custom">
         <template #default="scope">
           <el-button
             v-if="checkPermi(['pay:wallet:update-balance'])"
@@ -364,12 +373,12 @@ onMounted(() => {
           <span v-else class="amount-text">{{ formatMoney(scope.row.wallet?.balance) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="冻结余额" align="center" width="120">
+      <el-table-column label="冻结余额" align="center" prop="freezePrice" width="120" sortable="custom">
         <template #default="scope">
           <span class="amount-text">{{ formatMoney(scope.row.wallet?.freezePrice) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="保证金" align="center" width="120">
+      <el-table-column label="保证金" align="center" prop="depositBalance" width="120" sortable="custom">
         <template #default="scope">
           <el-button
             v-if="checkPermi(['pay:wallet:update-balance'])"
@@ -383,7 +392,12 @@ onMounted(() => {
           <span v-else class="amount-text">{{ formatMoney(scope.row.wallet?.depositBalance) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="积分数" align="center" width="120">
+      <el-table-column label="投票数" align="center" prop="availableVoteCount" width="120" sortable="custom">
+        <template #default="scope">
+          <span class="amount-text">{{ scope.row.availableVoteCount ?? 0 }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="积分数" align="center" prop="totalExperience" width="120" sortable="custom">
         <template #default="scope">
           <el-button
             v-if="checkPermi(['pay:wallet:update-balance'])"
