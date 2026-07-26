@@ -59,6 +59,7 @@ const KEYS = {
   ENABLE_PICK_ORDER_SMS_NOTICE: 'orderNoticeConfigEnablePickOrderSmsNotice',
   ENABLE_FIGHTER_COMPLETE_ORDER_SMS_NOTICE: 'orderNoticeConfigEnableFighterCompleteOrderSmsNotice',
   ENABLE_CUSTOM_SMS: 'smsConfigEnableCustomSms',
+  ORDER_SUBSCRIBE_SUPPORTED: 'notificationConfigIsOrderSubscribeSupported',
   ORDER_SUBSCRIBE_TEMPLATE_CODE: 'notificationConfigOrderSubscribeTemplateCode',
   // 前端文案配置
   ESCORT_TEXT: 'copywritingConfigEscortText',
@@ -122,6 +123,7 @@ const formData = reactive<any>({
   orderNoticeConfigEnablePickOrderSmsNotice: false,
   orderNoticeConfigEnableFighterCompleteOrderSmsNotice: false,
   smsConfigEnableCustomSms: false,
+  isOrderSubscribeSupported: false,
   orderSubscribeTemplateCode: '',
   escortText: '护航',
   companionText: '陪玩',
@@ -178,8 +180,8 @@ const configGroups = [
     title: '消息通知',
     description: '短信与微信订阅通知',
     icon: 'ep:bell',
-    count: 4,
-    keywords: '短信 自定义短信 接单提醒 完成订单 微信订阅 模板编码 模板ID',
+    count: 5,
+    keywords: '短信 自定义短信 接单提醒 完成订单 微信订阅 开关 模板编码 模板ID',
   },
 
   {
@@ -320,6 +322,9 @@ async function loadAll() {
           break
         case KEYS.ENABLE_CUSTOM_SMS:
           formData.smsConfigEnableCustomSms = toBool(item.configValue)
+          break
+        case KEYS.ORDER_SUBSCRIBE_SUPPORTED:
+          formData.isOrderSubscribeSupported = toBool(item.configValue)
           break
         case KEYS.ORDER_SUBSCRIBE_TEMPLATE_CODE:
           formData.orderSubscribeTemplateCode = String(item.configValue || '')
@@ -515,7 +520,10 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
 
     const id = configList.value.find((item: any) => item.configKey === key)?.id
 
-    const isOrderSubscribeTemplate = key === KEYS.ORDER_SUBSCRIBE_TEMPLATE_CODE
+    const isOrderSubscribeConfig = [
+      KEYS.ORDER_SUBSCRIBE_SUPPORTED,
+      KEYS.ORDER_SUBSCRIBE_TEMPLATE_CODE,
+    ].includes(key as typeof KEYS.ORDER_SUBSCRIBE_SUPPORTED | typeof KEYS.ORDER_SUBSCRIBE_TEMPLATE_CODE)
     const copywritingTitleMap: Partial<Record<KeyName, string>> = {
       [KEYS.ESCORT_TEXT]: '护航文字',
       [KEYS.COMPANION_TEXT]: '陪玩文字',
@@ -523,14 +531,20 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
     }
     const copywritingTitle = copywritingTitleMap[key]
     const params: any = {
-      title: isOrderSubscribeTemplate ? '模板编码' : copywritingTitle || key,
+      title: key === KEYS.ORDER_SUBSCRIBE_SUPPORTED
+        ? '启用订单订阅通知'
+        : key === KEYS.ORDER_SUBSCRIBE_TEMPLATE_CODE
+          ? '模板编码'
+          : copywritingTitle || key,
       configKey: key,
       configValue,
     }
-    if (isOrderSubscribeTemplate) {
+    if (isOrderSubscribeConfig) {
       params.configGroupKey = 'notificationConfig'
       params.configGroupName = '消息通知'
-      params.description = '订单被接单或开始服务后的微信公众号订阅通知模板'
+      params.description = key === KEYS.ORDER_SUBSCRIBE_SUPPORTED
+        ? '开启后，用户支付订单时请求微信订阅授权'
+        : '订单被接单或开始服务后的微信公众号订阅通知模板'
     }
     if (copywritingTitle) {
       params.configGroupKey = 'copywritingConfig'
@@ -935,6 +949,17 @@ onMounted(() => {
                 <h4>微信订阅通知</h4>
               </div>
               <div class="config-fields config-fields--one">
+                <div class="config-field config-field--switch">
+                  <div class="config-field-label">
+                    <strong>开启订单订阅通知</strong>
+                    <small>开启后，用户支付订单时请求微信订阅授权</small>
+                  </div>
+                  <el-switch
+                    v-model="formData.isOrderSubscribeSupported"
+                    :loading="savingKeys.has(KEYS.ORDER_SUBSCRIBE_SUPPORTED)"
+                    @change="(val: any) => handleSave(KEYS.ORDER_SUBSCRIBE_SUPPORTED, 'boolean', val)"
+                  />
+                </div>
                 <div class="config-field">
                   <div class="config-field-label">
                     <div class="config-label-line">
