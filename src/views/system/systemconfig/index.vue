@@ -74,6 +74,11 @@ const KEYS = {
   ENABLE_CONSUME_RANK: 'appConfigEnableConsumeRank',
   ENABLE_AUTO_PICK_ORDER: 'appConfigEnableAutoPickOrder',
   INVITATION_POSTER: 'appConfigInvitePoster',
+  TENCENT_ATTRIBUTION_ENABLED: 'appConfigTencentAttributionEnabled',
+  TENCENT_ATTRIBUTION_ACCESS_TOKEN: 'appConfigTencentAttributionAccessToken',
+  TENCENT_ATTRIBUTION_ACCOUNT_ID: 'appConfigTencentAttributionAccountId',
+  TENCENT_ATTRIBUTION_ACTION_SET_ID: 'appConfigTencentAttributionActionSetId',
+  TENCENT_ATTRIBUTION_WECHAT_APP_ID: 'appConfigTencentAttributionWechatAppId',
   SITE_CONFIG_HTML_H5_KEY: 'siteConfigHtmlH5Key',
   // 订单超时时间
   ORDER_TIMEOUT_TIME: 'siteConfigOrderTimeoutTime',
@@ -136,6 +141,11 @@ const formData = reactive<any>({
   enableInvitationMode: false,
   enableConsumeRank: false,
   enableAutoPickOrder: false,
+  tencentAttributionEnabled: false,
+  tencentAttributionAccessToken: '',
+  tencentAttributionAccountId: '',
+  tencentAttributionActionSetId: '',
+  tencentAttributionWechatAppId: '',
   siteConfigCustomerServiceLink: '',
   siteConfigMiniProgramCustomerServiceCorpId: '',
   siteConfigMiniProgramCustomerServiceLink: '',
@@ -191,10 +201,10 @@ const configGroups = [
   {
     key: 'app',
     title: '应用配置',
-    description: '费率、邀请与自动接单',
+    description: '费率、业务模式与腾讯回传',
     icon: 'ep:operation',
-    count: 6,
-    keywords: '提现手续费 自动接单 邀请模式 消费排名 分佣比例 邀请海报',
+    count: 11,
+    keywords: '提现手续费 自动接单 邀请模式 消费排名 分佣比例 邀请海报 腾讯广告 回传 DataNexus 密钥',
   },
 ]
 
@@ -417,6 +427,21 @@ async function loadAll() {
         case KEYS.ENABLE_AUTO_PICK_ORDER:
           formData.enableAutoPickOrder = toBool(item.configValue)
           break
+        case KEYS.TENCENT_ATTRIBUTION_ENABLED:
+          formData.tencentAttributionEnabled = toBool(item.configValue)
+          break
+        case KEYS.TENCENT_ATTRIBUTION_ACCESS_TOKEN:
+          formData.tencentAttributionAccessToken = String(item.configValue || '')
+          break
+        case KEYS.TENCENT_ATTRIBUTION_ACCOUNT_ID:
+          formData.tencentAttributionAccountId = String(item.configValue || '')
+          break
+        case KEYS.TENCENT_ATTRIBUTION_ACTION_SET_ID:
+          formData.tencentAttributionActionSetId = String(item.configValue || '')
+          break
+        case KEYS.TENCENT_ATTRIBUTION_WECHAT_APP_ID:
+          formData.tencentAttributionWechatAppId = String(item.configValue || '')
+          break
         case KEYS.CUSTOMER_SERVICE_LINK:
           formData.siteConfigCustomerServiceLink = String(item.configValue || '')
           break
@@ -545,12 +570,20 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
       [KEYS.MINI_PROGRAM_CUSTOMER_SERVICE_LINK]: '小程序跳转企业微信客服连接',
     }
     const customerServiceTitle = customerServiceTitleMap[key]
+    const tencentAttributionTitleMap: Partial<Record<KeyName, string>> = {
+      [KEYS.TENCENT_ATTRIBUTION_ENABLED]: '启用腾讯广告回传',
+      [KEYS.TENCENT_ATTRIBUTION_ACCESS_TOKEN]: 'DataNexus 密钥',
+      [KEYS.TENCENT_ATTRIBUTION_ACCOUNT_ID]: '腾讯广告账号 ID',
+      [KEYS.TENCENT_ATTRIBUTION_ACTION_SET_ID]: 'DataNexus 数据源 ID',
+      [KEYS.TENCENT_ATTRIBUTION_WECHAT_APP_ID]: '微信小程序 AppID',
+    }
+    const tencentAttributionTitle = tencentAttributionTitleMap[key]
     const params: any = {
       title: key === KEYS.ORDER_SUBSCRIBE_SUPPORTED
         ? '启用订单订阅通知'
         : key === KEYS.ORDER_SUBSCRIBE_TEMPLATE_CODE
           ? '模板编码'
-          : copywritingTitle || customerServiceTitle || key,
+          : copywritingTitle || customerServiceTitle || tencentAttributionTitle || key,
       configKey: key,
       configValue,
     }
@@ -570,6 +603,11 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
       params.configGroupKey = 'siteConfig'
       params.configGroupName = '站点配置'
       params.description = '微信小程序打开企业微信客服所需配置'
+    }
+    if (tencentAttributionTitle) {
+      params.configGroupKey = 'appConfig'
+      params.configGroupName = '应用配置'
+      params.description = tencentAttributionTitle + '，用于腾讯广告小程序购买行为回传'
     }
     if (id) {
       params.id = id
@@ -1174,6 +1212,108 @@ onMounted(() => {
                     <small>用户分享邀请时展示的海报</small>
                   </div>
                   <UploadImg v-model="formData.invitationPoster" height="160px" width="120px" />
+                </div>
+              </div>
+
+              <div class="config-section-title config-section-title--secondary">
+                <h4>腾讯广告回传</h4>
+              </div>
+              <div class="config-fields">
+                <div class="config-field config-field--switch">
+                  <div class="config-field-label">
+                    <strong>启用购买行为回传</strong>
+                    <small>仅回传带腾讯广告点击参数且已支付的订单</small>
+                  </div>
+                  <el-switch
+                    v-model="formData.tencentAttributionEnabled"
+                    :loading="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ENABLED)"
+                    @change="(val: any) => handleSave(KEYS.TENCENT_ATTRIBUTION_ENABLED, 'boolean', val)"
+                  />
+                </div>
+                <div class="config-field">
+                  <div class="config-field-label">
+                    <strong>DataNexus 密钥</strong>
+                    <small>数据源列表中“查看密钥”获取的 access_token</small>
+                  </div>
+                  <div class="config-control-row">
+                    <el-input
+                      v-model="formData.tencentAttributionAccessToken"
+                      type="password"
+                      show-password
+                      clearable
+                      placeholder="请输入数据源密钥"
+                    />
+                    <el-button
+                      type="primary"
+                      :loading="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACCESS_TOKEN)"
+                      @click="handleSave(KEYS.TENCENT_ATTRIBUTION_ACCESS_TOKEN, 'string', formData.tencentAttributionAccessToken)"
+                    >
+                      保存
+                    </el-button>
+                  </div>
+                </div>
+                <div class="config-field">
+                  <div class="config-field-label">
+                    <strong>腾讯广告账号 ID</strong>
+                    <small>推广账号 ID 或 DataNexus 账号 ID</small>
+                  </div>
+                  <div class="config-control-row">
+                    <el-input
+                      v-model="formData.tencentAttributionAccountId"
+                      clearable
+                      maxlength="32"
+                      placeholder="请输入 account_id"
+                    />
+                    <el-button
+                      type="primary"
+                      :loading="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACCOUNT_ID)"
+                      @click="handleSave(KEYS.TENCENT_ATTRIBUTION_ACCOUNT_ID, 'string', formData.tencentAttributionAccountId)"
+                    >
+                      保存
+                    </el-button>
+                  </div>
+                </div>
+                <div class="config-field">
+                  <div class="config-field-label">
+                    <strong>DataNexus 数据源 ID</strong>
+                    <small>创建微信小程序数据源后获得的 user_action_set_id</small>
+                  </div>
+                  <div class="config-control-row">
+                    <el-input
+                      v-model="formData.tencentAttributionActionSetId"
+                      clearable
+                      maxlength="32"
+                      placeholder="请输入 user_action_set_id"
+                    />
+                    <el-button
+                      type="primary"
+                      :loading="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACTION_SET_ID)"
+                      @click="handleSave(KEYS.TENCENT_ATTRIBUTION_ACTION_SET_ID, 'string', formData.tencentAttributionActionSetId)"
+                    >
+                      保存
+                    </el-button>
+                  </div>
+                </div>
+                <div class="config-field">
+                  <div class="config-field-label">
+                    <strong>微信小程序 AppID</strong>
+                    <small>必须与数据源授权关联的小程序一致</small>
+                  </div>
+                  <div class="config-control-row">
+                    <el-input
+                      v-model="formData.tencentAttributionWechatAppId"
+                      clearable
+                      maxlength="64"
+                      placeholder="请输入小程序 AppID"
+                    />
+                    <el-button
+                      type="primary"
+                      :loading="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_WECHAT_APP_ID)"
+                      @click="handleSave(KEYS.TENCENT_ATTRIBUTION_WECHAT_APP_ID, 'string', formData.tencentAttributionWechatAppId)"
+                    >
+                      保存
+                    </el-button>
+                  </div>
                 </div>
               </div>
             </section>
