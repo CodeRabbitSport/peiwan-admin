@@ -10,19 +10,20 @@ export interface UserInfo {
   phone: string // 手机号
   nickname: string // 用户昵称
   avatar: string // 用户头像
-  trueHead: string // 真实头像地址
-  sex: boolean // 性别 0未知 1男 2女
-  city: string // 城市
-  signature: string // 个性签名/简介
   money: number // 余额
   giftMoney: number // 礼物余额
   wealthVal: number // 财富值
   charmVal: number // 魅力值
-  davName: string // 达人名称
   voiceAuditStatus: number // 语音审核状态
   availableVoteCount: number // 可用投票数
-  isSeeFollow: boolean // 是否允许查看关注 0否 1是
-  isSeeFans: boolean // 是否允许查看粉丝 0否 1是
+  trueHead?: string
+  sex?: number
+  city?: string
+  signature?: string
+  davName?: string
+  isSeeFollow?: boolean
+  isSeeFans?: boolean
+  parentId?: number
 }
 
 export interface UserWalletAmountUpdateReqVO {
@@ -52,7 +53,7 @@ export const UserInfoApi = {
   },
 
   // 修改用户信息
-  updateUserInfo: async (data: UserInfo) => {
+  updateUserInfo: async (data: Partial<UserInfo> & { id: number }) => {
     return await request.put({ url: `/gamer/user-info/update`, data })
   },
 

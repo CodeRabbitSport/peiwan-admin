@@ -22,6 +22,8 @@ export interface TenantPageReqVO extends PageParam {
   contactMobile?: string
   status?: number
   createTime?: Date[]
+  sortField?: 'currentMonthProfit' | 'totalProfit'
+  sortOrder?: 'asc' | 'desc'
 }
 
 export interface TenantExportReqVO {

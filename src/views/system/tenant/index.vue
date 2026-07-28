@@ -24,6 +24,8 @@ const queryParams = reactive({
   contactMobile: undefined,
   status: undefined,
   createTime: [],
+  sortField: undefined as 'currentMonthProfit' | 'totalProfit' | undefined,
+  sortOrder: undefined as 'asc' | 'desc' | undefined,
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
@@ -52,6 +54,13 @@ function handleQuery() {
 function resetQuery() {
   queryFormRef.value.resetFields()
   handleQuery()
+}
+
+function handleSortChange({ prop, order }: { prop?: string, order?: 'ascending' | 'descending' | null }) {
+  queryParams.sortField = order && (prop === 'currentMonthProfit' || prop === 'totalProfit') ? prop : undefined
+  queryParams.sortOrder = order === 'ascending' ? 'asc' : order === 'descending' ? 'desc' : undefined
+  queryParams.pageNo = 1
+  getList()
 }
 
 /** 添加/修改操作 */
@@ -229,7 +238,12 @@ onMounted(async () => {
 
   <!-- 列表 -->
   <ContentWrap>
-    <el-table v-loading="loading" :data="list" @selection-change="handleRowCheckboxChange">
+    <el-table
+      v-loading="loading"
+      :data="list"
+      @selection-change="handleRowCheckboxChange"
+      @sort-change="handleSortChange"
+    >
       <el-table-column type="selection" width="55" />
       <el-table-column label="租户编号" align="center" prop="id" />
       <el-table-column label="租户名" align="center" prop="name" />
@@ -247,12 +261,12 @@ onMounted(async () => {
       </el-table-column>
       <el-table-column label="联系人" align="center" prop="contactName" />
       <el-table-column label="联系手机" align="center" prop="contactMobile" />
-      <el-table-column label="当月收入" align="center" prop="currentMonthProfit">
+      <el-table-column label="当月收入" align="center" prop="currentMonthProfit" sortable="custom">
         <template #default="scope">
           {{ fenToYuan(scope.row.currentMonthProfit || 0) }}元
         </template>
       </el-table-column>
-      <el-table-column label="总收入" align="center" prop="totalProfit">
+      <el-table-column label="总收入" align="center" prop="totalProfit" sortable="custom">
         <template #default="scope">
           {{ fenToYuan(scope.row.totalProfit || 0) }}元
         </template>

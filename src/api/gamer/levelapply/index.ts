@@ -17,6 +17,10 @@ export interface LevelApply {
   isRecommended?: boolean // 是否推荐
   userNickname?: string // 用户昵称
   userAvatar?: string // 用户头像
+  loginIp?: string // 最后登录IP
+  loginDate?: string // 最后登录时间
+  roleBanned?: boolean // 当前身份是否封禁
+  walletBalance?: number // 钱包可用余额（分）
   levelName?: string // 等级名称
   levelIcon?: string // 等级图标
   voteCount?: number // 当前票数
@@ -25,6 +29,46 @@ export interface LevelApply {
 export interface AdjustVoteCountReqVO {
   id: number
   changeCount: number
+}
+
+/** 打手数据统计（按接单人聚合，打手+陪玩全算） */
+export interface LevelApplyAcceptorStats {
+  userId: number
+  // 接单单数
+  todayAcceptCount: number
+  yesterdayAcceptCount: number
+  currentWeekAcceptCount: number
+  lastWeekAcceptCount: number
+  currentMonthAcceptCount: number
+  lastMonthAcceptCount: number
+  // 退单单数
+  todayRefundCount: number
+  yesterdayRefundCount: number
+  currentWeekRefundCount: number
+  lastWeekRefundCount: number
+  currentMonthRefundCount: number
+  lastMonthRefundCount: number
+  // 接单金额（元）
+  todayAcceptAmount: number
+  yesterdayAcceptAmount: number
+  currentWeekAcceptAmount: number
+  lastWeekAcceptAmount: number
+  currentMonthAcceptAmount: number
+  lastMonthAcceptAmount: number
+  // 退单金额（元）
+  todayRefundAmount: number
+  yesterdayRefundAmount: number
+  currentWeekRefundAmount: number
+  lastWeekRefundAmount: number
+  currentMonthRefundAmount: number
+  lastMonthRefundAmount: number
+  // 评分
+  ratedCount: number
+  star1Count: number
+  star2Count: number
+  star3Count: number
+  star4Count: number
+  star5Count: number
 }
 
 // 打手/陪玩等级申请 API
@@ -39,9 +83,22 @@ export const LevelApplyApi = {
     return await request.get({ url: `/gamer/level-apply/get?id=${id}` })
   },
 
+  // 查询接单人数据统计；levelType 为 1 仅陪玩，2 仅打手，未传则合计
+  getAcceptorStats: async (userId: number, levelType?: number): Promise<LevelApplyAcceptorStats> => {
+    return await request.get({
+      url: `/gamer/level-apply/acceptor-stats`,
+      params: { userId, levelType },
+    })
+  },
+
   // 审核打手/陪玩等级申请
   auditLevelApply: async (data: any) => {
     return await request.post({ url: `/gamer/level-apply/audit`, data })
+  },
+
+  // 更新打手/陪玩身份封禁状态
+  updateRoleBanStatus: async (data: { userId: number, levelType: number, banned: boolean }) => {
+    return await request.put({ url: `/gamer/level-apply/role-ban`, data })
   },
 
   // 新增打手/陪玩等级申请

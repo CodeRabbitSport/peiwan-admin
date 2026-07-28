@@ -24,6 +24,8 @@ const KEYS = {
   // 话题配置
   HOT_TOPIC_LIST: 'topicConfigHotTopicList',
   CUSTOMER_SERVICE_LINK: 'siteConfigCustomerServiceLink',
+  MINI_PROGRAM_CUSTOMER_SERVICE_CORP_ID: 'siteConfigMiniProgramCustomerServiceCorpId',
+  MINI_PROGRAM_CUSTOMER_SERVICE_LINK: 'siteConfigMiniProgramCustomerServiceLink',
   // 服务订单配置
   ORDER_VIRTUAL_COUNT: 'serviceOrderConfigVirtualCount',
   // 服务配置
@@ -135,6 +137,8 @@ const formData = reactive<any>({
   enableConsumeRank: false,
   enableAutoPickOrder: false,
   siteConfigCustomerServiceLink: '',
+  siteConfigMiniProgramCustomerServiceCorpId: '',
+  siteConfigMiniProgramCustomerServiceLink: '',
   invitationPoster: '',
   htmlH5Key: '',
   // 订单超时时间
@@ -156,8 +160,8 @@ const configGroups = [
     title: '服务配置',
     description: '订单、身份与站点功能',
     icon: 'ep:setting',
-    count: 9,
-    keywords: '订单超时时间 微信提现 绑定手机号 实名认证 指定陪玩 验证码 订单延迟 客服链接 防红链接',
+    count: 10,
+    keywords: '订单超时时间 微信提现 绑定手机号 实名认证 指定陪玩 验证码 订单延迟 客服链接 企业微信 小程序 防红链接',
   },
   {
     key: 'region',
@@ -416,6 +420,12 @@ async function loadAll() {
         case KEYS.CUSTOMER_SERVICE_LINK:
           formData.siteConfigCustomerServiceLink = String(item.configValue || '')
           break
+        case KEYS.MINI_PROGRAM_CUSTOMER_SERVICE_CORP_ID:
+          formData.siteConfigMiniProgramCustomerServiceCorpId = String(item.configValue || '')
+          break
+        case KEYS.MINI_PROGRAM_CUSTOMER_SERVICE_LINK:
+          formData.siteConfigMiniProgramCustomerServiceLink = String(item.configValue || '')
+          break
         case KEYS.INVITATION_POSTER:
           formData.invitationPoster = String(item.configValue || '')
           break
@@ -530,12 +540,17 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
       [KEYS.RANK_TEXT]: '排行榜文字',
     }
     const copywritingTitle = copywritingTitleMap[key]
+    const customerServiceTitleMap: Partial<Record<KeyName, string>> = {
+      [KEYS.MINI_PROGRAM_CUSTOMER_SERVICE_CORP_ID]: '小程序跳转企业微信客服企业ID',
+      [KEYS.MINI_PROGRAM_CUSTOMER_SERVICE_LINK]: '小程序跳转企业微信客服连接',
+    }
+    const customerServiceTitle = customerServiceTitleMap[key]
     const params: any = {
       title: key === KEYS.ORDER_SUBSCRIBE_SUPPORTED
         ? '启用订单订阅通知'
         : key === KEYS.ORDER_SUBSCRIBE_TEMPLATE_CODE
           ? '模板编码'
-          : copywritingTitle || key,
+          : copywritingTitle || customerServiceTitle || key,
       configKey: key,
       configValue,
     }
@@ -550,6 +565,11 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
       params.configGroupKey = 'copywritingConfig'
       params.configGroupName = '前端文案'
       params.description = `${copywritingTitle}，用于客户端首页顶部导航`
+    }
+    if (customerServiceTitle) {
+      params.configGroupKey = 'siteConfig'
+      params.configGroupName = '站点配置'
+      params.description = '微信小程序打开企业微信客服所需配置'
     }
     if (id) {
       params.id = id
@@ -788,6 +808,24 @@ onMounted(() => {
                     placeholder="请输入客服链接"
                     @change="(val: any) => handleSave(KEYS.CUSTOMER_SERVICE_LINK, 'string', val)"
                   />
+                </div>
+                <div class="config-field">
+                  <div class="config-field-label">
+                    <strong>小程序跳转企业微信客服连接</strong>
+                    <small>填写同一微信客服主体的企业 ID 和客服链接</small>
+                  </div>
+                  <div class="customer-service-inputs">
+                    <el-input
+                      v-model="formData.siteConfigMiniProgramCustomerServiceCorpId"
+                      placeholder="请输入企业 ID"
+                      @change="(val: any) => handleSave(KEYS.MINI_PROGRAM_CUSTOMER_SERVICE_CORP_ID, 'string', val)"
+                    />
+                    <el-input
+                      v-model="formData.siteConfigMiniProgramCustomerServiceLink"
+                      placeholder="请输入客服链接"
+                      @change="(val: any) => handleSave(KEYS.MINI_PROGRAM_CUSTOMER_SERVICE_LINK, 'string', val)"
+                    />
+                  </div>
                 </div>
                 <div class="config-field">
                   <div class="config-field-label">
@@ -1433,6 +1471,11 @@ onMounted(() => {
   &--template {
     max-width: 760px;
   }
+}
+
+.customer-service-inputs {
+  display: grid;
+  gap: 8px;
 }
 
 .time-unit-select {
