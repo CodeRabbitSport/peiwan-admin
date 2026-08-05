@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { SystemConfig } from '@/api/gamer/systemconfig'
+import type { PageDecorationPreview, SystemConfig } from '@/api/gamer/systemconfig'
 import { SystemConfigApi } from '@/api/gamer/systemconfig'
-import { TenantNew_getAssessmentCode, TenantNew_refreshAssessmentCode } from '@/api/system/tenant'
+import { getTenant, TenantNew_getAssessmentCode, TenantNew_refreshAssessmentCode } from '@/api/system/tenant'
 import UploadImg from '@/components/UploadFile/src/UploadImg.vue'
 import { useAppStore } from '@/store/modules/app'
+import { getTenantId } from '@/utils/auth'
 
 import MiniProgramRelease from './components/MiniProgramRelease.vue'
 
@@ -26,6 +27,7 @@ const CONFIG_KEYS = {
   siteIndexDialogContent: 'siteConfigIndexDialogContent',
   siteConfigEnableIndexDialog: 'siteConfigEnableIndexDialog',
   siteIndexDialogFrequency: 'siteConfigIndexDialogFrequency',
+  siteConfigEnableEveryEnterIndexDialog: 'siteConfigEnableEveryEnterIndexDialog',
   siteEnableRecycle: 'recycleConfigEnableRecycle',
   siteEnableVoiceRoom: 'siteConfigEnableVoiceRoom',
   siteCreateOrderContent: 'siteConfigCreateOrderContent',
@@ -46,6 +48,8 @@ const CONFIG_KEYS = {
   siteConfigAssessmentGroupQrCode: 'siteConfigAssessmentGroupQrCode',
   siteConfigBlindBoxAnnouncement: 'siteConfigBlindBoxAnnouncement',
   decorationThemeColor: 'decorationConfigThemeColor',
+  decorationThemeTokens: 'decorationConfigThemeTokens',
+  decorationThemeConfig: 'decorationConfigTheme',
   decorationHomeBackground: 'decorationConfigHomeBackground',
   decorationMineBackground: 'decorationConfigMineBackground',
   decorationOrderBackground: 'decorationConfigOrderBackground',
@@ -81,7 +85,7 @@ const topSections: NavItem[] = [
     label: '首页运营',
     description: '弹窗、公告与功能开关',
     icon: 'ep:house',
-    count: 5,
+    count: 6,
   },
   {
     key: 'mine',
@@ -150,7 +154,7 @@ const decorationPages = [
 ]
 
 const DEFAULT_DECORATION = {
-  decorationThemeColor: '#AA884E',
+  decorationThemeColor: '#FEC328',
   decorationHomeBackground: '',
   decorationMineBackground: '',
   decorationOrderBackground: '',
@@ -161,6 +165,57 @@ const DEFAULT_DECORATION = {
   companionText: '陪玩',
   rankText: '排行榜',
 } as const
+
+/**
+ * 主题色系通过一个 JSON 配置保存，方便客户端新增 token 时保持向后兼容。
+ * 单色 decorationConfigThemeColor 仍然保留，作为 primaryColor 的兼容来源；
+ * 主题 JSON 同时写入 decorationConfigThemeTokens（新键）和 decorationConfigTheme（旧别名）。
+ */
+const DEFAULT_DECORATION_THEME = {
+  primaryColor: '#FEC328',
+  accentColor: '#FEC328',
+  primaryTextColor: '#48371E',
+  textColor: '#48371E',
+  textSecondaryColor: '#806D4E',
+  textMutedColor: '#9C8C71',
+  textPlaceholderColor: '#B8AD9C',
+  pageBackgroundColor: '#FDFDFB',
+  surfaceColor: '#FFFDF8',
+  surfaceMutedColor: '#FBF5E5',
+  surfaceDeepColor: '#F5E5BB',
+  surfaceWarmColor: '#FDFAF2',
+  surfaceHighlightColor: '#FFF7DF',
+  surfaceCoolColor: '#D9FBFF',
+  borderColor: '#FFE8B8',
+  borderStrongColor: '#F2C55D',
+  darkColor: '#48371E',
+  lightTextColor: '#FFFAF2',
+  headerGradientStartColor: '#FDE081',
+  headerGradientEndColor: 'rgb(253 224 129 / 0%)',
+  shadowColor: 'rgb(72 55 30 / 16%)',
+  overlayColor: 'rgb(72 55 30 / 62%)',
+  successColor: '#25A969',
+  warningColor: '#FB7F18',
+  dangerColor: '#E65A4F',
+  genderFemaleColor: '#F287C0',
+  buttonPrimaryColor: '#FEC328',
+  buttonPrimaryTextColor: '#48371E',
+  buttonHighlightColor: 'rgb(255 255 255 / 35%)',
+  buttonHighlightSubtleColor: 'rgb(255 255 255 / 12%)',
+  buttonOutlineColor: '#FFFDF8',
+  buttonDarkColor: '#48371E',
+  buttonDarkTextColor: '#FFFAF2',
+  popupBackgroundColor: '#FFF8E6',
+  navbarTextColor: '#48371E',
+  navbarBackgroundColor: 'transparent',
+  navbarBorderColor: '#FFE8B8',
+  pageBackgroundImage: '',
+  headerBackgroundImage: '/static/ui-v2/header-bg.png',
+  loginBackgroundImage: '/static/ui-v2/login/login-bg.png',
+  popupBackgroundImage: '',
+} as const
+
+type DecorationThemeConfig = Record<keyof typeof DEFAULT_DECORATION_THEME, string>
 
 const MOBILE_PREVIEW_ASSET_BASE = 'https://kuaiyoudj.oss-cn-beijing.aliyuncs.com/static'
 const previewAssets = {
@@ -194,6 +249,7 @@ const TITLE_MAP: Record<ConfigKey, string> = {
   [CONFIG_KEYS.siteIndexDialogContent]: '首页弹窗图片',
   [CONFIG_KEYS.siteConfigEnableIndexDialog]: '首页弹窗开关',
   [CONFIG_KEYS.siteIndexDialogFrequency]: '首页弹窗频率',
+  [CONFIG_KEYS.siteConfigEnableEveryEnterIndexDialog]: '首页选择游戏弹窗频率',
   [CONFIG_KEYS.siteEnableRecycle]: '首页回收开关',
   [CONFIG_KEYS.siteEnableVoiceRoom]: '语音房开关',
   [CONFIG_KEYS.siteCreateOrderContent]: '下单页面内容',
@@ -214,6 +270,8 @@ const TITLE_MAP: Record<ConfigKey, string> = {
   [CONFIG_KEYS.siteConfigAssessmentGroupQrCode]: '考核群二维码',
   [CONFIG_KEYS.siteConfigBlindBoxAnnouncement]: '盲盒公告',
   [CONFIG_KEYS.decorationThemeColor]: '客户端主题色',
+  [CONFIG_KEYS.decorationThemeTokens]: '客户端主题色系',
+  [CONFIG_KEYS.decorationThemeConfig]: '客户端主题色系',
   [CONFIG_KEYS.decorationHomeBackground]: '首页背景图',
   [CONFIG_KEYS.decorationMineBackground]: '我的页面背景图',
   [CONFIG_KEYS.decorationOrderBackground]: '陪玩下单页背景图',
@@ -232,6 +290,7 @@ const FIELD_BY_KEY: Record<ConfigKey, FormField> = {
   [CONFIG_KEYS.siteIndexDialogContent]: 'siteIndexDialogContent',
   [CONFIG_KEYS.siteConfigEnableIndexDialog]: 'siteConfigEnableIndexDialog',
   [CONFIG_KEYS.siteIndexDialogFrequency]: 'siteIndexDialogFrequency',
+  [CONFIG_KEYS.siteConfigEnableEveryEnterIndexDialog]: 'siteConfigEnableEveryEnterIndexDialog',
   [CONFIG_KEYS.siteEnableRecycle]: 'siteEnableRecycle',
   [CONFIG_KEYS.siteEnableVoiceRoom]: 'siteEnableVoiceRoom',
   [CONFIG_KEYS.siteCreateOrderContent]: 'siteCreateOrderContent',
@@ -252,6 +311,8 @@ const FIELD_BY_KEY: Record<ConfigKey, FormField> = {
   [CONFIG_KEYS.siteConfigAssessmentGroupQrCode]: 'siteConfigAssessmentGroupQrCode',
   [CONFIG_KEYS.siteConfigBlindBoxAnnouncement]: 'siteConfigBlindBoxAnnouncement',
   [CONFIG_KEYS.decorationThemeColor]: 'decorationThemeColor',
+  [CONFIG_KEYS.decorationThemeTokens]: 'decorationThemeConfig',
+  [CONFIG_KEYS.decorationThemeConfig]: 'decorationThemeConfig',
   [CONFIG_KEYS.decorationHomeBackground]: 'decorationHomeBackground',
   [CONFIG_KEYS.decorationMineBackground]: 'decorationMineBackground',
   [CONFIG_KEYS.decorationOrderBackground]: 'decorationOrderBackground',
@@ -265,6 +326,7 @@ const FIELD_BY_KEY: Record<ConfigKey, FormField> = {
 
 const BOOLEAN_KEYS = new Set<ConfigKey>([
   CONFIG_KEYS.siteConfigEnableIndexDialog,
+  CONFIG_KEYS.siteConfigEnableEveryEnterIndexDialog,
   CONFIG_KEYS.siteEnableRecycle,
   CONFIG_KEYS.siteEnableVoiceRoom,
   CONFIG_KEYS.siteConfigEnableAssessmentCode,
@@ -282,12 +344,15 @@ const SECTION_KEYS: Record<string, ConfigKey[]> = {
     CONFIG_KEYS.siteConfigEnableIndexDialog,
     CONFIG_KEYS.siteIndexDialogContent,
     CONFIG_KEYS.siteIndexDialogFrequency,
+    CONFIG_KEYS.siteConfigEnableEveryEnterIndexDialog,
     CONFIG_KEYS.orderVirtualCount,
     CONFIG_KEYS.siteConfigBlindBoxAnnouncement,
   ],
   mine: [CONFIG_KEYS.siteEnableVoiceRoom],
   decoration: [
     CONFIG_KEYS.decorationThemeColor,
+    CONFIG_KEYS.decorationThemeTokens,
+    CONFIG_KEYS.decorationThemeConfig,
     CONFIG_KEYS.decorationHomeBackground,
     CONFIG_KEYS.decorationMineBackground,
     CONFIG_KEYS.decorationOrderBackground,
@@ -321,7 +386,7 @@ const SECTION_KEYS: Record<string, ConfigKey[]> = {
   miniProgram: [],
 }
 
-const form = reactive({
+const form = reactive<Record<string, any>>({
   siteLogoUrl: '',
   siteName: '',
   siteConfigGlobalProductPlacementMap: '',
@@ -332,6 +397,7 @@ const form = reactive({
   siteIndexDialogContent: '',
   siteConfigEnableIndexDialog: false,
   siteIndexDialogFrequency: 'daily',
+  siteConfigEnableEveryEnterIndexDialog: false,
   siteEnableVoiceRoom: false,
   sitePrivacyContent: '',
   userRegistrationAgreement: '',
@@ -348,9 +414,15 @@ const form = reactive({
   recyclingQrCode: '',
   siteConfigBlindBoxAnnouncement: '',
   ...DEFAULT_DECORATION,
+  decorationThemeConfig: { ...DEFAULT_DECORATION_THEME },
 })
 
 const existingMap = ref<Record<string, SystemConfig>>({})
+const tenantDomain = ref('')
+const previewInfo = ref<PageDecorationPreview | null>(null)
+const previewFrame = ref<HTMLIFrameElement | null>(null)
+const previewFrameReady = ref(false)
+const themeDrawerVisible = ref(false)
 
 const currentSection = computed(
   () => topSections.find(item => item.key === activeSection.value) || topSections[0],
@@ -394,6 +466,216 @@ const currentDecorationPreviewBackground = computed(() => {
   return backgroundMap[activeDecorationPage.value] || ''
 })
 
+const decorationThemeFields: Array<{
+  key: keyof DecorationThemeConfig
+  label: string
+  description: string
+  kind?: 'text' | 'image'
+}> = [
+  { key: 'primaryColor', label: '主色', description: '导航、选中态和主要操作' },
+  { key: 'accentColor', label: '强调色', description: '高亮、价格和重点提示' },
+  { key: 'primaryTextColor', label: '主色文字', description: '主色按钮和高亮区域文字' },
+  { key: 'pageBackgroundColor', label: '页面背景', description: '页面整体底色' },
+  { key: 'surfaceColor', label: '卡片背景', description: '卡片、弹窗和输入容器' },
+  { key: 'surfaceMutedColor', label: '浅色表面', description: '输入框和次级容器' },
+  { key: 'surfaceDeepColor', label: '深色表面', description: '选中态和强调区域底色' },
+  { key: 'surfaceWarmColor', label: '暖色表面', description: '订单、收益等浅暖卡片背景' },
+  { key: 'surfaceHighlightColor', label: '高亮表面', description: '提示和重点区域背景' },
+  { key: 'surfaceCoolColor', label: '冷色表面', description: '申请入口等浅色背景' },
+  { key: 'borderColor', label: '边框色', description: '卡片、分割线和输入边框' },
+  { key: 'borderStrongColor', label: '强调边框', description: '主要按钮和选中态边框' },
+  { key: 'textColor', label: '主文字', description: '标题和主要内容' },
+  { key: 'textSecondaryColor', label: '次文字', description: '辅助说明和标签' },
+  { key: 'textMutedColor', label: '弱文字', description: '禁用态和弱提示' },
+  { key: 'textPlaceholderColor', label: '占位文字', description: '输入框占位符' },
+  { key: 'darkColor', label: '深色操作', description: '深色按钮和强调底' },
+  { key: 'lightTextColor', label: '深色底文字', description: '深色按钮上的浅色文字' },
+  { key: 'headerGradientStartColor', label: '顶部渐变起点', description: '页面顶部背景渐变起始色' },
+  { key: 'headerGradientEndColor', label: '顶部渐变终点', description: '页面顶部背景渐变结束色', kind: 'text' },
+  { key: 'shadowColor', label: '阴影色', description: '卡片和弹窗阴影', kind: 'text' },
+  { key: 'overlayColor', label: '遮罩色', description: '弹窗遮罩基色' },
+  { key: 'successColor', label: '成功色', description: '成功状态和完成提示' },
+  { key: 'warningColor', label: '警告色', description: '警告状态和待处理提示' },
+  { key: 'dangerColor', label: '危险色', description: '删除、取消和错误提示' },
+  { key: 'genderFemaleColor', label: '女性卡片色', description: '首页女性用户卡片和陪玩渐变' },
+  { key: 'buttonPrimaryColor', label: '主按钮背景', description: '主要操作按钮背景' },
+  { key: 'buttonPrimaryTextColor', label: '主按钮文字', description: '主按钮文字颜色' },
+  { key: 'buttonHighlightColor', label: '按钮高光', description: '主按钮顶部高光', kind: 'text' },
+  { key: 'buttonHighlightSubtleColor', label: '按钮弱高光', description: '深色按钮顶部高光', kind: 'text' },
+  { key: 'buttonOutlineColor', label: '描边按钮背景', description: '次要描边按钮背景' },
+  { key: 'buttonDarkColor', label: '深色按钮背景', description: '深色操作按钮背景' },
+  { key: 'buttonDarkTextColor', label: '深色按钮文字', description: '深色按钮文字颜色' },
+  { key: 'popupBackgroundColor', label: '弹窗背景', description: '主题弹窗容器' },
+  { key: 'navbarTextColor', label: '导航文字', description: '页面导航栏文字' },
+  { key: 'navbarBackgroundColor', label: '导航背景', description: '页面导航栏背景', kind: 'text' },
+  { key: 'navbarBorderColor', label: '导航边框', description: '页面导航栏边框' },
+  { key: 'pageBackgroundImage', label: '页面背景图', description: '应用于全局页面底图', kind: 'image' },
+  { key: 'headerBackgroundImage', label: '顶部背景图', description: '应用于页面顶部主视觉', kind: 'image' },
+  { key: 'loginBackgroundImage', label: '登录页背景图', description: '手机号登录页整屏背景', kind: 'image' },
+  // { key: 'popupBackgroundImage', label: '弹窗背景图', description: '应用于主题弹窗容器', kind: 'image' },
+]
+
+const h5PreviewKey = computed(() => String(
+  previewInfo.value?.h5Key
+  || existingMap.value.siteConfigHtmlH5Key?.configValue
+  || '',
+).trim())
+
+const h5PreviewUrl = computed(() => {
+  if (previewInfo.value?.previewUrl) return previewInfo.value.previewUrl
+  if (!h5PreviewKey.value || typeof window === 'undefined') return ''
+  const rawDomain = tenantDomain.value || window.location.origin
+  const origin = /^https?:\/\//i.test(rawDomain) ? rawDomain : `https://${rawDomain}`
+  try {
+    const url = new URL(`/html/${h5PreviewKey.value}`, origin)
+    url.searchParams.set('decorationPreview', '1')
+    return url.toString()
+  }
+  catch {
+    return ''
+  }
+})
+
+const previewPayload = computed(() => ({
+  type: 'peiwan-decoration-preview',
+  payload: {
+    themeColor: form.decorationThemeColor,
+    theme: {
+      ...form.decorationThemeConfig,
+      primaryColor: form.decorationThemeColor,
+    },
+    colors: {
+      ...form.decorationThemeConfig,
+      primaryColor: form.decorationThemeColor,
+    },
+    ...form.decorationThemeConfig,
+    backgrounds: {
+      home: form.decorationHomeBackground,
+      mine: form.decorationMineBackground,
+      order: form.decorationOrderBackground,
+      rank: form.decorationRankBackground,
+      apply: form.decorationApplyBackground,
+      applyButton: form.decorationApplyButton,
+    },
+    homeBackground: form.decorationHomeBackground,
+    mineBackground: form.decorationMineBackground,
+    orderBackground: form.decorationOrderBackground,
+    rankBackground: form.decorationRankBackground,
+    applyBackground: form.decorationApplyBackground,
+    applyButton: form.decorationApplyButton,
+    navigationTexts: {
+      escort: form.escortText,
+      companion: form.companionText,
+      rank: form.rankText,
+    },
+  },
+}))
+
+function postPreviewTheme() {
+  if (!previewFrameReady.value || !previewFrame.value?.contentWindow) return
+  previewFrame.value.contentWindow.postMessage(previewPayload.value, '*')
+}
+
+function handlePreviewFrameLoad() {
+  previewFrameReady.value = true
+  postPreviewTheme()
+}
+
+function handlePreviewReady(event: MessageEvent) {
+  const data = event.data
+  if (
+    !data
+    || (data.type !== 'peiwan-decoration-preview-ready'
+      && data.type !== 'ziniu-decoration-preview-ready')
+    || !previewFrame.value?.contentWindow
+    || event.source !== previewFrame.value.contentWindow
+  ) {
+    return
+  }
+  // App.onLaunch performs async tenant/config loading before installing the
+  // mobile listener. Re-send after its ready handshake so the first preview
+  // payload cannot be lost between iframe load and listener registration.
+  previewFrameReady.value = true
+  postPreviewTheme()
+}
+
+function openPreviewWindow() {
+  if (h5PreviewUrl.value && typeof window !== 'undefined') {
+    window.open(h5PreviewUrl.value, '_blank', 'noopener,noreferrer')
+  }
+}
+
+function setDecorationColor(key: keyof DecorationThemeConfig, value: string) {
+  const raw = String(value || '').trim()
+  if (key.endsWith('Image')) {
+    // UploadImg emits an empty value when its delete action is used.
+    form.decorationThemeConfig[key] = raw
+    return
+  }
+  const normalized = raw.toUpperCase()
+  if (normalized) form.decorationThemeConfig[key] = normalized
+  if (key === 'primaryColor' && /^#[0-9A-F]{3,8}$/.test(normalized)) {
+    // Keep the legacy single-color field and the canonical token map in sync
+    // while editing, so the iframe preview uses the same primary color before
+    // the user saves the section.
+    form.decorationThemeColor = normalized
+    form.decorationThemeConfig.primaryColor = normalized
+  }
+}
+
+function normalizeDecorationThemeConfig(
+  value: unknown,
+  fallbackPrimary: string = DEFAULT_DECORATION.decorationThemeColor,
+): DecorationThemeConfig {
+  let parsed: Record<string, unknown> = {}
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      parsed = JSON.parse(value) as Record<string, unknown>
+    }
+    catch {
+      parsed = {}
+    }
+  }
+  else if (value && typeof value === 'object') {
+    parsed = value as Record<string, unknown>
+  }
+  if (parsed.theme && typeof parsed.theme === 'object') {
+    parsed = parsed.theme as Record<string, unknown>
+  }
+  else if (parsed.tokens && typeof parsed.tokens === 'object') {
+    parsed = parsed.tokens as Record<string, unknown>
+  }
+  else if (parsed.colors && typeof parsed.colors === 'object') {
+    parsed = parsed.colors as Record<string, unknown>
+  }
+  const aliases: Record<string, string[]> = {
+    primaryTextColor: ['buttonTextColor'],
+    textSecondaryColor: ['secondaryTextColor'],
+    textMutedColor: ['mutedTextColor'],
+    textPlaceholderColor: ['placeholderColor'],
+    surfaceMutedColor: ['inputBackgroundColor', 'inputBg'],
+    buttonPrimaryColor: ['buttonColor', 'primaryButtonColor'],
+    buttonPrimaryTextColor: ['buttonTextColor'],
+  }
+  Object.entries(aliases).forEach(([target, names]) => {
+    if (String(parsed[target] || '').trim()) return
+    const alias = names.find(name => String(parsed[name] || '').trim())
+    if (alias) parsed[target] = parsed[alias]
+  })
+  const next = { ...DEFAULT_DECORATION_THEME, ...parsed } as DecorationThemeConfig
+  next.primaryColor = normalizeThemeColor(String(next.primaryColor || fallbackPrimary))
+  ;(Object.keys(DEFAULT_DECORATION_THEME) as Array<keyof DecorationThemeConfig>).forEach((key) => {
+    if (!String(next[key] || '').trim()) next[key] = DEFAULT_DECORATION_THEME[key]
+  })
+  return next
+}
+
+watch(
+  previewPayload,
+  () => postPreviewTheme(),
+  { deep: true },
+)
+
 function toBool(value: unknown) {
   if (typeof value === 'boolean') return value
   const normalized = String(value ?? '')
@@ -428,6 +710,33 @@ function configGroupName(key: ConfigKey) {
   return names[configGroupKey(key)]
 }
 
+async function fetchTenantDomain() {
+  try {
+    const tenantId = Number(getTenantId())
+    if (!tenantId) return
+    const tenant = await getTenant(tenantId)
+    const website = Array.isArray(tenant?.websites) ? tenant.websites[0] : tenant?.domain
+    if (website) tenantDomain.value = String(website).trim()
+  }
+  catch (error) {
+    console.error('获取租户预览域名失败:', error)
+  }
+}
+
+async function fetchPreviewInfo() {
+  try {
+    const data = await SystemConfigApi.getPageDecorationPreview()
+    previewInfo.value = data || null
+    if (!tenantDomain.value && data?.websites?.[0]) {
+      tenantDomain.value = String(data.websites[0]).trim()
+    }
+  }
+  catch (error) {
+    // 兼容尚未部署预览接口的环境，h5PreviewUrl 会回退到本页读取的配置。
+    console.warn('获取页面装修预览信息失败，将使用本地配置回退:', error)
+  }
+}
+
 async function fetchAssessmentCode(refresh = false) {
   try {
     if (refresh) await TenantNew_refreshAssessmentCode({})
@@ -449,6 +758,7 @@ async function fetchAll() {
     )
 
     Object.assign(form, DEFAULT_DECORATION)
+    form.decorationThemeConfig = { ...DEFAULT_DECORATION_THEME }
 
     Object.entries(FIELD_BY_KEY).forEach(([key, field]) => {
       const item = existingMap.value[key]
@@ -456,11 +766,30 @@ async function fetchAll() {
       if (BOOLEAN_KEYS.has(key as ConfigKey)) {
         ;(form[field] as boolean) = toBool(item.configValue)
       }
+      else if (key === CONFIG_KEYS.decorationThemeConfig) {
+        ;(form[field] as DecorationThemeConfig) = normalizeDecorationThemeConfig(
+          item.configValue,
+          String(existingMap.value[CONFIG_KEYS.decorationThemeColor]?.configValue || DEFAULT_DECORATION.decorationThemeColor),
+        )
+      }
       else {
         ;(form[field] as string) = String(item.configValue || '')
       }
     })
     form.decorationThemeColor = normalizeThemeColor(form.decorationThemeColor)
+    const themeConfigItem = existingMap.value[CONFIG_KEYS.decorationThemeTokens]
+      || existingMap.value[CONFIG_KEYS.decorationThemeConfig]
+    if (themeConfigItem) {
+      form.decorationThemeConfig = normalizeDecorationThemeConfig(
+        themeConfigItem.configValue,
+        form.decorationThemeColor,
+      )
+    }
+    form.decorationThemeConfig = normalizeDecorationThemeConfig(
+      form.decorationThemeConfig,
+      form.decorationThemeColor,
+    )
+    form.decorationThemeConfig.primaryColor = form.decorationThemeColor
     form.escortText = form.escortText.trim() || DEFAULT_DECORATION.escortText
     form.companionText = form.companionText.trim() || DEFAULT_DECORATION.companionText
     form.rankText = form.rankText.trim() || DEFAULT_DECORATION.rankText
@@ -477,11 +806,13 @@ async function fetchAll() {
 function buildConfig(key: ConfigKey): SystemConfig {
   const field = FIELD_BY_KEY[key]
   const rawValue = form[field]
-  const value = BOOLEAN_KEYS.has(key)
-    ? rawValue
-      ? 'true'
-      : 'false'
-    : String(rawValue ?? '').trim()
+  const value = (key === CONFIG_KEYS.decorationThemeTokens || key === CONFIG_KEYS.decorationThemeConfig)
+    ? JSON.stringify(normalizeDecorationThemeConfig(rawValue, form.decorationThemeColor))
+    : BOOLEAN_KEYS.has(key)
+      ? rawValue
+        ? 'true'
+        : 'false'
+      : String(rawValue ?? '').trim()
   const existing = existingMap.value[key]
   return {
     ...(existing?.id ? { id: existing.id } : {}),
@@ -498,6 +829,13 @@ async function doSave(keys: ConfigKey[]) {
   if (!keys.length || saving.value) return
   if (keys.includes(CONFIG_KEYS.decorationThemeColor)) {
     form.decorationThemeColor = normalizeThemeColor(form.decorationThemeColor)
+  }
+  if (
+    keys.includes(CONFIG_KEYS.decorationThemeColor)
+    || keys.includes(CONFIG_KEYS.decorationThemeTokens)
+    || keys.includes(CONFIG_KEYS.decorationThemeConfig)
+  ) {
+    form.decorationThemeConfig.primaryColor = form.decorationThemeColor
   }
 
   saving.value = true
@@ -544,11 +882,19 @@ function clearDecorationImage(
 
 function resetDecorationToDefault() {
   Object.assign(form, DEFAULT_DECORATION)
+  form.decorationThemeConfig = { ...DEFAULT_DECORATION_THEME }
 }
 
 onMounted(() => {
+  window.addEventListener('message', handlePreviewReady)
+  fetchTenantDomain()
+  fetchPreviewInfo()
   fetchAll()
   fetchAssessmentCode()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('message', handlePreviewReady)
 })
 </script>
 
@@ -716,6 +1062,16 @@ onMounted(() => {
                   <el-option label="每次进平台都弹" value="session" />
                 </el-select>
               </article>
+              <article class="field-card field-card--switch">
+                <div class="field-copy">
+                  <strong>首页选择游戏弹窗频率</strong>
+                  <small>开启后每次进入首页都会显示选择游戏弹窗；关闭后仅首次选择时显示</small>
+                </div>
+                <el-switch
+                  v-model="form.siteConfigEnableEveryEnterIndexDialog"
+                  aria-label="首页选择游戏弹窗频率"
+                />
+              </article>
               <article class="field-card field-card--span-2">
                 <div class="field-copy">
                   <strong>首页滚动通知</strong>
@@ -767,7 +1123,7 @@ onMounted(() => {
                 <el-color-picker
                   v-model="form.decorationThemeColor"
                   aria-label="客户端主题色"
-                  :predefine="['#AA884E', '#3E7D4E', '#5D5FEF', '#D14D72', '#111827']"
+                  :predefine="['#FEC328', '#AA884E', '#3E7D4E', '#5D5FEF', '#D14D72', '#111827']"
                 />
                 <el-input
                   v-model="form.decorationThemeColor"
@@ -779,10 +1135,16 @@ onMounted(() => {
                   "
                 />
               </div>
-              <el-button @click="resetDecorationToDefault">
-                <Icon icon="ep:refresh-left" />
-                恢复默认
-              </el-button>
+              <div class="decoration-toolbar__actions">
+                <el-button type="primary" plain @click="themeDrawerVisible = true">
+                  <Icon icon="ep:brush" />
+                  客户端主题色系
+                </el-button>
+                <el-button @click="resetDecorationToDefault">
+                  <Icon icon="ep:refresh-left" />
+                  恢复默认
+                </el-button>
+              </div>
             </div>
 
             <div class="page-selector" role="tablist" aria-label="装修页面">
@@ -803,6 +1165,83 @@ onMounted(() => {
                 </span>
               </button>
             </div>
+
+            <div class="decoration-preview-link">
+              <span>手机端实时预览地址</span>
+              <el-input
+                :model-value="h5PreviewUrl"
+                readonly
+                :placeholder="h5PreviewKey ? '正在生成预览地址…' : '请到系统配置生成微信防红链接'"
+              />
+              <el-button v-if="h5PreviewUrl" text @click="openPreviewWindow">
+                新窗口打开
+              </el-button>
+            </div>
+
+            <el-drawer
+              v-model="themeDrawerVisible"
+              title="客户端主题色系"
+              direction="rtl"
+              size="560px"
+              append-to-body
+              :modal="false"
+              :lock-scroll="false"
+              class="decoration-theme-drawer"
+            >
+              <div class="decoration-theme-panel decoration-theme-panel--drawer">
+                <div class="decoration-theme-panel__heading">
+                  <div>
+                    <h4>客户端主题色系</h4>
+                    <p>修改后立即同步到手机预览，保存后才会生效到客户端。</p>
+                  </div>
+                  <el-tag v-if="h5PreviewUrl" type="success" effect="plain">
+                    实时预览已连接
+                  </el-tag>
+                  <el-tag v-else type="warning" effect="plain">
+                    本地示意预览
+                  </el-tag>
+                </div>
+                <div class="decoration-color-grid">
+                  <div
+                    v-for="field in decorationThemeFields"
+                    :key="field.key"
+                    class="decoration-color-field"
+                    :class="{ 'decoration-color-field--image': field.kind === 'image' }"
+                  >
+                    <div class="decoration-color-field__copy">
+                      <strong>{{ field.label }}</strong>
+                      <small>{{ field.description }}</small>
+                    </div>
+                    <UploadImg
+                      v-if="field.kind === 'image'"
+                      :model-value="form.decorationThemeConfig[field.key]"
+                      :show-btn-text="false"
+                      height="78px"
+                      width="148px"
+                      @update:model-value="setDecorationColor(field.key, String($event || ''))"
+                    />
+                    <div
+                      v-else
+                      class="decoration-color-field__control"
+                      :class="{ 'decoration-color-field__control--text': field.kind === 'text' }"
+                    >
+                      <el-color-picker
+                        v-if="field.kind !== 'text'"
+                        :model-value="form.decorationThemeConfig[field.key]"
+                        :show-alpha="false"
+                        @change="setDecorationColor(field.key, String($event || ''))"
+                      />
+                      <el-input
+                        :model-value="form.decorationThemeConfig[field.key]"
+                        :maxlength="field.kind === 'text' ? 500 : 9"
+                        autocomplete="off"
+                        @update:model-value="setDecorationColor(field.key, String($event || ''))"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </el-drawer>
 
             <div class="decoration-workbench">
               <div class="decoration-editor">
@@ -1006,7 +1445,23 @@ onMounted(() => {
                 class="phone-preview"
                 :style="{ '--preview-theme': form.decorationThemeColor }"
               >
-                <div class="phone-shell">
+                <template v-if="h5PreviewUrl">
+                  <div class="phone-shell phone-shell--iframe">
+                    <div class="phone-status">
+                      <span>9:41</span><span>Wi-Fi&nbsp;&nbsp;100%</span>
+                    </div>
+                    <div class="phone-screen phone-screen--iframe">
+                      <iframe
+                        ref="previewFrame"
+                        :src="h5PreviewUrl"
+                        title="客户端手机端实时预览"
+                        @load="handlePreviewFrameLoad"
+                      />
+                    </div>
+                  </div>
+                  <p>当前预览 · 微信防红 H5（实时同步）</p>
+                </template>
+                <div v-if="!h5PreviewUrl" class="phone-shell">
                   <div class="phone-status">
                     <span>9:41</span><span>Wi-Fi&nbsp;&nbsp;100%</span>
                   </div>
@@ -1177,7 +1632,7 @@ onMounted(() => {
                     </template>
                   </div>
                 </div>
-                <p>
+                <p v-if="!h5PreviewUrl">
                   当前预览 ·
                   {{ currentDecorationImage ? '自定义背景' : currentDecorationImageFallback }}
                 </p>
@@ -1581,12 +2036,150 @@ onMounted(() => {
   }
 }
 
+.decoration-theme-panel {
+  margin: 4px 0 16px;
+  padding: 16px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 12px;
+  background: var(--el-fill-color-extra-light);
+}
+
+.decoration-theme-panel--drawer {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+:deep(.decoration-theme-drawer .el-drawer__body) {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.decoration-theme-panel__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+
+  h4,
+  p {
+    margin: 0;
+  }
+
+  h4 {
+    color: var(--el-text-color-primary);
+    font-size: 15px;
+    line-height: 22px;
+  }
+
+  p {
+    margin-top: 3px;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 18px;
+  }
+}
+
+.decoration-color-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+.decoration-color-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 10px;
+  background: var(--el-bg-color);
+
+  &--image {
+    grid-column: 1 / -1;
+    align-items: flex-start;
+  }
+}
+
+.decoration-color-field__copy {
+  min-width: 0;
+
+  strong,
+  small {
+    display: block;
+  }
+
+  strong {
+    color: var(--el-text-color-regular);
+    font-size: 13px;
+    line-height: 20px;
+  }
+
+  small {
+    margin-top: 2px;
+    overflow: hidden;
+    color: var(--el-text-color-secondary);
+    font-size: 11px;
+    line-height: 16px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.decoration-color-field__control {
+  display: flex;
+  flex: 0 0 146px;
+  align-items: center;
+  gap: 6px;
+
+  :deep(.el-color-picker) {
+    flex: none;
+  }
+
+  :deep(.el-input) {
+    min-width: 0;
+  }
+
+  &--text {
+    flex-basis: 260px;
+  }
+}
+
+.decoration-color-field--image :deep(.upload-box) {
+  flex: 0 0 148px;
+}
+
+.decoration-preview-link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px dashed var(--el-border-color);
+  border-radius: 10px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+}
+
 .decoration-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
   padding: 22px 0 14px;
+}
+
+.decoration-toolbar__actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
 }
 
 .theme-control {
@@ -1679,9 +2272,8 @@ onMounted(() => {
 
 .decoration-workbench {
   display: grid;
-  grid-template-columns: minmax(340px, 1fr) 320px;
+  grid-template-columns: minmax(320px, 392px) minmax(480px, 1fr);
   min-height: 650px;
-  overflow: hidden;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 12px;
   background: var(--el-fill-color-extra-light);
@@ -1763,12 +2355,16 @@ onMounted(() => {
 }
 
 .phone-preview {
+  position: sticky;
+  top: 16px;
+  order: -1;
+  align-self: start;
   display: flex;
   align-items: center;
   flex-direction: column;
   justify-content: center;
   padding: 24px 18px;
-  border-left: 1px solid var(--el-border-color-lighter);
+  border-right: 1px solid var(--el-border-color-lighter);
   background: #eef0f4;
 
   > p {
@@ -1811,6 +2407,24 @@ onMounted(() => {
   border-radius: 17px;
   color: #1c1d20;
   background: #f5f5f5;
+}
+
+.phone-shell--iframe {
+  width: 375px;
+  max-width: 100%;
+}
+
+.phone-screen--iframe {
+  height: 667px;
+  background: #fff;
+
+  iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #fff;
+  }
 }
 
 .mobile-home-hero {
@@ -2500,15 +3114,17 @@ onMounted(() => {
   background: var(--el-bg-color);
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 1060px) {
   .decoration-workbench {
     grid-template-columns: minmax(330px, 1fr);
   }
 
   .phone-preview {
+    position: static;
+    order: 0;
     min-height: 610px;
     border-top: 1px solid var(--el-border-color-lighter);
-    border-left: 0;
+    border-right: 0;
   }
 }
 
@@ -2535,6 +3151,17 @@ onMounted(() => {
   .decoration-workbench {
     grid-template-columns: 1fr;
   }
+
+  .phone-preview {
+    order: 0;
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+  }
+
+  .decoration-color-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 680px) {
@@ -2559,7 +3186,8 @@ onMounted(() => {
   .field-grid,
   .field-grid--two,
   .copywriting-grid,
-  .page-selector {
+  .page-selector,
+  .decoration-color-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -2583,9 +3211,32 @@ onMounted(() => {
     grid-template-columns: auto auto 1fr;
   }
 
+  .decoration-theme-panel__heading,
+  .decoration-preview-link {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .decoration-color-field__control {
+    flex-basis: 150px;
+  }
+
   .image-control {
     flex-basis: auto;
     align-items: flex-start;
+  }
+
+  .decoration-preview-link {
+    grid-template-columns: 1fr;
+  }
+
+  .decoration-color-field {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .decoration-color-field__control {
+    flex-basis: auto;
   }
 }
 </style>

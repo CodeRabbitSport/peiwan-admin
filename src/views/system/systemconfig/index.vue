@@ -73,6 +73,7 @@ const KEYS = {
   ENABLE_INVITATION_MODE: 'appConfigEnableInvitationMode',
   ENABLE_CONSUME_RANK: 'appConfigEnableConsumeRank',
   ENABLE_AUTO_PICK_ORDER: 'appConfigEnableAutoPickOrder',
+  ENABLE_IOS_VIRTUAL_PAYMENT: 'appConfigEnableIosVirtualPayment',
   INVITATION_POSTER: 'appConfigInvitePoster',
   TENCENT_ATTRIBUTION_ENABLED: 'appConfigTencentAttributionEnabled',
   TENCENT_ATTRIBUTION_ACCESS_TOKEN: 'appConfigTencentAttributionAccessToken',
@@ -141,6 +142,7 @@ const formData = reactive<any>({
   enableInvitationMode: false,
   enableConsumeRank: false,
   enableAutoPickOrder: false,
+  enableIosVirtualPayment: false,
   tencentAttributionEnabled: false,
   tencentAttributionAccessToken: '',
   tencentAttributionAccountId: '',
@@ -203,8 +205,8 @@ const configGroups = [
     title: '应用配置',
     description: '费率、业务模式与腾讯回传',
     icon: 'ep:operation',
-    count: 11,
-    keywords: '提现手续费 自动接单 邀请模式 消费排名 分佣比例 邀请海报 腾讯广告 回传 DataNexus 密钥',
+    count: 12,
+    keywords: '提现手续费 自动接单 iOS 虚拟支付 邀请模式 消费排名 分佣比例 邀请海报 腾讯广告 回传 DataNexus 密钥',
   },
 ]
 
@@ -427,6 +429,9 @@ async function loadAll() {
         case KEYS.ENABLE_AUTO_PICK_ORDER:
           formData.enableAutoPickOrder = toBool(item.configValue)
           break
+        case KEYS.ENABLE_IOS_VIRTUAL_PAYMENT:
+          formData.enableIosVirtualPayment = toBool(item.configValue)
+          break
         case KEYS.TENCENT_ATTRIBUTION_ENABLED:
           formData.tencentAttributionEnabled = toBool(item.configValue)
           break
@@ -525,11 +530,25 @@ async function handleGenerateH5Key() {
 
 // 计算完整的H5链接
 const fullH5Url = computed(() => {
-  const domain = tenantDomain.value || window.location.origin
-  return formData.htmlH5Key ? `https://${domain}/html/${formData.htmlH5Key}` : ''
+  if (!formData.htmlH5Key)
+    return ''
+  const rawDomain = String(tenantDomain.value || window.location.origin).trim()
+  const origin = /^https?:\/\//i.test(rawDomain) ? rawDomain : `https://${rawDomain}`
+  return `${origin.replace(/\/+$/, '')}/html/${formData.htmlH5Key}`
 })
 
 async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'productIds' | 'string', value: any) {
+  // 区服入口开关：必须至少保留一个开启
+  if (
+    type === 'boolean'
+    && value === false
+    && (key === KEYS.ENABLE_MOBILE_REGION || key === KEYS.ENABLE_COMPUTER_REGION)
+    && !formData[key === KEYS.ENABLE_MOBILE_REGION ? KEYS.ENABLE_COMPUTER_REGION : KEYS.ENABLE_MOBILE_REGION]
+  ) {
+    formData[key] = true
+    message.warning('手机端区服和电脑端区服至少需要开启一个')
+    return
+  }
   savingKeys.value.add(key)
   try {
     let configValue = ''
@@ -578,12 +597,15 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
       [KEYS.TENCENT_ATTRIBUTION_WECHAT_APP_ID]: '微信小程序 AppID',
     }
     const tencentAttributionTitle = tencentAttributionTitleMap[key]
+    const iosVirtualPaymentTitle = key === KEYS.ENABLE_IOS_VIRTUAL_PAYMENT
+      ? '开启 iOS 虚拟支付'
+      : ''
     const params: any = {
       title: key === KEYS.ORDER_SUBSCRIBE_SUPPORTED
         ? '启用订单订阅通知'
         : key === KEYS.ORDER_SUBSCRIBE_TEMPLATE_CODE
           ? '模板编码'
-          : copywritingTitle || customerServiceTitle || tencentAttributionTitle || key,
+          : copywritingTitle || customerServiceTitle || tencentAttributionTitle || iosVirtualPaymentTitle || key,
       configKey: key,
       configValue,
     }
@@ -608,6 +630,11 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
       params.configGroupKey = 'appConfig'
       params.configGroupName = '应用配置'
       params.description = tencentAttributionTitle + '，用于腾讯广告小程序购买行为回传'
+    }
+    if (iosVirtualPaymentTitle) {
+      params.configGroupKey = 'appConfig'
+      params.configGroupName = '应用配置'
+      params.description = '开启后，微信小程序 iOS 用户可选择虚拟支付'
     }
     if (id) {
       params.id = id
@@ -1166,6 +1193,17 @@ onMounted(() => {
                     v-model="formData.enableAutoPickOrder"
                     :loading="savingKeys.has(KEYS.ENABLE_AUTO_PICK_ORDER)"
                     @change="handleSaveAutoPickOrder"
+                  />
+                </div>
+                <div class="config-field config-field--switch">
+                  <div class="config-field-label">
+                    <strong>开启 iOS 虚拟支付</strong>
+                    <small>开启后，微信小程序 iOS 用户可选择虚拟支付</small>
+                  </div>
+                  <el-switch
+                    v-model="formData.enableIosVirtualPayment"
+                    :loading="savingKeys.has(KEYS.ENABLE_IOS_VIRTUAL_PAYMENT)"
+                    @change="(val: any) => handleSave(KEYS.ENABLE_IOS_VIRTUAL_PAYMENT, 'boolean', val)"
                   />
                 </div>
                 <div class="config-field config-field--switch">

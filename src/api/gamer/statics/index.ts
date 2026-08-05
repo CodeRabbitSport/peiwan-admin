@@ -219,6 +219,12 @@ export interface StaticsDashboardRespVO {
   giftFeeAmount?: number
   /* 复购率 */
   repeatPurchaseRate?: number
+  /* 新用户消费金额 */
+  newUserOrderAmount?: number
+  /* 手机端消费金额 */
+  mobileOrderAmount?: number
+  /* 电脑端消费金额 */
+  computerOrderAmount?: number
 }
 
 /**

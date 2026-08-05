@@ -24,7 +24,11 @@
         </el-radio-group>
       </el-form-item>
       <el-form-item label="Offer ID" prop="config.offerId">
-        <el-input v-model="formData.config.offerId" clearable placeholder="请输入虚拟支付 Offer ID" />
+        <el-input
+          v-model="formData.config.offerId"
+          clearable
+          placeholder="请输入虚拟支付 Offer ID"
+        />
       </el-form-item>
       <el-form-item label="AppKey" prop="config.appKey">
         <el-input
@@ -49,6 +53,29 @@
           controls-position="right"
         />
         <span class="ml-8px text-12px text-gray-500">钱包余额分 / 1 代币</span>
+      </el-form-item>
+      <el-divider content-position="left">iOS 退款消息推送</el-divider>
+      <el-form-item label="消息推送 Token" prop="config.notifyToken">
+        <el-input
+          v-model="formData.config.notifyToken"
+          clearable
+          placeholder="填写微信公众平台消息推送配置的 Token"
+          show-password
+          type="password"
+        />
+      </el-form-item>
+      <el-form-item label="EncodingAESKey" prop="config.notifyAesKey">
+        <el-input
+          v-model="formData.config.notifyAesKey"
+          clearable
+          placeholder="安全模式必填，填写微信公众平台的 EncodingAESKey"
+          show-password
+          type="password"
+        />
+        <div class="mt-6px text-12px text-gray-500">
+          在微信公众平台「开发管理 - 消息推送配置」中选择 JSON 与安全模式；URL 填 &lt;API
+          域名&gt;/app-api/gamer/virtual-payment/notify/&lt;租户 ID&gt;/&lt;小程序 AppID&gt;。
+        </div>
       </el-form-item>
       <el-form-item>
         <a
@@ -103,7 +130,9 @@ const resetForm = (appId: number, code: string) => {
       offerId: '',
       appKey: '',
       env: 0,
-      walletUnit: 100
+      walletUnit: 100,
+      notifyToken: '',
+      notifyAesKey: ''
     }
   }
   formRef.value?.resetFields()

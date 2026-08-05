@@ -11,6 +11,17 @@ export interface SystemConfig {
   description: string // 配置描述
 }
 
+/** 页面装修手机端预览信息。 */
+export interface PageDecorationPreview {
+  tenantId?: number
+  h5Key?: string
+  h5Path?: string
+  websites?: string[]
+  h5Url?: string
+  previewUrl?: string
+  configValues?: Record<string, string>
+}
+
 // 系统配置 API
 export const SystemConfigApi = {
   // 查询系统配置分页
@@ -19,6 +30,10 @@ export const SystemConfigApi = {
   },
   getSystemLogoName: async (params?: any) => {
     return await request.get({ url: `/gamer/system-config/getSiteBasicConfig`, params })
+  },
+  /** 获取当前租户微信防红链接及页面装修预览配置。 */
+  getPageDecorationPreview: async () => {
+    return await request.get<PageDecorationPreview>({ url: `/gamer/system-config/getPageDecorationPreview` })
   },
 
   // 查询系统配置详情

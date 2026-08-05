@@ -776,6 +776,48 @@ onActivated(async () => {
           />
         </el-card>
       </el-col>
+    </el-row>
+
+    <el-row :gutter="16" class="mb-4">
+      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+        <el-card shadow="never" :loading="dashboardLoading">
+          <SummaryCard
+            title="新用户消费金额"
+            icon="ep:user-filled"
+            icon-color="bg-cyan-100"
+            icon-bg-color="text-cyan-500"
+            prefix="¥ "
+            :decimals="2"
+            :value="Number(fenToYuan(dashboardData.newUserOrderAmount || 0))"
+          />
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+        <el-card shadow="never" :loading="dashboardLoading">
+          <SummaryCard
+            title="手机端消费"
+            icon="ep:iphone"
+            icon-color="bg-blue-100"
+            icon-bg-color="text-blue-500"
+            prefix="¥ "
+            :decimals="2"
+            :value="Number(fenToYuan(dashboardData.mobileOrderAmount || 0))"
+          />
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+        <el-card shadow="never" :loading="dashboardLoading">
+          <SummaryCard
+            title="电脑端消费"
+            icon="ep:monitor"
+            icon-color="bg-purple-100"
+            icon-bg-color="text-purple-500"
+            prefix="¥ "
+            :decimals="2"
+            :value="Number(fenToYuan(dashboardData.computerOrderAmount || 0))"
+          />
+        </el-card>
+      </el-col>
       <!-- <el-col :xs="24" :sm="12" :md="8" :lg="8">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
