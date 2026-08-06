@@ -491,8 +491,8 @@ const decorationThemeFields: Array<{
   { key: 'darkColor', label: '深色操作', description: '深色按钮和强调底' },
   { key: 'lightTextColor', label: '深色底文字', description: '深色按钮上的浅色文字' },
   { key: 'headerGradientStartColor', label: '顶部渐变起点', description: '页面顶部背景渐变起始色' },
-  { key: 'headerGradientEndColor', label: '顶部渐变终点', description: '页面顶部背景渐变结束色', kind: 'text' },
-  { key: 'shadowColor', label: '阴影色', description: '卡片和弹窗阴影', kind: 'text' },
+  { key: 'headerGradientEndColor', label: '顶部渐变终点', description: '页面顶部背景渐变结束色' },
+  { key: 'shadowColor', label: '阴影色', description: '卡片和弹窗阴影' },
   { key: 'overlayColor', label: '遮罩色', description: '弹窗遮罩基色' },
   { key: 'successColor', label: '成功色', description: '成功状态和完成提示' },
   { key: 'warningColor', label: '警告色', description: '警告状态和待处理提示' },
@@ -500,14 +500,14 @@ const decorationThemeFields: Array<{
   { key: 'genderFemaleColor', label: '女性卡片色', description: '首页女性用户卡片和陪玩渐变' },
   { key: 'buttonPrimaryColor', label: '主按钮背景', description: '主要操作按钮背景' },
   { key: 'buttonPrimaryTextColor', label: '主按钮文字', description: '主按钮文字颜色' },
-  { key: 'buttonHighlightColor', label: '按钮高光', description: '主按钮顶部高光', kind: 'text' },
-  { key: 'buttonHighlightSubtleColor', label: '按钮弱高光', description: '深色按钮顶部高光', kind: 'text' },
+  { key: 'buttonHighlightColor', label: '按钮高光', description: '主按钮顶部高光' },
+  { key: 'buttonHighlightSubtleColor', label: '按钮弱高光', description: '深色按钮顶部高光' },
   { key: 'buttonOutlineColor', label: '描边按钮背景', description: '次要描边按钮背景' },
   { key: 'buttonDarkColor', label: '深色按钮背景', description: '深色操作按钮背景' },
   { key: 'buttonDarkTextColor', label: '深色按钮文字', description: '深色按钮文字颜色' },
   { key: 'popupBackgroundColor', label: '弹窗背景', description: '主题弹窗容器' },
   { key: 'navbarTextColor', label: '导航文字', description: '页面导航栏文字' },
-  { key: 'navbarBackgroundColor', label: '导航背景', description: '页面导航栏背景', kind: 'text' },
+  { key: 'navbarBackgroundColor', label: '导航背景', description: '页面导航栏背景' },
   { key: 'navbarBorderColor', label: '导航边框', description: '页面导航栏边框' },
   { key: 'pageBackgroundImage', label: '页面背景图', description: '应用于全局页面底图', kind: 'image' },
   { key: 'headerBackgroundImage', label: '顶部背景图', description: '应用于页面顶部主视觉', kind: 'image' },
@@ -1123,6 +1123,7 @@ onBeforeUnmount(() => {
                 <el-color-picker
                   v-model="form.decorationThemeColor"
                   aria-label="客户端主题色"
+                  show-alpha
                   :predefine="['#FEC328', '#AA884E', '#3E7D4E', '#5D5FEF', '#D14D72', '#111827']"
                 />
                 <el-input
@@ -1228,7 +1229,7 @@ onBeforeUnmount(() => {
                       <el-color-picker
                         v-if="field.kind !== 'text'"
                         :model-value="form.decorationThemeConfig[field.key]"
-                        :show-alpha="false"
+                        show-alpha
                         @change="setDecorationColor(field.key, String($event || ''))"
                       />
                       <el-input
