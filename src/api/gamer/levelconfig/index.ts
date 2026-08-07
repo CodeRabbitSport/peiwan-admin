@@ -4,7 +4,8 @@ import request from '@/config/axios'
 export interface LevelConfig {
   id: number // 等级ID
   categoryType?: number // 分类类型(1:陪玩, 2:打手)
-  categoryId?: number // 商品分类ID（陪玩使用）
+  categoryId?: number // 商品分类ID
+  gameRegion?: string // 游戏区服（多个用逗号分隔）
   unitPrice?: number // 单价/每小时（分，陪玩使用）
   levelName?: string // 等级名称
   levelNumber?: number // 级别号

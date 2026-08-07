@@ -219,6 +219,7 @@ const queryParams = reactive({
   productCategoryId: undefined,
   auditStatus: undefined,
   level: undefined,
+  levelType: 2,
   createTime: [],
 })
 const queryFormRef = ref() // 搜索的表单
@@ -227,8 +228,6 @@ const queryFormRef = ref() // 搜索的表单
 async function getList() {
   loading.value = true
   try {
-    console.log('%c🤪 ~ file: index.vue:230 [] -> queryParams : ', 'color: #21c1f2', queryParams)
-
     const data = await LevelApplyApi.getLevelApplyPage(queryParams)
     list.value = data.list
     total.value = data.total
@@ -344,6 +343,7 @@ onMounted(() => {
         <UserMultiSelectInput
           v-model="queryParams.userId"
           :multiple="false"
+          :category-type="2"
           placeholder="请选择用户"
           @change="handleQuery"
         />

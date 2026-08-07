@@ -219,6 +219,7 @@ onMounted(() => {
         <UserMultiSelectInput
           v-model="queryParams.userId"
           :multiple="false"
+          :category-type="1"
           placeholder="请选择用户"
           @change="handleQuery"
         />

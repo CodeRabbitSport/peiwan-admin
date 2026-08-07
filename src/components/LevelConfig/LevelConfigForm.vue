@@ -5,6 +5,7 @@ import type { LevelConfig } from '@/api/gamer/levelconfig'
 import { LevelConfigApi } from '@/api/gamer/levelconfig'
 import type { Product } from '@/api/gamer/product'
 import { ProductApi } from '@/api/gamer/product'
+import type { ProductCategory } from '@/api/gamer/productcategory'
 import { ProductCategoryApi } from '@/api/gamer/productcategory'
 
 /** 等级配置表单组件 */
@@ -34,7 +35,8 @@ const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref<Partial<LevelConfig>>({
   id: undefined,
   categoryType: props.categoryType,
-  categoryId: undefined, // 商品分类ID（仅陪玩使用）
+  categoryId: undefined, // 商品分类ID
+  gameRegion: undefined, // 游戏区服
   unitPrice: undefined, // 单价/每小时（元，陪玩使用）
   commissionRate: undefined, // 佣金抽成比率（陪玩使用，%）
   levelName: undefined,
@@ -69,10 +71,33 @@ const formData = ref<Partial<LevelConfig>>({
 })
 // 游戏区服价差动态表单字段（仅陪玩使用）
 const orderReceivingRegionFields = ref<Array<{ region: string, price: number }>>([{ region: '', price: 0 }])
+
+const categoryOptions = ref<ProductCategory[]>([])
+
+function parseGameRegions(value?: string) {
+  return [...new Set(String(value || '')
+    .split(/[,，]/)
+    .map(region => region.trim())
+    .filter(Boolean))]
+}
+
+const gameRegionOptions = computed(() => parseGameRegions(
+  categoryOptions.value.find(item => item.id === formData.value.categoryId)?.orderReceivingRegion,
+))
+const selectedGameRegions = computed<string[]>({
+  get: () => parseGameRegions(formData.value.gameRegion),
+  set: (regions) => {
+    formData.value.gameRegion = regions.join(',')
+  },
+})
+
 // 动态验证规则
 const formRules = computed(() => ({
   categoryType: [{ required: true, message: '分类类型不能为空', trigger: 'change' }],
-  categoryId: props.categoryType === 1 ? [{ required: true, message: '商品分类不能为空', trigger: 'change' }] : [],
+  categoryId: [{ required: true, message: '商品分类不能为空', trigger: 'change' }],
+  gameRegion: gameRegionOptions.value.length
+    ? [{ required: true, message: '游戏区服不能为空', trigger: 'change' }]
+    : [],
   unitPrice: props.categoryType === 1 ? [{ required: true, message: '单价不能为空', trigger: 'blur' }] : [],
   commissionRate: props.categoryType === 1 ? [{ required: true, message: '佣金抽成比率不能为空', trigger: 'blur' }] : [],
   levelName: [{ required: true, message: '等级名称不能为空', trigger: 'blur' }],
@@ -98,18 +123,11 @@ const formRules = computed(() => ({
 }))
 const formRef = ref() // 表单 Ref
 
-// 商品分类列表（仅陪玩使用）
-const categoryOptions = ref<Array<{ label: string, value: number }>>([])
-
 // 获取商品分类列表
 async function loadCategoryOptions() {
-  if (props.categoryType !== 1) return // 仅陪玩需要加载
   try {
-    const { list = [] } = await ProductCategoryApi.getProductCategoryPage()
-    categoryOptions.value = list.map((item: any) => ({
-      label: item.categoryName,
-      value: item.id,
-    }))
+    const { list = [] } = await ProductCategoryApi.getProductCategoryPage({ pageNo: 1, pageSize: 100 })
+    categoryOptions.value = list
   }
   catch (error) {
     console.error('获取商品分类列表失败:', error)
@@ -122,8 +140,7 @@ async function open(type: string, id?: number) {
   dialogTitle.value = t(`action.${type}`)
   formType.value = type
   resetForm()
-  // 加载商品分类列表（陪玩）
-  if (props.categoryType === 1 && !categoryOptions.value.length) {
+  if (!categoryOptions.value.length) {
     await loadCategoryOptions()
   }
   // 修改时，设置数据
@@ -149,6 +166,10 @@ async function open(type: string, id?: number) {
   else if (props.categoryType === 1) {
     orderReceivingRegionFields.value = [{ region: '', price: 0 }]
   }
+}
+
+function handleCategoryChange() {
+  selectedGameRegions.value = []
 }
 
 // 解析游戏区服价差配置（JSON 字符串 -> 表单字段，价格分转元）
@@ -195,6 +216,7 @@ function removeOrderReceivingRegionField(index: number) {
     updateOrderReceivingRegionData()
   }
 }
+
 defineExpose({ open }) // 定义 success 事件，用于操作成功后的回调
 async function submitForm() {
   try {
@@ -268,6 +290,7 @@ function resetForm() {
     id: undefined,
     categoryType: props.categoryType,
     categoryId: undefined,
+    gameRegion: undefined,
     unitPrice: undefined,
     commissionRate: undefined,
     levelName: undefined,
@@ -404,19 +427,40 @@ function clearSelectedProducts() {
             {{ categoryLabel }}
           </el-tag>
         </el-form-item>
-        <el-form-item v-if="props.categoryType === 1" label="商品分类" prop="categoryId">
+        <el-form-item label="商品分类" prop="categoryId">
           <el-select
             v-model="formData.categoryId"
             placeholder="请选择商品分类"
             filterable
             clearable
             class="w-full"
+            @change="handleCategoryChange"
           >
             <el-option
               v-for="item in categoryOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+              :key="item.id"
+              :label="item.categoryName"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="游戏区服" prop="gameRegion">
+          <el-select
+            v-model="selectedGameRegions"
+            :placeholder="!formData.categoryId ? '请先选择商品分类' : gameRegionOptions.length ? '请选择游戏区服' : '该分类无需选择区服'"
+            filterable
+            clearable
+            multiple
+            collapse-tags
+            collapse-tags-tooltip
+            class="w-full"
+            :disabled="!formData.categoryId || !gameRegionOptions.length"
+          >
+            <el-option
+              v-for="region in gameRegionOptions"
+              :key="region"
+              :label="region"
+              :value="region"
             />
           </el-select>
         </el-form-item>

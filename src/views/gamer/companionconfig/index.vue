@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { LevelConfig } from '@/api/gamer/levelconfig'
 import { LevelConfigApi } from '@/api/gamer/levelconfig'
+import type { ProductCategory } from '@/api/gamer/productcategory'
+import { ProductCategoryApi } from '@/api/gamer/productcategory'
+import LevelConfigRestrictions from '@/components/LevelConfig/LevelConfigRestrictions.vue'
 import { fenToYuan } from '@/utils'
 import { dateFormatter } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
@@ -20,6 +23,8 @@ const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
   categoryType: 1, // 陪玩类型
+  categoryId: undefined as number | undefined,
+  gameRegion: undefined as string | undefined,
   levelName: undefined,
   levelNumber: undefined,
   isDefault: undefined,
@@ -34,24 +39,32 @@ const queryParams = reactive({
   createTime: [],
 })
 const queryFormRef = ref() // 搜索的表单
+const categoryOptions = ref<ProductCategory[]>([])
 
-// 布尔兼容转换：兼容 true/false 与 1/0 字段
-function toBool(val: any) {
-  if (typeof val === 'boolean') return val
-  if (val === 1 || val === '1') return true
-  return false
+function parseGameRegions(value?: string) {
+  return [...new Set(String(value || '')
+    .split(/[,，]/)
+    .map(region => region.trim())
+    .filter(Boolean))]
 }
-// 将布尔类字段显示为 "有/无" 文案
-const permissionText = (val: number | string | boolean) => (toBool(val) ? '有' : '无')
-// 验证类型文案
-function verifyTypeText(val: number | undefined) {
-  switch (val) {
-    case 0:
-      return '无需验证'
-    case 1:
-      return '验证码验证'
-  }
+
+const gameRegionOptions = computed(() => parseGameRegions(
+  categoryOptions.value.find(item => item.id === queryParams.categoryId)?.orderReceivingRegion,
+))
+
+function handleCategoryChange() {
+  queryParams.gameRegion = undefined
 }
+
+function getCategoryName(categoryId?: number) {
+  return categoryOptions.value.find(item => item.id === categoryId)?.categoryName || '--'
+}
+
+async function loadCategoryOptions() {
+  const { list = [] } = await ProductCategoryApi.getProductCategoryPage({ pageNo: 1, pageSize: 100 })
+  categoryOptions.value = list
+}
+
 // 解析游戏区服价差配置 JSON 字符串
 function parseRegionList(value: string | undefined): Array<{ region: string, price: number }> {
   if (!value) return []
@@ -131,6 +144,7 @@ function handleRowCheckboxChange(records: LevelConfig[]) {
 /** 初始化 */
 onMounted(() => {
   getList()
+  loadCategoryOptions()
 })
 </script>
 
@@ -138,6 +152,40 @@ onMounted(() => {
   <ContentWrap>
     <!-- 搜索工作栏 -->
     <el-form ref="queryFormRef" class="-mb-[15px]" :model="queryParams" :inline="true" label-width="68px">
+      <el-form-item label="游戏分类" prop="categoryId">
+        <el-select
+          v-model="queryParams.categoryId"
+          placeholder="请选择游戏分类"
+          filterable
+          clearable
+          class="!w-[240px]"
+          @change="handleCategoryChange"
+        >
+          <el-option
+            v-for="item in categoryOptions"
+            :key="item.id"
+            :label="item.categoryName"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="游戏区服" prop="gameRegion">
+        <el-select
+          v-model="queryParams.gameRegion"
+          :placeholder="!queryParams.categoryId ? '请先选择游戏分类' : gameRegionOptions.length ? '请选择游戏区服' : '该分类无需选择区服'"
+          filterable
+          clearable
+          class="!w-[240px]"
+          :disabled="!queryParams.categoryId || !gameRegionOptions.length"
+        >
+          <el-option
+            v-for="region in gameRegionOptions"
+            :key="region"
+            :label="region"
+            :value="region"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="等级名称" prop="levelName">
         <el-input v-model="queryParams.levelName" placeholder="请输入等级名称" clearable class="!w-[240px]" />
       </el-form-item>
@@ -173,7 +221,30 @@ onMounted(() => {
     >
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" width="80" />
+      <el-table-column label="游戏分类" align="center" prop="categoryId" min-width="140">
+        <template #default="{ row }">
+          {{ getCategoryName(row.categoryId) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="游戏区服" align="center" prop="gameRegion" min-width="160">
+        <template #default="{ row }">
+          {{ row.gameRegion || '--' }}
+        </template>
+      </el-table-column>
       <el-table-column label="等级名称" align="center" prop="levelName" width="150" />
+      <el-table-column label="等级图标" align="center" prop="levelIcon" width="90">
+        <template #default="{ row }">
+          <el-image
+            v-if="row.levelIcon"
+            :src="row.levelIcon"
+            :preview-src-list="[row.levelIcon]"
+            fit="contain"
+            preview-teleported
+            class="h-10 w-10 rounded-[4px]"
+          />
+          <span v-else>--</span>
+        </template>
+      </el-table-column>
       <el-table-column label="级别号" align="center" prop="levelNumber" width="100" />
       <el-table-column label="陪玩费用" align="center" prop="unitPrice" width="180">
         <template #default="{ row }">
@@ -207,73 +278,9 @@ onMounted(() => {
           </el-tag>
         </template>
       </el-table-column> -->
-      <el-table-column label="功能限制" min-width="360" align="center">
+      <el-table-column label="功能限制" min-width="320" align="center">
         <template #default="{ row }">
-          <div class="feature-list">
-            <div class="feature-item">
-              接单保证金：{{ fenToYuan(row.depositFee) }}
-            </div>
-            <div class="feature-item">
-              每日接单数：{{ row.dailyOrderLimit === 0 ? '不限制' : row.dailyOrderLimit }}
-            </div>
-            <div class="feature-item">
-              新待接订单延迟接单时间：{{ row.newOrderDelaySeconds }}秒
-            </div>
-            <div class="feature-item">
-              提现手续费：{{ row.withdrawalFeeRate }}%
-            </div>
-            <div class="feature-item">
-              陪玩到手比例：{{ row.commissionRate }}%
-            </div>
-            <div class="feature-item">
-              订单服务费解冻时间：{{ row.orderFeeUnfreezeSeconds }}秒
-            </div>
-            <div class="feature-item">
-              打赏金额抽成：{{ row.rewardCommissionRate }}%
-            </div>
-            <div class="feature-item">
-              可自主取消接单订单：{{ permissionText(row.canCancelOrder) }}
-            </div>
-            <div class="feature-item">
-              可自主退款接单订单：{{ permissionText(row.canRefundOrder) }}
-            </div>
-            <div class="feature-item">
-              查看已申请退款订单用户手机号：{{ permissionText(row.canViewRefundPhone) }}
-            </div>
-            <div class="feature-item">
-              查看未退款订单用户手机号：{{ permissionText(row.canViewUnrefundedPhone) }}
-            </div>
-            <div class="feature-item">
-              查看未退款订单用户手机号天数：{{ row.viewPhoneDaysLimit === -1 ? '不限制' : `${row.viewPhoneDaysLimit
-              }天` }}
-            </div>
-            <div class="feature-item">
-              设置用户公告内容权限：{{ permissionText(row.canSetAnnouncement) }}
-            </div>
-            <div class="feature-item">
-              保证金退还安全期限：{{ row.depositRefundSafeDays }}天
-            </div>
-            <div class="feature-item">
-              限制指定接单商品：{{ row.restrictedProductIds && row.restrictedProductIds.length
-                ? row.restrictedProductIds : '无' }}
-            </div>
-            <div class="feature-item">
-              限制每日接单缴费金额：{{ fenToYuan(row.dailyOrderFeeLimit) }}元
-            </div>
-            <div class="feature-item">
-              限制同时可接单数：{{ row.simultaneousOrderLimit === 0 ? '不限制' : `${row.simultaneousOrderLimit
-              }单` }}
-            </div>
-            <div class="feature-item">
-              接单验证类型：{{ verifyTypeText(row.orderVerificationType) }}
-            </div>
-            <div class="feature-item">
-              限制升级人数名额：{{ row.upgradeSlotLimit === 0 ? '不限制' : row.upgradeSlotLimit }}
-            </div>
-            <div class="feature-item">
-              允许接单抵扣保证金：{{ toBool(row.allowDepositRecharge) ? '允许' : '不允许' }}
-            </div>
-          </div>
+          <LevelConfigRestrictions :config="row" show-commission />
         </template>
       </el-table-column>
       <el-table-column label="备注" align="center" prop="remark" />

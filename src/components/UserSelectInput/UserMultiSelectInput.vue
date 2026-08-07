@@ -15,6 +15,7 @@ const props = withDefaults(defineProps<{
   disabled?: boolean
   appendButtonIcon?: string
   multiple?: boolean // 是否多选，默认true
+  categoryType?: 1 | 2 // 用户分类类型：1-陪玩，2-打手
 }>(), {
   clearable: true,
   disabled: false,
@@ -110,7 +111,7 @@ function handleTagUpdate(val: string[]) {
   selectedUsers.value = keptUsers
   internalValue.value = keptUsers.map(u => u.id)
   displayTagValues.value = keptUsers.map(u => u.nickname || String(u.id))
-  
+
   if (!props.multiple) {
     // 单选模式
     const emitValue = keptUsers.length > 0 ? keptUsers[0].id : undefined
@@ -140,7 +141,7 @@ function handleTagUpdate(val: string[]) {
         <el-button :icon="CloseBold" link @click="handleClear" />
       </template>
     </el-input-tag>
-    <UserInfoMultiPickerDialog ref="pickerRef" :multiple="multiple" @confirm="handleConfirm" />
+    <UserInfoMultiPickerDialog ref="pickerRef" :multiple="multiple" :category-type="categoryType" @confirm="handleConfirm" />
   </div>
 </template>
 

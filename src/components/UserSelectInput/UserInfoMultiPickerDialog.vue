@@ -9,6 +9,7 @@ interface Emits {
 
 const props = withDefaults(defineProps<{
   multiple?: boolean
+  categoryType?: 1 | 2
 }>(), {
   multiple: true,
 })
@@ -48,7 +49,9 @@ function open(preSelectedIds?: number[], multiple = true) {
 async function getList() {
   loading.value = true
   try {
-    const data = await UserInfoApi.getUserInfoPage(queryParams)
+    const data = props.categoryType
+      ? await UserInfoApi.getUserInfoPageByLevel({ ...queryParams, categoryType: props.categoryType })
+      : await UserInfoApi.getUserInfoPage(queryParams)
     list.value = data.list
     total.value = data.total
     await nextTick()
@@ -188,4 +191,3 @@ defineExpose({ open })
     </template>
   </Dialog>
 </template>
-
