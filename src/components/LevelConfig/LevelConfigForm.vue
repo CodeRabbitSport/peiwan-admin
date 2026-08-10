@@ -42,6 +42,8 @@ const formData = ref<Partial<LevelConfig>>({
   levelName: undefined,
   levelNumber: undefined,
   levelIcon: '',
+  productImage: '',
+  productIntroduction: '',
   upgradeFee: undefined,
   upgradeDays: undefined,
   isDefault: undefined,
@@ -296,6 +298,8 @@ function resetForm() {
     levelName: undefined,
     levelNumber: undefined,
     levelIcon: '',
+    productImage: '',
+    productIntroduction: '',
     upgradeFee: undefined,
     upgradeDays: undefined,
     isDefault: false,
@@ -515,6 +519,19 @@ function clearSelectedProducts() {
         </el-form-item>
         <el-form-item label="等级图标" prop="levelIcon">
           <UploadImg v-model="formData.levelIcon" height="80px" width="80px" />
+        </el-form-item>
+        <el-form-item v-if="props.categoryType === 1" label="商品图片" prop="productImage">
+          <UploadImg v-model="formData.productImage" height="120px" width="120px" />
+        </el-form-item>
+        <el-form-item v-if="props.categoryType === 1" label="商品介绍" prop="productIntroduction">
+          <el-input
+            v-model="formData.productIntroduction"
+            type="textarea"
+            :rows="4"
+            maxlength="500"
+            show-word-limit
+            placeholder="请输入商品介绍"
+          />
         </el-form-item>
         <el-form-item label="级别号" prop="levelNumber">
           <el-input-number v-model="formData.levelNumber" placeholder="请输入级别号" />
