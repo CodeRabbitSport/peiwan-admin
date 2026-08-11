@@ -3,6 +3,7 @@ import type { PageDecorationPreview, SystemConfig } from '@/api/gamer/systemconf
 import { SystemConfigApi } from '@/api/gamer/systemconfig'
 import { getTenant, TenantNew_getAssessmentCode, TenantNew_refreshAssessmentCode } from '@/api/system/tenant'
 import UploadImg from '@/components/UploadFile/src/UploadImg.vue'
+import UploadImgs from '@/components/UploadFile/src/UploadImgs.vue'
 import { useAppStore } from '@/store/modules/app'
 import { getTenantId } from '@/utils/auth'
 
@@ -51,6 +52,7 @@ const CONFIG_KEYS = {
   decorationThemeTokens: 'decorationConfigThemeTokens',
   decorationThemeConfig: 'decorationConfigTheme',
   decorationHomeBackground: 'decorationConfigHomeBackground',
+  decorationHomeCarousel: 'decorationConfigHomeCarousel',
   decorationMineBackground: 'decorationConfigMineBackground',
   decorationOrderBackground: 'decorationConfigOrderBackground',
   decorationRankBackground: 'decorationConfigRankBackground',
@@ -97,9 +99,9 @@ const topSections: NavItem[] = [
   {
     key: 'decoration',
     label: '页面装修',
-    description: '主题、背景图与页面文案',
+    description: '主题、背景图、轮播与页面文案',
     icon: 'ep:brush',
-    count: 10,
+    count: 11,
   },
   {
     key: 'content',
@@ -146,7 +148,7 @@ watch(
 )
 
 const decorationPages = [
-  { key: 'home', label: '首页', description: '顶部视觉与导航文案', icon: 'ep:house' },
+  { key: 'home', label: '首页', description: '顶部视觉、轮播与导航文案', icon: 'ep:house' },
   { key: 'mine', label: '我的', description: '个人中心顶部背景', icon: 'ep:user' },
   { key: 'order', label: '陪玩下单', description: '快速派单页面背景', icon: 'ep:shopping-bag' },
   { key: 'rank', label: '排行榜', description: '榜单顶部主视觉', icon: 'ep:trophy' },
@@ -156,6 +158,7 @@ const decorationPages = [
 const DEFAULT_DECORATION = {
   decorationThemeColor: '#FEC328',
   decorationHomeBackground: '',
+  decorationHomeCarousel: [] as string[],
   decorationMineBackground: '',
   decorationOrderBackground: '',
   decorationRankBackground: '',
@@ -273,6 +276,7 @@ const TITLE_MAP: Record<ConfigKey, string> = {
   [CONFIG_KEYS.decorationThemeTokens]: '客户端主题色系',
   [CONFIG_KEYS.decorationThemeConfig]: '客户端主题色系',
   [CONFIG_KEYS.decorationHomeBackground]: '首页背景图',
+  [CONFIG_KEYS.decorationHomeCarousel]: '首页轮播图',
   [CONFIG_KEYS.decorationMineBackground]: '我的页面背景图',
   [CONFIG_KEYS.decorationOrderBackground]: '陪玩下单页背景图',
   [CONFIG_KEYS.decorationRankBackground]: '排行榜背景图',
@@ -314,6 +318,7 @@ const FIELD_BY_KEY: Record<ConfigKey, FormField> = {
   [CONFIG_KEYS.decorationThemeTokens]: 'decorationThemeConfig',
   [CONFIG_KEYS.decorationThemeConfig]: 'decorationThemeConfig',
   [CONFIG_KEYS.decorationHomeBackground]: 'decorationHomeBackground',
+  [CONFIG_KEYS.decorationHomeCarousel]: 'decorationHomeCarousel',
   [CONFIG_KEYS.decorationMineBackground]: 'decorationMineBackground',
   [CONFIG_KEYS.decorationOrderBackground]: 'decorationOrderBackground',
   [CONFIG_KEYS.decorationRankBackground]: 'decorationRankBackground',
@@ -354,6 +359,7 @@ const SECTION_KEYS: Record<string, ConfigKey[]> = {
     CONFIG_KEYS.decorationThemeTokens,
     CONFIG_KEYS.decorationThemeConfig,
     CONFIG_KEYS.decorationHomeBackground,
+    CONFIG_KEYS.decorationHomeCarousel,
     CONFIG_KEYS.decorationMineBackground,
     CONFIG_KEYS.decorationOrderBackground,
     CONFIG_KEYS.decorationRankBackground,
@@ -423,6 +429,22 @@ const previewInfo = ref<PageDecorationPreview | null>(null)
 const previewFrame = ref<HTMLIFrameElement | null>(null)
 const previewFrameReady = ref(false)
 const themeDrawerVisible = ref(false)
+
+function normalizeCarouselImages(value: unknown): string[] {
+  let parsed = value
+  if (typeof parsed === 'string') {
+    if (!parsed.trim()) return []
+    try {
+      parsed = JSON.parse(parsed)
+    }
+    catch {
+      return []
+    }
+  }
+  return Array.isArray(parsed)
+    ? parsed.map(item => String(item ?? '').trim()).filter(Boolean)
+    : []
+}
 
 const currentSection = computed(
   () => topSections.find(item => item.key === activeSection.value) || topSections[0],
@@ -766,6 +788,9 @@ async function fetchAll() {
       if (BOOLEAN_KEYS.has(key as ConfigKey)) {
         ;(form[field] as boolean) = toBool(item.configValue)
       }
+      else if (key === CONFIG_KEYS.decorationHomeCarousel) {
+        ;(form[field] as string[]) = normalizeCarouselImages(item.configValue)
+      }
       else if (key === CONFIG_KEYS.decorationThemeConfig) {
         ;(form[field] as DecorationThemeConfig) = normalizeDecorationThemeConfig(
           item.configValue,
@@ -806,13 +831,15 @@ async function fetchAll() {
 function buildConfig(key: ConfigKey): SystemConfig {
   const field = FIELD_BY_KEY[key]
   const rawValue = form[field]
-  const value = (key === CONFIG_KEYS.decorationThemeTokens || key === CONFIG_KEYS.decorationThemeConfig)
-    ? JSON.stringify(normalizeDecorationThemeConfig(rawValue, form.decorationThemeColor))
-    : BOOLEAN_KEYS.has(key)
-      ? rawValue
-        ? 'true'
-        : 'false'
-      : String(rawValue ?? '').trim()
+  const value = key === CONFIG_KEYS.decorationHomeCarousel
+    ? JSON.stringify(normalizeCarouselImages(rawValue))
+    : (key === CONFIG_KEYS.decorationThemeTokens || key === CONFIG_KEYS.decorationThemeConfig)
+        ? JSON.stringify(normalizeDecorationThemeConfig(rawValue, form.decorationThemeColor))
+        : BOOLEAN_KEYS.has(key)
+          ? rawValue
+            ? 'true'
+            : 'false'
+          : String(rawValue ?? '').trim()
   const existing = existingMap.value[key]
   return {
     ...(existing?.id ? { id: existing.id } : {}),
@@ -882,6 +909,7 @@ function clearDecorationImage(
 
 function resetDecorationToDefault() {
   Object.assign(form, DEFAULT_DECORATION)
+  form.decorationHomeCarousel = []
   form.decorationThemeConfig = { ...DEFAULT_DECORATION_THEME }
 }
 
@@ -1278,6 +1306,21 @@ onBeforeUnmount(() => {
                         恢复内置背景
                       </el-button>
                     </div>
+                  </div>
+                  <div class="decoration-field decoration-field--span-2">
+                    <div class="field-copy">
+                      <strong>首页轮播图</strong>
+                      <small>按列表顺序展示在首页分类下方，建议使用 750 × 196 px 的横幅图片</small>
+                    </div>
+                    <UploadImgs
+                      v-model="form.decorationHomeCarousel"
+                      :limit="10"
+                      :multiple="true"
+                      :drag="false"
+                      height="96px"
+                      width="144px"
+                      aria-label="管理首页轮播图"
+                    />
                   </div>
                   <div class="decoration-field decoration-field--span-2">
                     <div class="field-copy">

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { ElCheckbox, ElMessageBox } from 'element-plus'
+import { h } from 'vue'
+
 import type { LevelConfig } from '@/api/gamer/levelconfig'
 import { LevelConfigApi } from '@/api/gamer/levelconfig'
 import type { Product } from '@/api/gamer/product'
@@ -8,7 +11,7 @@ import { ProductTypeApi } from '@/api/gamer/producttype'
 import PaginationSelect from '@/components/PaginationSelect/index.vue'
 import { fenToYuan } from '@/utils'
 import download from '@/utils/download'
-import { dateFormatter } from '@/utils/formatTime'
+import { dateFormatter, formatDate } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
 
 import ProductForm from './ProductForm.vue'
@@ -98,18 +101,59 @@ function openForm(type: string, id?: number) {
   formRef.value.open(type, id)
 }
 
+const linkedProductDetailVisible = ref(false)
+const linkedProductDetailLoading = ref(false)
+const linkedProductDetail = ref<Product>()
+
+async function openLinkedProductDetail(id?: number) {
+  if (!id) return
+  linkedProductDetailVisible.value = true
+  linkedProductDetailLoading.value = true
+  linkedProductDetail.value = undefined
+  try {
+    linkedProductDetail.value = await ProductApi.getProduct(id)
+  }
+  catch {
+    message.error('加载关联商品信息失败')
+  }
+  finally {
+    linkedProductDetailLoading.value = false
+  }
+}
+
 const checkedIds = ref<number[]>([])
+const checkedProducts = ref<Product[]>([])
 function handleRowCheckboxChange(records: Product[]) {
+  checkedProducts.value = records
   checkedIds.value = records.map(item => item.id)
 }
 
+async function confirmDelete(content: string, hasLinkedProduct: boolean) {
+  let deleteLinked = false
+  const messageContent = hasLinkedProduct
+    ? h('div', { class: 'flex flex-col gap-3' }, [
+        h('div', content),
+        h(ElCheckbox, {
+          'checked': false,
+          'onUpdate:modelValue': (value: boolean | string | number) => {
+            deleteLinked = Boolean(value)
+          },
+        }, { default: () => '同时删除关联商品' }),
+      ])
+    : content
+  await ElMessageBox.confirm(messageContent, '确认删除', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+  return deleteLinked
+}
+
 /** 删除按钮操作 */
-async function handleDelete(id: number) {
+async function handleDelete(product: Product) {
   try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await ProductApi.deleteProduct(id)
+    const deleteLinked = await confirmDelete('确认删除该商品？', Boolean(product.linkedProductId))
+    await ProductApi.deleteProduct(product.id, deleteLinked)
     message.success(t('common.delSuccess'))
     // 刷新列表
     await getList()
@@ -120,10 +164,13 @@ async function handleDelete(id: number) {
 /** 批量删除商品 */
 async function handleDeleteBatch() {
   try {
-    // 删除的二次确认
-    await message.delConfirm()
-    await ProductApi.deleteProductList(checkedIds.value)
+    const deleteLinked = await confirmDelete(
+      `确认删除选中的 ${checkedIds.value.length} 个商品？`,
+      checkedProducts.value.some(item => Boolean(item.linkedProductId)),
+    )
+    await ProductApi.deleteProductList(checkedIds.value, deleteLinked)
     checkedIds.value = []
+    checkedProducts.value = []
     message.success(t('common.delSuccess'))
     await getList()
   }
@@ -260,6 +307,20 @@ onMounted(() => {
     >
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" width="80" />
+      <el-table-column label="关联商品" align="center" prop="linkedProductTitle" min-width="160">
+        <template #default="scope">
+          <el-link
+            v-if="scope.row.linkedProductId"
+            type="primary"
+            :underline="false"
+            :title="scope.row.linkedProductTitle || `商品 #${scope.row.linkedProductId}`"
+            @click="openLinkedProductDetail(scope.row.linkedProductId)"
+          >
+            {{ scope.row.linkedProductTitle || `商品 #${scope.row.linkedProductId}` }}
+          </el-link>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column label="商品标题" align="center" prop="productTitle" />
       <!-- <el-table-column label="描述" align="center" prop="productDesc" /> -->
       <el-table-column label="库存" align="center" prop="productStock" />
@@ -334,7 +395,7 @@ onMounted(() => {
             v-hasPermi="['gamer:product:delete']"
             link
             type="danger"
-            @click="handleDelete(scope.row.id)"
+            @click="handleDelete(scope.row)"
           >
             删除
           </el-button>
@@ -350,4 +411,91 @@ onMounted(() => {
 
   <!-- 表单弹窗：添加/修改 -->
   <ProductForm ref="formRef" @success="getList" />
+
+  <Dialog
+    v-model="linkedProductDetailVisible"
+    :title="linkedProductDetail?.productTitle || '关联商品信息'"
+    width="820px"
+    align-center
+  >
+    <div v-loading="linkedProductDetailLoading" class="min-h-[180px]">
+      <template v-if="linkedProductDetail">
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="商品 ID">
+            {{ linkedProductDetail.id ?? '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="商品标题">
+            {{ linkedProductDetail.productTitle || '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="商品价格">
+            {{ linkedProductDetail.productPrice == null ? '-' : `${fenToYuan(linkedProductDetail.productPrice)} 元` }}
+          </el-descriptions-item>
+          <el-descriptions-item label="库存">
+            {{ linkedProductDetail.productStock ?? '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="分类 ID">
+            {{ linkedProductDetail.categoryId ?? '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="商品类型 ID">
+            {{ linkedProductDetail.typeId ?? '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="上下架">
+            {{ linkedProductDetail.saleStatus ? '上架' : '下架' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="创建时间">
+            {{ linkedProductDetail.createTime ? formatDate(new Date(linkedProductDetail.createTime)) : '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="描述" :span="2">
+            {{ linkedProductDetail.productDesc || '-' }}
+          </el-descriptions-item>
+        </el-descriptions>
+
+        <el-divider content-position="left">
+          商品图片
+        </el-divider>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div v-if="linkedProductDetail.productDetailCover">
+            <div class="mb-2 text-sm text-gray-500">
+              详情图
+            </div>
+            <el-image
+              :src="linkedProductDetail.productDetailCover"
+              :preview-src-list="[linkedProductDetail.productDetailCover]"
+              fit="contain"
+              class="h-40 max-w-[320px] w-full"
+              preview-teleported
+            />
+          </div>
+          <div v-if="linkedProductDetail.productMainCover">
+            <div class="mb-2 text-sm text-gray-500">
+              主页图
+            </div>
+            <el-image
+              :src="linkedProductDetail.productMainCover"
+              :preview-src-list="[linkedProductDetail.productMainCover]"
+              fit="contain"
+              class="h-40 max-w-[320px] w-full"
+              preview-teleported
+            />
+          </div>
+        </div>
+
+        <el-divider content-position="left">
+          商品内容
+        </el-divider>
+        <div
+          v-if="linkedProductDetail.productContent"
+          v-dompurify-html="linkedProductDetail.productContent"
+          class="max-h-[260px] overflow-y-auto border border-gray-200 rounded p-3"
+        />
+        <el-empty v-else description="暂无商品内容" :image-size="60" />
+      </template>
+      <el-empty v-else-if="!linkedProductDetailLoading" description="暂无商品信息" :image-size="80" />
+    </div>
+    <template #footer>
+      <el-button @click="linkedProductDetailVisible = false">
+        关闭
+      </el-button>
+    </template>
+  </Dialog>
 </template>

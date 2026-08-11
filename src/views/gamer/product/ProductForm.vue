@@ -9,7 +9,7 @@ import type { Product } from '@/api/gamer/product'
 import { ProductApi } from '@/api/gamer/product'
 import { ProductCategoryApi } from '@/api/gamer/productcategory'
 import { ProductTypeApi } from '@/api/gamer/producttype'
-import { fenToYuan } from '@/utils'
+import { fenToYuan, yuanToFen } from '@/utils'
 
 /** 商品 表单 */
 defineOptions({ name: 'ProductForm' })
@@ -27,6 +27,10 @@ const formLoading = ref(false) // 表单的加载中：1）修改时的数据加
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const prizeGroupOptions = ref<PrizeGroup[]>([]) // 奖品组选项
 const levelOptions = ref<LevelConfig[]>([]) // 等级选项（来自 LevelConfig 接口）
+const linkedProduct = ref<Product & {
+  categoryName?: string
+  typeName?: string
+}>()
 const cascaderProps = {
   lazy: true,
   lazyLoad: (node, resolve) => {
@@ -68,7 +72,7 @@ const formData = ref<any>({
   categoryTypeValue: [] as number[], // 级联选择器的值
   scoreThreshold: undefined,
   accompanyTimeoutCancel: undefined,
-  accompanySettting: undefined,
+  accompanySetting: undefined,
   maxBuyNum: undefined,
   commissionRate: undefined,
   refundSupported: undefined,
@@ -81,6 +85,14 @@ const formData = ref<any>({
   orderReceivingRegion: '',
   // 折扣配置
   discountConfigList: undefined,
+  linkedProductId: undefined,
+  syncLinkedProduct: false,
+  syncProductId: undefined,
+  linkedProductPrice: undefined,
+  createLinkedProduct: false,
+  linkedCategoryId: undefined,
+  linkedTypeId: undefined,
+  linkedCategoryTypeValue: [] as number[],
 })
 const formRules = reactive({
   productTitle: [{ required: true, message: '商品标题不能为空', trigger: 'blur' }],
@@ -133,6 +145,46 @@ async function handleCategoryChange(value: number[]) {
   }
 }
 
+function handleLinkedCategoryChange(value: number[]) {
+  formData.value.linkedCategoryId = value?.[0]
+  formData.value.linkedTypeId = value?.[1]
+}
+
+function handleCreateLinkedChange(value: boolean | string | number) {
+  if (!value) {
+    formData.value.linkedCategoryTypeValue = []
+    formData.value.linkedCategoryId = undefined
+    formData.value.linkedTypeId = undefined
+    formData.value.linkedProductPrice = undefined
+  }
+}
+
+async function handleSyncChange(value: boolean | string | number) {
+  const sync = Boolean(value)
+  if (!sync) {
+    formData.value.syncProductId = undefined
+    return
+  }
+  const target = linkedProduct.value
+  if (!target
+    || target.id !== formData.value.linkedProductId
+    || target.linkedProductId !== formData.value.id) {
+    formData.value.syncLinkedProduct = false
+    message.error('关联商品不存在或关联关系已失效')
+    return
+  }
+  try {
+    await message.confirm(
+      `确认同步编辑关联商品 #${target.id}「${target.productTitle || '-'}」（分类 ${target.categoryName || '-'} / 类型 ${target.typeName || '-'}）？`,
+      '确认关联商品',
+    )
+    formData.value.syncProductId = target.id
+  }
+  catch {
+    formData.value.syncLinkedProduct = false
+  }
+}
+
 /** 打开弹窗 */
 async function open(type: string, id?: number) {
   dialogTitle.value = t(`action.${type}`)
@@ -140,14 +192,22 @@ async function open(type: string, id?: number) {
   resetForm()
   // 加载奖品组选项
   await loadPrizeGroupOptions()
-  // 加载等级选项
   dialogVisible.value = true
+  await loadLevelOptions()
 
   // 修改时，设置数据
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await ProductApi.getProduct(id)
+      formData.value = {
+        ...formData.value,
+        ...await ProductApi.getProduct(id),
+        syncLinkedProduct: false,
+        syncProductId: undefined,
+        linkedProductPrice: undefined,
+        createLinkedProduct: false,
+        linkedCategoryTypeValue: [],
+      }
       // 如果有分类ID和类型ID，设置级联选择器的值
       if (formData.value.categoryId && formData.value.typeId) {
         formData.value.categoryTypeValue = [formData.value.categoryId, formData.value.typeId]
@@ -156,11 +216,11 @@ async function open(type: string, id?: number) {
         formData.value.productContent = undefined
       }
 
-      if (formData.value.productPrice) {
-        formData.value.productPrice = fenToYuan(formData.value.productPrice)
+      if (formData.value.productPrice != null) {
+        formData.value.productPrice = Number(fenToYuan(formData.value.productPrice))
       }
-      if (formData.value.virtualPrice) {
-        formData.value.virtualPrice = fenToYuan(formData.value.virtualPrice)
+      if (formData.value.virtualPrice != null) {
+        formData.value.virtualPrice = Number(fenToYuan(formData.value.virtualPrice))
       }
       // 初始化接单大区字段
       initOrderReceivingRegionFields()
@@ -174,7 +234,28 @@ async function open(type: string, id?: number) {
           .filter(v => !Number.isNaN(v))
         formData.value.productLevel = arr as any
       }
-      await loadLevelOptions()
+      if (formData.value.linkedProductId) {
+        try {
+          const target = await ProductApi.getProduct(formData.value.linkedProductId)
+          if (!target || target.linkedProductId !== formData.value.id) {
+            throw new Error('关联关系不是双向有效关联')
+          }
+          const [category, productType] = await Promise.all([
+            ProductCategoryApi.getProductCategory(target.categoryId).catch(() => undefined),
+            ProductTypeApi.getProductType(target.typeId).catch(() => undefined),
+          ])
+          linkedProduct.value = {
+            ...target,
+            categoryName: category?.categoryName,
+            typeName: productType?.typeName,
+          }
+          formData.value.linkedProductPrice = Number(fenToYuan(target.productPrice))
+        }
+        catch {
+          linkedProduct.value = undefined
+          message.warning('关联商品不存在或关联关系已失效，请先修复关联关系')
+        }
+      }
       // 确保有默认的接单大区字段行
       if (!orderReceivingRegionFields.value || orderReceivingRegionFields.value.length === 0) {
         orderReceivingRegionFields.value = [{ region: '', price: 0 }]
@@ -191,48 +272,68 @@ async function open(type: string, id?: number) {
 }
 defineExpose({ open }) // 定义 success 事件，用于操作成功后的回调
 async function submitForm() {
-  // 校验表单
   await formRef.value.validate()
-  // 提交请求
+  if (formData.value.categoryTypeValue?.length !== 2) {
+    message.warning('请选择完整的商品分类和类型')
+    return
+  }
+  formData.value.categoryId = formData.value.categoryTypeValue[0]
+  formData.value.typeId = formData.value.categoryTypeValue[1]
+
+  if (formType.value === 'create' && formData.value.createLinkedProduct) {
+    if (formData.value.linkedCategoryTypeValue?.length !== 2) {
+      message.warning('请选择完整的关联商品分类和类型')
+      return
+    }
+    handleLinkedCategoryChange(formData.value.linkedCategoryTypeValue)
+    if (formData.value.linkedProductPrice == null) {
+      message.warning('请输入关联商品价格')
+      return
+    }
+  }
+
+  if (formType.value === 'update' && formData.value.syncLinkedProduct) {
+    if (!linkedProduct.value
+      || linkedProduct.value.id !== formData.value.linkedProductId
+      || linkedProduct.value.linkedProductId !== formData.value.id) {
+      message.error('关联商品不存在或关联关系已失效')
+      return
+    }
+    if (formData.value.linkedProductPrice == null) {
+      message.warning('请输入关联商品价格')
+      return
+    }
+    formData.value.syncProductId = linkedProduct.value.id
+  }
+
+  updateOrderReceivingRegionData()
+  updateDiscountData()
+  if (formData.value.orderReceivingStatus === true) {
+    const regions = orderReceivingRegionFields.value
+      .map(it => (it.region || '').trim())
+      .filter((name: string) => name !== '')
+    const duplicateRegion = regions.find((name, index) => regions.indexOf(name) !== index)
+    if (duplicateRegion) {
+      message.error(`接单大区存在重复的大区名称：${duplicateRegion}`)
+      return
+    }
+  }
+
+  const { categoryTypeValue, linkedCategoryTypeValue, ...submitData } = formData.value
+  const data = {
+    ...submitData,
+    productLevel: Array.isArray(submitData.productLevel)
+      ? submitData.productLevel.join(',')
+      : submitData.productLevel,
+    productPrice: yuanToFen(submitData.productPrice ?? 0),
+    virtualPrice: yuanToFen(submitData.virtualPrice ?? 0),
+    linkedProductPrice: submitData.linkedProductPrice == null
+      ? undefined
+      : yuanToFen(submitData.linkedProductPrice),
+  } as Product
+
   formLoading.value = true
   try {
-    // 确保级联选择器的值已经同步到categoryId和typeId
-    if (formData.value.categoryTypeValue && formData.value.categoryTypeValue.length === 2) {
-      formData.value.categoryId = formData.value.categoryTypeValue[0]
-      formData.value.typeId = formData.value.categoryTypeValue[1]
-    }
-    if (formData.value.productLevel && Array.isArray(formData.value.productLevel)) {
-      formData.value.productLevel = (formData.value.productLevel as any).join(',')
-    }
-    formData.value.productPrice = formData.value.productPrice ? formData.value.productPrice * 100 : 0
-    formData.value.virtualPrice = formData.value.virtualPrice ? formData.value.virtualPrice * 100 : 0
-    // 同步接单大区序列化数据
-    updateOrderReceivingRegionData()
-    // 同步折扣配置序列化数据
-    updateDiscountData()
-    // 重复校验：接单大区名称不得重复（只在启用时校验）
-    if (formData.value.orderReceivingStatus === true) {
-      const regions = orderReceivingRegionFields.value
-        .map(it => (it.region || '').trim())
-        .filter((n: string) => n !== '')
-      const seen = new Set<string>()
-      let dupName: string | null = null
-      for (const n of regions) {
-        if (seen.has(n)) {
-          dupName = n
-          break
-        }
-        seen.add(n)
-      }
-      if (dupName) {
-        message.error(`接单大区存在重复的大区名称：${dupName}`)
-        return
-      }
-    }
-    // 创建提交数据，排除级联选择器字段
-    const { categoryTypeValue, ...submitData } = formData.value
-    const data = submitData as unknown as Product
-
     if (formType.value === 'create') {
       await ProductApi.createProduct(data)
       message.success(t('common.createSuccess'))
@@ -293,7 +394,7 @@ function resetForm() {
     categoryTypeValue: [] as number[], // 级联选择器的值
     scoreThreshold: undefined,
     accompanyTimeoutCancel: undefined,
-    accompanySettting: undefined,
+    accompanySetting: undefined,
     maxBuyNum: undefined,
     commissionRate: undefined,
     refundSupported: undefined,
@@ -306,8 +407,17 @@ function resetForm() {
     orderReceivingRegion: '',
     // 折扣配置
     discountConfigList: undefined,
+    linkedProductId: undefined,
+    syncLinkedProduct: false,
+    syncProductId: undefined,
+    linkedProductPrice: undefined,
+    createLinkedProduct: false,
+    linkedCategoryId: undefined,
+    linkedTypeId: undefined,
+    linkedCategoryTypeValue: [] as number[],
   }
-  // 重置折扣配置字段
+  linkedProduct.value = undefined
+  orderReceivingRegionFields.value = [{ region: '', price: 0 }]
   discountFields.value = [{ amount: 0, discount: 0, discountType: 1 }]
   formRef.value?.resetFields()
 }
@@ -459,6 +569,72 @@ function initDiscountFields() {
           @change="handleCategoryChange"
         />
       </el-form-item>
+
+      <template v-if="formType === 'create'">
+        <el-divider content-position="left">
+          关联新增
+        </el-divider>
+        <el-form-item label="同时创建关联商品" label-width="140">
+          <el-switch v-model="formData.createLinkedProduct" @change="handleCreateLinkedChange" />
+        </el-form-item>
+        <el-row v-if="formData.createLinkedProduct" :gutter="16">
+          <el-col :xs="24" :sm="16">
+            <el-form-item label="关联商品分类" prop="linkedCategoryTypeValue" label-width="120">
+              <el-cascader
+                v-model="formData.linkedCategoryTypeValue"
+                :props="cascaderProps"
+                placeholder="请选择关联商品分类和类型"
+                clearable
+                filterable
+                class="!w-full"
+                @change="handleLinkedCategoryChange"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="8">
+            <el-form-item label="关联商品价格" label-width="120">
+              <el-input-number
+                v-model="formData.linkedProductPrice"
+                :min="0"
+                :precision="2"
+                placeholder="请输入关联商品价格"
+                class="!w-full"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </template>
+
+      <template v-if="formType === 'update' && formData.linkedProductId">
+        <el-divider content-position="left">
+          关联编辑
+        </el-divider>
+        <el-form-item label="关联商品">
+          <el-tag v-if="linkedProduct" type="info">
+            #{{ linkedProduct.id }} {{ linkedProduct.productTitle || '-' }}
+            （分类 {{ linkedProduct.categoryName || '-' }} / 类型 {{ linkedProduct.typeName || '-' }}）
+          </el-tag>
+          <el-tag v-else type="danger">
+            #{{ formData.linkedProductId }} 关联已失效
+          </el-tag>
+        </el-form-item>
+        <el-form-item label="同步编辑">
+          <el-switch
+            v-model="formData.syncLinkedProduct"
+            :disabled="!linkedProduct"
+            @change="handleSyncChange"
+          />
+        </el-form-item>
+        <el-form-item v-if="formData.syncLinkedProduct" label="关联商品价格" label-width="120">
+          <el-input-number
+            v-model="formData.linkedProductPrice"
+            :min="0"
+            :precision="2"
+            placeholder="请输入关联商品价格"
+            class="!w-full"
+          />
+        </el-form-item>
+      </template>
 
       <!-- 媒体内容 -->
       <el-divider content-position="left">
@@ -615,8 +791,8 @@ function initDiscountFields() {
           </el-form-item>
         </el-col>
         <el-col :xs="24" :sm="12">
-          <el-form-item label="陪陪分配置" prop="accompanySettting">
-            <el-input-number v-model="formData.accompanySettting" placeholder="请输入陪陪分配置" :min="0" class="!w-full" />
+          <el-form-item label="陪陪分配置" prop="accompanySetting">
+            <el-input-number v-model="formData.accompanySetting" placeholder="请输入陪陪分配置" :min="0" class="!w-full" />
           </el-form-item>
         </el-col>
       </el-row>

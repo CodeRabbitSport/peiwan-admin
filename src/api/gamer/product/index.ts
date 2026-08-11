@@ -16,7 +16,7 @@ export interface Product {
   typeId: number // 商品类型
   scoreThreshold: number // 接单分数门槛
   accompanyTimeoutCancel: number // 派單超時自動取消(分鐘),-1代表無限制
-  accompanySettting: number // 陪陪分配置(預留字段)
+  accompanySetting: number // 陪陪分配置(預留字段)
   maxBuyNum: number // 最低购买数量
   commissionRate?: number // 抽成比例(陪玩到手比例)
   refundSupported: boolean // 是否支持退款
@@ -24,6 +24,28 @@ export interface Product {
   virtualPrice: number // 虚拟价格
   estimateAccompanyTime: number // 预估陪玩时长(分钟)
   saleStatus: boolean // 上下架状态
+  sortOrder?: number // 商品排序
+  createTime?: string
+  linkedProductId?: number // 关联商品 ID
+  linkedProductTitle?: string // 关联商品标题
+  syncLinkedProduct?: boolean // 是否同步编辑关联商品
+  syncProductId?: number // 编辑时确认的关联商品 ID
+  linkedProductPrice?: number // 关联商品实际售价（分）
+  createLinkedProduct?: boolean // 是否同时创建关联商品
+  linkedCategoryId?: number // 关联商品分类 ID
+  linkedTypeId?: number // 关联商品类型 ID
+  orderReceivingStatus?: boolean
+  orderReceivingRegion?: string
+  popUp?: string
+  popUpEnabled?: boolean
+  discountConfigList?: string
+  discountEnabled?: boolean
+}
+
+export interface ProductLinkRequest {
+  productId: number
+  linkedProductId: number
+  replaceExisting?: boolean
 }
 
 // 商品 API
@@ -49,13 +71,23 @@ export const ProductApi = {
   },
 
   // 删除商品
-  deleteProduct: async (id: number) => {
-    return await request.delete({ url: `/gamer/product/delete?id=${id}` })
+  deleteProduct: async (id: number, deleteLinked = false) => {
+    return await request.delete({ url: `/gamer/product/delete?id=${id}&deleteLinked=${deleteLinked}` })
   },
 
   /** 批量删除商品 */
-  deleteProductList: async (ids: number[]) => {
-    return await request.delete({ url: `/gamer/product/delete-list?ids=${ids.join(',')}` })
+  deleteProductList: async (ids: number[], deleteLinked = false) => {
+    return await request.delete({ url: `/gamer/product/delete-list?ids=${ids.join(',')}&deleteLinked=${deleteLinked}` })
+  },
+
+  // 建立商品一对一关联
+  linkProduct: async (data: ProductLinkRequest) => {
+    return await request.post({ url: `/gamer/product/link`, data })
+  },
+
+  // 解除商品一对一关联
+  unlinkProduct: async (id: number) => {
+    return await request.delete({ url: `/gamer/product/link?id=${id}` })
   },
 
   // 导出商品 Excel
