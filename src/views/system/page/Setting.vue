@@ -53,6 +53,7 @@ const CONFIG_KEYS = {
   decorationThemeConfig: 'decorationConfigTheme',
   decorationHomeBackground: 'decorationConfigHomeBackground',
   decorationHomeCarousel: 'decorationConfigHomeCarousel',
+  decorationHomeCustomerService: 'decorationConfigHomeCustomerService',
   decorationMineBackground: 'decorationConfigMineBackground',
   decorationOrderBackground: 'decorationConfigOrderBackground',
   decorationRankBackground: 'decorationConfigRankBackground',
@@ -99,9 +100,9 @@ const topSections: NavItem[] = [
   {
     key: 'decoration',
     label: '页面装修',
-    description: '主题、背景图、轮播与页面文案',
+    description: '主题、背景图、轮播、客服与页面文案',
     icon: 'ep:brush',
-    count: 11,
+    count: 12,
   },
   {
     key: 'content',
@@ -148,17 +149,21 @@ watch(
 )
 
 const decorationPages = [
-  { key: 'home', label: '首页', description: '顶部视觉、轮播与导航文案', icon: 'ep:house' },
+  { key: 'home', label: '首页', description: '顶部视觉、轮播、客服与导航文案', icon: 'ep:house' },
   { key: 'mine', label: '我的', description: '个人中心顶部背景', icon: 'ep:user' },
   { key: 'order', label: '陪玩下单', description: '快速派单页面背景', icon: 'ep:shopping-bag' },
   { key: 'rank', label: '排行榜', description: '榜单顶部主视觉', icon: 'ep:trophy' },
   { key: 'apply', label: '申请接单', description: '小程序招募页素材', icon: 'ep:promotion' },
 ]
 
+const MOBILE_PREVIEW_ASSET_BASE = 'https://kuaiyoudj.oss-cn-beijing.aliyuncs.com/static'
+const DEFAULT_HOME_CUSTOMER_SERVICE_IMAGE = `${MOBILE_PREVIEW_ASSET_BASE}/ui-v2/customer-service.png`
+
 const DEFAULT_DECORATION = {
   decorationThemeColor: '#FEC328',
   decorationHomeBackground: '',
   decorationHomeCarousel: [] as string[],
+  decorationHomeCustomerService: DEFAULT_HOME_CUSTOMER_SERVICE_IMAGE,
   decorationMineBackground: '',
   decorationOrderBackground: '',
   decorationRankBackground: '',
@@ -220,7 +225,6 @@ const DEFAULT_DECORATION_THEME = {
 
 type DecorationThemeConfig = Record<keyof typeof DEFAULT_DECORATION_THEME, string>
 
-const MOBILE_PREVIEW_ASSET_BASE = 'https://kuaiyoudj.oss-cn-beijing.aliyuncs.com/static'
 const previewAssets = {
   homeBackground: `${MOBILE_PREVIEW_ASSET_BASE}/images/index/top.png`,
   noticeBackground: `${MOBILE_PREVIEW_ASSET_BASE}/noticeBar.png`,
@@ -277,6 +281,7 @@ const TITLE_MAP: Record<ConfigKey, string> = {
   [CONFIG_KEYS.decorationThemeConfig]: '客户端主题色系',
   [CONFIG_KEYS.decorationHomeBackground]: '首页背景图',
   [CONFIG_KEYS.decorationHomeCarousel]: '首页轮播图',
+  [CONFIG_KEYS.decorationHomeCustomerService]: '首页客服图片',
   [CONFIG_KEYS.decorationMineBackground]: '我的页面背景图',
   [CONFIG_KEYS.decorationOrderBackground]: '陪玩下单页背景图',
   [CONFIG_KEYS.decorationRankBackground]: '排行榜背景图',
@@ -319,6 +324,7 @@ const FIELD_BY_KEY: Record<ConfigKey, FormField> = {
   [CONFIG_KEYS.decorationThemeConfig]: 'decorationThemeConfig',
   [CONFIG_KEYS.decorationHomeBackground]: 'decorationHomeBackground',
   [CONFIG_KEYS.decorationHomeCarousel]: 'decorationHomeCarousel',
+  [CONFIG_KEYS.decorationHomeCustomerService]: 'decorationHomeCustomerService',
   [CONFIG_KEYS.decorationMineBackground]: 'decorationMineBackground',
   [CONFIG_KEYS.decorationOrderBackground]: 'decorationOrderBackground',
   [CONFIG_KEYS.decorationRankBackground]: 'decorationRankBackground',
@@ -360,6 +366,7 @@ const SECTION_KEYS: Record<string, ConfigKey[]> = {
     CONFIG_KEYS.decorationThemeConfig,
     CONFIG_KEYS.decorationHomeBackground,
     CONFIG_KEYS.decorationHomeCarousel,
+    CONFIG_KEYS.decorationHomeCustomerService,
     CONFIG_KEYS.decorationMineBackground,
     CONFIG_KEYS.decorationOrderBackground,
     CONFIG_KEYS.decorationRankBackground,
@@ -543,14 +550,33 @@ const h5PreviewKey = computed(() => String(
   || '',
 ).trim())
 
+const DECORATION_PREVIEW_ROUTES: Record<string, string> = {
+  home: '/pages/index/index',
+  mine: '/pages/me/me',
+  order: '/pages/game/orderGrabbing',
+  rank: '/pages/rank/acceptor',
+  apply: '/pages/game/apply',
+}
+
 const h5PreviewUrl = computed(() => {
-  if (previewInfo.value?.previewUrl) return previewInfo.value.previewUrl
-  if (!h5PreviewKey.value || typeof window === 'undefined') return ''
-  const rawDomain = tenantDomain.value || window.location.origin
-  const origin = /^https?:\/\//i.test(rawDomain) ? rawDomain : `https://${rawDomain}`
+  let rawUrl = previewInfo.value?.previewUrl || ''
+  if (!rawUrl) {
+    if (!h5PreviewKey.value || typeof window === 'undefined') return ''
+    const rawDomain = tenantDomain.value || window.location.origin
+    const origin = /^https?:\/\//i.test(rawDomain) ? rawDomain : `https://${rawDomain}`
+    try {
+      rawUrl = new URL(`/html/${h5PreviewKey.value}`, origin).toString()
+    }
+    catch {
+      return ''
+    }
+  }
+
   try {
-    const url = new URL(`/html/${h5PreviewKey.value}`, origin)
+    const url = new URL(rawUrl, typeof window === 'undefined' ? undefined : window.location.origin)
     url.searchParams.set('decorationPreview', '1')
+    const pagePath = DECORATION_PREVIEW_ROUTES[activeDecorationPage.value]
+    url.hash = `#${pagePath}?decorationPreview=1`
     return url.toString()
   }
   catch {
@@ -580,6 +606,7 @@ const previewPayload = computed(() => ({
       applyButton: form.decorationApplyButton,
     },
     homeBackground: form.decorationHomeBackground,
+    homeCustomerService: form.decorationHomeCustomerService,
     mineBackground: form.decorationMineBackground,
     orderBackground: form.decorationOrderBackground,
     rankBackground: form.decorationRankBackground,
@@ -625,6 +652,13 @@ function openPreviewWindow() {
   if (h5PreviewUrl.value && typeof window !== 'undefined') {
     window.open(h5PreviewUrl.value, '_blank', 'noopener,noreferrer')
   }
+}
+
+function setPrimaryDecorationColor(value: string | null) {
+  const normalized = String(value || '').trim().toUpperCase()
+  if (!normalized) return
+  form.decorationThemeColor = normalized
+  form.decorationThemeConfig.primaryColor = normalized
 }
 
 function setDecorationColor(key: keyof DecorationThemeConfig, value: string) {
@@ -791,6 +825,10 @@ async function fetchAll() {
       else if (key === CONFIG_KEYS.decorationHomeCarousel) {
         ;(form[field] as string[]) = normalizeCarouselImages(item.configValue)
       }
+      else if (key === CONFIG_KEYS.decorationHomeCustomerService) {
+        ;(form[field] as string) = String(item.configValue || '').trim()
+          || DEFAULT_DECORATION.decorationHomeCustomerService
+      }
       else if (key === CONFIG_KEYS.decorationThemeConfig) {
         ;(form[field] as DecorationThemeConfig) = normalizeDecorationThemeConfig(
           item.configValue,
@@ -905,6 +943,10 @@ function clearDecorationImage(
     | 'decorationApplyButton',
 ) {
   form[field] = ''
+}
+
+function resetHomeCustomerServiceImage() {
+  form.decorationHomeCustomerService = DEFAULT_DECORATION.decorationHomeCustomerService
 }
 
 function resetDecorationToDefault() {
@@ -1153,6 +1195,8 @@ onBeforeUnmount(() => {
                   aria-label="客户端主题色"
                   show-alpha
                   :predefine="['#FEC328', '#AA884E', '#3E7D4E', '#5D5FEF', '#D14D72', '#111827']"
+                  @active-change="setPrimaryDecorationColor"
+                  @change="setPrimaryDecorationColor"
                 />
                 <el-input
                   v-model="form.decorationThemeColor"
@@ -1321,6 +1365,28 @@ onBeforeUnmount(() => {
                       width="144px"
                       aria-label="管理首页轮播图"
                     />
+                  </div>
+                  <div class="decoration-field decoration-field--image">
+                    <div class="field-copy">
+                      <strong>首页客服图片</strong>
+                      <small>首页悬浮客服入口图片，未设置时使用当前内置客服图片</small>
+                    </div>
+                    <div class="image-control">
+                      <UploadImg
+                        v-model="form.decorationHomeCustomerService"
+                        aria-label="上传首页客服图片"
+                        height="96px"
+                        width="96px"
+                      />
+                      <el-button
+                        v-if="form.decorationHomeCustomerService !== DEFAULT_DECORATION.decorationHomeCustomerService"
+                        text
+                        type="danger"
+                        @click="resetHomeCustomerServiceImage"
+                      >
+                        恢复默认图片
+                      </el-button>
+                    </div>
                   </div>
                   <div class="decoration-field decoration-field--span-2">
                     <div class="field-copy">

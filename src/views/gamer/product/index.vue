@@ -210,6 +210,32 @@ async function changeGood(row) {
     loading.value = false
   }
 }
+
+async function changeMiniProgramVisibility(row: Product) {
+  const nextIsShow = !row.isShow
+  try {
+    loading.value = true
+    await ProductApi.updateProduct({
+      ...row,
+      isShow: nextIsShow,
+    })
+    row.isShow = nextIsShow
+    message.success('修改成功')
+    try {
+      await getList()
+    }
+    catch {
+      message.error('刷新列表失败')
+    }
+  }
+  catch {
+    message.error('修改失败')
+  }
+  finally {
+    loading.value = false
+  }
+}
+
 /** 初始化 */
 onMounted(() => {
   getList()
@@ -329,7 +355,7 @@ onMounted(() => {
           {{ fenToYuan(scope.row.productPrice) }}
         </template>
       </el-table-column>
-      <el-table-column label="等级" align="center" prop="productLevel" min-width="160">
+      <!-- <el-table-column label="等级" align="center" prop="productLevel" min-width="160">
         <template #default="scope">
           <div class="flex flex-wrap justify-center gap-1">
             <el-tag v-for="(name, idx) in parseLevelNames(scope.row.productLevel)" :key="idx" size="small">
@@ -337,7 +363,7 @@ onMounted(() => {
             </el-tag>
           </div>
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="详情图" align="center" prop="productDetailCover">
         <template #default="scope">
           <!-- 图片类型 -->
@@ -378,6 +404,18 @@ onMounted(() => {
       <el-table-column label="上下架" align="center" prop="saleStatus">
         <template #default="scope">
           <el-switch :model-value="scope.row.saleStatus" @change="changeGood(scope.row)" />
+        </template>
+      </el-table-column>
+      <el-table-column label="小程序端显示" align="center" prop="isShow" width="140">
+        <template #default="scope">
+          <el-switch
+            v-hasPermi="['gamer:product:update']"
+            :model-value="scope.row.isShow"
+            active-text="显示"
+            inactive-text="隐藏"
+            inline-prompt
+            @change="changeMiniProgramVisibility(scope.row)"
+          />
         </template>
       </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
@@ -441,6 +479,9 @@ onMounted(() => {
           </el-descriptions-item>
           <el-descriptions-item label="上下架">
             {{ linkedProductDetail.saleStatus ? '上架' : '下架' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="小程序端显示">
+            {{ linkedProductDetail.isShow ? '显示' : '隐藏' }}
           </el-descriptions-item>
           <el-descriptions-item label="创建时间">
             {{ linkedProductDetail.createTime ? formatDate(new Date(linkedProductDetail.createTime)) : '-' }}

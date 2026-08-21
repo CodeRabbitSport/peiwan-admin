@@ -80,6 +80,7 @@ const formData = ref<any>({
   virtualPrice: undefined,
   estimateAccompanyTime: undefined,
   saleStatus: true,
+  isShow: true,
   // 接单大区（从分类移入商品：保持字段与交互不变）
   orderReceivingStatus: true,
   orderReceivingRegion: '',
@@ -402,6 +403,7 @@ function resetForm() {
     virtualPrice: undefined,
     estimateAccompanyTime: undefined,
     saleStatus: true,
+    isShow: true,
     // 接单大区（从分类移入商品：保持字段与交互不变）
     orderReceivingStatus: true,
     orderReceivingRegion: '',
@@ -769,6 +771,15 @@ function initDiscountFields() {
                 下架
               </el-radio>
             </el-radio-group>
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="小程序端显示" prop="isShow">
+            <el-switch
+              v-model="formData.isShow"
+              active-text="显示"
+              inactive-text="隐藏"
+            />
           </el-form-item>
         </el-col>
       </el-row>

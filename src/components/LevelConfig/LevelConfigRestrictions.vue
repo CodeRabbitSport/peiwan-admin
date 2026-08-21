@@ -83,14 +83,14 @@ const restrictionItems = computed(() => {
       <span>保证金</span>
       <strong>{{ formatMoney(config.depositFee) }}</strong>
     </div>
-    <div class="restriction-metric">
+    <!-- <div class="restriction-metric">
       <span>每日接单</span>
       <strong>{{ formatLimit(config.dailyOrderLimit, ' 单') }}</strong>
     </div>
     <div class="restriction-metric">
       <span>同时接单</span>
       <strong>{{ formatLimit(config.simultaneousOrderLimit, ' 单') }}</strong>
-    </div>
+    </div> -->
 
     <el-popover placement="left-start" :width="640" trigger="click">
       <template #reference>
@@ -121,9 +121,9 @@ const restrictionItems = computed(() => {
 <style scoped>
 .restriction-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(70px, 1fr));
+  grid-template-columns: repeat(1, minmax(70px, 1fr));
   align-items: center;
-  min-width: 260px;
+  min-width: 150px;
 }
 
 .restriction-metric {

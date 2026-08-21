@@ -251,7 +251,7 @@ onMounted(() => {
           {{ row.unitPrice ? fenToYuan(row.unitPrice) : '--' }}元/小时
         </template>
       </el-table-column>
-      <el-table-column label="游戏区服价差" align="center" min-width="220">
+      <!-- <el-table-column label="游戏区服价差" align="center" min-width="220">
         <template #default="{ row }">
           <template v-if="row.orderReceivingStatus && parseRegionList(row.orderReceivingRegion).length">
             <div class="feature-list">
@@ -262,7 +262,7 @@ onMounted(() => {
           </template>
           <span v-else>--</span>
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <!-- <el-table-column label="自助升级天数" align="center" prop="upgradeDays" width="120" /> -->
       <!-- <el-table-column label="默认等级" align="center" prop="isDefault" width="100">
         <template #default="{ row }">
@@ -278,12 +278,12 @@ onMounted(() => {
           </el-tag>
         </template>
       </el-table-column> -->
-      <el-table-column label="功能限制" min-width="320" align="center">
+      <el-table-column label="功能限制" min-width="150" align="center">
         <template #default="{ row }">
           <LevelConfigRestrictions :config="row" show-commission />
         </template>
       </el-table-column>
-      <el-table-column label="备注" align="center" prop="remark" />
+      <!-- <el-table-column label="备注" align="center" prop="remark" /> -->
       <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
