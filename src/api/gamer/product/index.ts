@@ -25,6 +25,7 @@ export interface Product {
   estimateAccompanyTime: number // 预估陪玩时长(分钟)
   saleStatus: boolean // 上下架状态
   isShow: boolean // 是否在小程序端显示
+  isWebShow: boolean // 是否在网页端显示
   sortOrder?: number // 商品排序
   createTime?: string
   linkedProductId?: number // 关联商品 ID

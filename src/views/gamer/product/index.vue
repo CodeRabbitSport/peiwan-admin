@@ -236,6 +236,26 @@ async function changeMiniProgramVisibility(row: Product) {
   }
 }
 
+async function changeWebVisibility(row: Product) {
+  const nextIsWebShow = !row.isWebShow
+  try {
+    loading.value = true
+    await ProductApi.updateProduct({
+      ...row,
+      isWebShow: nextIsWebShow,
+    })
+    row.isWebShow = nextIsWebShow
+    message.success('修改成功')
+    await getList()
+  }
+  catch {
+    message.error('修改失败')
+  }
+  finally {
+    loading.value = false
+  }
+}
+
 /** 初始化 */
 onMounted(() => {
   getList()
@@ -401,21 +421,46 @@ onMounted(() => {
       </el-table-column>
       <el-table-column label="分类" align="center" prop="categoryName" />
       <el-table-column label="商品类型" align="center" prop="typeName" />
-      <el-table-column label="上下架" align="center" prop="saleStatus">
+      <el-table-column label="展示控制" align="center" min-width="280">
         <template #default="scope">
-          <el-switch :model-value="scope.row.saleStatus" @change="changeGood(scope.row)" />
-        </template>
-      </el-table-column>
-      <el-table-column label="小程序端显示" align="center" prop="isShow" width="140">
-        <template #default="scope">
-          <el-switch
-            v-hasPermi="['gamer:product:update']"
-            :model-value="scope.row.isShow"
-            active-text="显示"
-            inactive-text="隐藏"
-            inline-prompt
-            @change="changeMiniProgramVisibility(scope.row)"
-          />
+          <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+            <div class="flex items-center gap-1">
+              <span class="text-xs text-gray-500">上下架</span>
+              <el-switch
+                v-hasPermi="['gamer:product:update']"
+                :model-value="scope.row.saleStatus"
+                active-text="上架"
+                inactive-text="下架"
+                inline-prompt
+                size="small"
+                @change="changeGood(scope.row)"
+              />
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-xs text-gray-500">小程序</span>
+              <el-switch
+                v-hasPermi="['gamer:product:update']"
+                :model-value="scope.row.isShow"
+                active-text="显示"
+                inactive-text="隐藏"
+                inline-prompt
+                size="small"
+                @change="changeMiniProgramVisibility(scope.row)"
+              />
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-xs text-gray-500">网页</span>
+              <el-switch
+                v-hasPermi="['gamer:product:update']"
+                :model-value="scope.row.isWebShow"
+                active-text="显示"
+                inactive-text="隐藏"
+                inline-prompt
+                size="small"
+                @change="changeWebVisibility(scope.row)"
+              />
+            </div>
+          </div>
         </template>
       </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
@@ -482,6 +527,9 @@ onMounted(() => {
           </el-descriptions-item>
           <el-descriptions-item label="小程序端显示">
             {{ linkedProductDetail.isShow ? '显示' : '隐藏' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="网页端显示">
+            {{ linkedProductDetail.isWebShow ? '显示' : '隐藏' }}
           </el-descriptions-item>
           <el-descriptions-item label="创建时间">
             {{ linkedProductDetail.createTime ? formatDate(new Date(linkedProductDetail.createTime)) : '-' }}

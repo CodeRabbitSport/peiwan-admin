@@ -81,6 +81,7 @@ const formData = ref<any>({
   estimateAccompanyTime: undefined,
   saleStatus: true,
   isShow: true,
+  isWebShow: true,
   // 接单大区（从分类移入商品：保持字段与交互不变）
   orderReceivingStatus: true,
   orderReceivingRegion: '',
@@ -95,6 +96,24 @@ const formData = ref<any>({
   linkedTypeId: undefined,
   linkedCategoryTypeValue: [] as number[],
 })
+
+type DisplaySettingKey = 'saleStatus' | 'isShow' | 'isWebShow'
+
+const displaySettings: Array<{
+  key: DisplaySettingKey
+  label: string
+  activeText: string
+  inactiveText: string
+}> = [
+  { key: 'saleStatus', label: '上下架', activeText: '上架', inactiveText: '下架' },
+  { key: 'isShow', label: '小程序端显示', activeText: '显示', inactiveText: '隐藏' },
+  { key: 'isWebShow', label: '网页端显示', activeText: '显示', inactiveText: '隐藏' },
+]
+
+function updateDisplaySetting(key: DisplaySettingKey, value: boolean | string | number) {
+  formData.value[key] = Boolean(value)
+}
+
 const formRules = reactive({
   productTitle: [{ required: true, message: '商品标题不能为空', trigger: 'blur' }],
   categoryTypeValue: [{ required: true, message: '商品分类不能为空', trigger: 'blur' }],
@@ -404,6 +423,7 @@ function resetForm() {
     estimateAccompanyTime: undefined,
     saleStatus: true,
     isShow: true,
+    isWebShow: true,
     // 接单大区（从分类移入商品：保持字段与交互不变）
     orderReceivingStatus: true,
     orderReceivingRegion: '',
@@ -752,37 +772,22 @@ function initDiscountFields() {
         </div>
       </el-form-item>
 
-      <el-row>
-        <!-- <el-col :xs="24" :sm="12">
-          <el-form-item label="预估陪玩时长" prop="estimateAccompanyTime">
-            <el-input-number
-              v-model="formData.estimateAccompanyTime" placeholder="请输入预估陪玩时长(分钟)" :min="1"
-              class="!w-full"
-            />
-          </el-form-item>
-        </el-col> -->
-        <el-col :xs="24" :sm="12">
-          <el-form-item label="上下架状态" prop="saleStatus">
-            <el-radio-group v-model="formData.saleStatus">
-              <el-radio :value="true">
-                上架
-              </el-radio>
-              <el-radio :value="false">
-                下架
-              </el-radio>
-            </el-radio-group>
-          </el-form-item>
-        </el-col>
-        <el-col :xs="24" :sm="12">
-          <el-form-item label="小程序端显示" prop="isShow">
-            <el-switch
-              v-model="formData.isShow"
-              active-text="显示"
-              inactive-text="隐藏"
-            />
-          </el-form-item>
-        </el-col>
-      </el-row>
+      <el-form-item label="展示控制">
+        <el-table :data="displaySettings" border size="small" class="w-full">
+          <el-table-column label="设置项" prop="label" min-width="140" />
+          <el-table-column label="状态" align="center" width="160">
+            <template #default="scope">
+              <el-switch
+                :model-value="formData[scope.row.key]"
+                :active-text="scope.row.activeText"
+                :inactive-text="scope.row.inactiveText"
+                inline-prompt
+                @change="updateDisplaySetting(scope.row.key, $event)"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-form-item>
 
       <!-- 业务规则 -->
       <el-divider content-position="left">
