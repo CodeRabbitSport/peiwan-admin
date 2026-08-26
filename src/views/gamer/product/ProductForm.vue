@@ -80,8 +80,8 @@ const formData = ref<any>({
   virtualPrice: undefined,
   estimateAccompanyTime: undefined,
   saleStatus: true,
-  isShow: true,
-  isWebShow: true,
+  isMiniProgramVisible: true,
+  isWebVisible: true,
   // 接单大区（从分类移入商品：保持字段与交互不变）
   orderReceivingStatus: true,
   orderReceivingRegion: '',
@@ -97,7 +97,7 @@ const formData = ref<any>({
   linkedCategoryTypeValue: [] as number[],
 })
 
-type DisplaySettingKey = 'saleStatus' | 'isShow' | 'isWebShow'
+type DisplaySettingKey = 'saleStatus' | 'isMiniProgramVisible' | 'isWebVisible'
 
 const displaySettings: Array<{
   key: DisplaySettingKey
@@ -106,8 +106,8 @@ const displaySettings: Array<{
   inactiveText: string
 }> = [
   { key: 'saleStatus', label: '上下架', activeText: '上架', inactiveText: '下架' },
-  { key: 'isShow', label: '小程序端显示', activeText: '显示', inactiveText: '隐藏' },
-  { key: 'isWebShow', label: '网页端显示', activeText: '显示', inactiveText: '隐藏' },
+  { key: 'isMiniProgramVisible', label: '小程序端显示', activeText: '显示', inactiveText: '隐藏' },
+  { key: 'isWebVisible', label: '网页端显示', activeText: '显示', inactiveText: '隐藏' },
 ]
 
 function updateDisplaySetting(key: DisplaySettingKey, value: boolean | string | number) {
@@ -422,8 +422,8 @@ function resetForm() {
     virtualPrice: undefined,
     estimateAccompanyTime: undefined,
     saleStatus: true,
-    isShow: true,
-    isWebShow: true,
+    isMiniProgramVisible: true,
+    isWebVisible: true,
     // 接单大区（从分类移入商品：保持字段与交互不变）
     orderReceivingStatus: true,
     orderReceivingRegion: '',

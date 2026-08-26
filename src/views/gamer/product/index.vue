@@ -212,14 +212,14 @@ async function changeGood(row) {
 }
 
 async function changeMiniProgramVisibility(row: Product) {
-  const nextIsShow = !row.isShow
+  const nextIsMiniProgramVisible = !row.isMiniProgramVisible
   try {
     loading.value = true
     await ProductApi.updateProduct({
       ...row,
-      isShow: nextIsShow,
+      isMiniProgramVisible: nextIsMiniProgramVisible,
     })
-    row.isShow = nextIsShow
+    row.isMiniProgramVisible = nextIsMiniProgramVisible
     message.success('修改成功')
     try {
       await getList()
@@ -237,14 +237,14 @@ async function changeMiniProgramVisibility(row: Product) {
 }
 
 async function changeWebVisibility(row: Product) {
-  const nextIsWebShow = !row.isWebShow
+  const nextIsWebVisible = !row.isWebVisible
   try {
     loading.value = true
     await ProductApi.updateProduct({
       ...row,
-      isWebShow: nextIsWebShow,
+      isWebVisible: nextIsWebVisible,
     })
-    row.isWebShow = nextIsWebShow
+    row.isWebVisible = nextIsWebVisible
     message.success('修改成功')
     await getList()
   }
@@ -440,7 +440,7 @@ onMounted(() => {
               <span class="text-xs text-gray-500">小程序</span>
               <el-switch
                 v-hasPermi="['gamer:product:update']"
-                :model-value="scope.row.isShow"
+                :model-value="scope.row.isMiniProgramVisible"
                 active-text="显示"
                 inactive-text="隐藏"
                 inline-prompt
@@ -452,7 +452,7 @@ onMounted(() => {
               <span class="text-xs text-gray-500">网页</span>
               <el-switch
                 v-hasPermi="['gamer:product:update']"
-                :model-value="scope.row.isWebShow"
+                :model-value="scope.row.isWebVisible"
                 active-text="显示"
                 inactive-text="隐藏"
                 inline-prompt
@@ -526,10 +526,10 @@ onMounted(() => {
             {{ linkedProductDetail.saleStatus ? '上架' : '下架' }}
           </el-descriptions-item>
           <el-descriptions-item label="小程序端显示">
-            {{ linkedProductDetail.isShow ? '显示' : '隐藏' }}
+            {{ linkedProductDetail.isMiniProgramVisible ? '显示' : '隐藏' }}
           </el-descriptions-item>
           <el-descriptions-item label="网页端显示">
-            {{ linkedProductDetail.isWebShow ? '显示' : '隐藏' }}
+            {{ linkedProductDetail.isWebVisible ? '显示' : '隐藏' }}
           </el-descriptions-item>
           <el-descriptions-item label="创建时间">
             {{ linkedProductDetail.createTime ? formatDate(new Date(linkedProductDetail.createTime)) : '-' }}
