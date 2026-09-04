@@ -44,6 +44,19 @@ export interface Product {
   discountEnabled?: boolean
 }
 
+export interface ProductPageQuery {
+  pageNo?: number
+  pageSize?: number
+  productTitle?: string
+  categoryId?: number
+  typeId?: number
+  refundSupported?: boolean
+  saleStatus?: boolean
+  isMiniProgramVisible?: boolean
+  isWebVisible?: boolean
+  createTime?: string[]
+}
+
 export interface ProductLinkRequest {
   productId: number
   linkedProductId: number
@@ -53,7 +66,7 @@ export interface ProductLinkRequest {
 // 商品 API
 export const ProductApi = {
   // 查询商品分页
-  getProductPage: async (params?: any) => {
+  getProductPage: async (params?: ProductPageQuery) => {
     return await request.get({ url: `/gamer/product/page`, params })
   },
 
@@ -93,7 +106,7 @@ export const ProductApi = {
   },
 
   // 导出商品 Excel
-  exportProduct: async (params) => {
+  exportProduct: async (params?: ProductPageQuery) => {
     return await request.download({ url: `/gamer/product/export-excel`, params })
   },
   /**

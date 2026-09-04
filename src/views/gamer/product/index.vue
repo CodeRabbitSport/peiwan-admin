@@ -22,6 +22,8 @@ defineOptions({ name: 'Product' })
 const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
 
+type DisplayPlatform = 'web' | 'miniProgram'
+
 const loading = ref(true) // 列表的加载中
 const list = ref<Product[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
@@ -33,10 +35,20 @@ const queryParams = reactive({
   typeId: undefined,
   refundSupported: undefined,
   saleStatus: undefined,
+  displayPlatform: undefined as DisplayPlatform | undefined,
   createTime: [],
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+
+function getRequestParams() {
+  const { displayPlatform, ...params } = queryParams
+  return {
+    ...params,
+    isMiniProgramVisible: displayPlatform === 'miniProgram' ? true : undefined,
+    isWebVisible: displayPlatform === 'web' ? true : undefined,
+  }
+}
 
 // 等级选项与映射（来自 LevelConfig 接口）
 const levelOptions = ref<LevelConfig[]>([])
@@ -74,7 +86,7 @@ function parseLevelNames(val: string | number[] | undefined) {
 async function getList() {
   loading.value = true
   try {
-    const data = await ProductApi.getProductPage(queryParams)
+    const data = await ProductApi.getProductPage(getRequestParams())
     list.value = data.list
     total.value = data.total
   }
@@ -184,7 +196,7 @@ async function handleExport() {
     await message.exportConfirm()
     // 发起导出
     exportLoading.value = true
-    const data = await ProductApi.exportProduct(queryParams)
+    const data = await ProductApi.exportProduct(getRequestParams())
     download.excel(data, '商品.xls')
   }
   catch {
@@ -312,6 +324,12 @@ onMounted(() => {
         <el-select v-model="queryParams.saleStatus" placeholder="请选择上下架状态" clearable class="!w-[240px]">
           <el-option label="上架" :value="true" />
           <el-option label="下架" :value="false" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="展示端" prop="displayPlatform">
+        <el-select v-model="queryParams.displayPlatform" placeholder="请选择展示端" clearable class="!w-[240px]">
+          <el-option label="网页" value="web" />
+          <el-option label="小程序" value="miniProgram" />
         </el-select>
       </el-form-item>
       <el-form-item class="flex flex-wrap gap-2">
