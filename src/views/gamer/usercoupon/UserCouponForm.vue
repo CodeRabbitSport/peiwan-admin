@@ -259,7 +259,7 @@ function formatCouponAmount(coupon: Coupon) {
   }
   if (coupon.couponType === 2) {
     const discount = Number(coupon.couponAmount)
-    return Number.isFinite(discount) ? `${Number((discount * 10).toFixed(2))}折` : '-'
+    return Number.isFinite(discount) ? `${Number((discount / 10).toFixed(2))}折` : '-'
   }
   return `${fenToYuan(coupon.couponAmount)}元`
 }

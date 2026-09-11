@@ -67,6 +67,20 @@ const payStatusOptions = [
   { label: '已退款', value: 2 },
 ]
 
+function formatPayChannel(payChannelCode?: string) {
+  switch (payChannelCode) {
+    case 'wx_virtual':
+      return '虚拟支付'
+    case 'wx_lite':
+    case 'wx_pub':
+      return 'JSAPI'
+    case 'wallet':
+      return '钱包支付'
+    default:
+      return payChannelCode || '未支付'
+  }
+}
+
 const refundDialogVisible = ref(false)
 const refundFormLoading = ref(false)
 const refundForm = reactive<{ orderId?: number, auditStatus?: 1 | 2, auditReason?: string }>({})
@@ -634,6 +648,7 @@ async function openAccOrderConversationByOrderId(orderId: number) {
             </div>
             <div>订单金额：{{ scope.row.totalAmount != null ? fenToYuan(scope.row.totalAmount) : '无' }}</div>
             <div>支付金额：{{ scope.row.actualAmount != null ? fenToYuan(scope.row.actualAmount) : '无' }}</div>
+            <div>支付方式：{{ formatPayChannel(scope.row.payChannelCode) }}</div>
             <div v-if="scope.row.refundAmount > 0">
               退款金额：{{ scope.row.refundAmount != null ? fenToYuan(scope.row.refundAmount) : '无' }}
             </div>

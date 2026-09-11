@@ -17,10 +17,13 @@ const virtualBalance = ref<number>()
 const virtualCoinBalance = ref<number>()
 const virtualWalletUnit = ref(100)
 const virtualBalanceError = ref('')
+type BalanceTarget = 'balance' | 'virtual'
+
 const formData = ref({
   id: undefined as number | undefined,
   nickname: undefined as string | undefined,
   balance: '0',
+  adjustTarget: 'balance' as BalanceTarget,
   changeBalance: 0,
   changeType: 1 as 1 | -1,
 })
@@ -28,21 +31,21 @@ const formRules = reactive({
   changeBalance: [{ required: true, message: '变动余额不能为空', trigger: 'blur' }],
 })
 
+const isVirtualAdjustment = computed(() => formData.value.adjustTarget === 'virtual')
+const balanceTargetLabel = computed(() => (isVirtualAdjustment.value ? '微信虚拟余额' : '余额'))
+const adjustedBalance = computed(() => {
+  const currentBalance = isVirtualAdjustment.value
+    ? virtualBalance.value
+    : convertToInteger(formData.value.balance)
+  if (currentBalance == null) return undefined
+  return currentBalance + convertToInteger(formData.value.changeBalance) * formData.value.changeType
+})
 const balanceResult = computed(() =>
-  formatToFraction(
-    convertToInteger(formData.value.balance)
-    + convertToInteger(formData.value.changeBalance) * formData.value.changeType,
-  ),
+  adjustedBalance.value == null ? undefined : formatToFraction(adjustedBalance.value),
 )
-const virtualBalanceResult = computed(() => virtualBalance.value == null
-  ? undefined
-  : formatToFraction(
-      virtualBalance.value
-      + convertToInteger(formData.value.changeBalance) * formData.value.changeType,
-    ))
-const changeBalanceStep = computed(() => virtualPaymentEnabled.value
-  ? virtualWalletUnit.value / 100
-  : 0.1)
+const changeBalanceStep = computed(() =>
+  isVirtualAdjustment.value ? virtualWalletUnit.value / 100 : 0.1,
+)
 
 function getErrorMessage(error: unknown) {
   return typeof error === 'string' && error !== 'error'
@@ -94,32 +97,32 @@ async function submitForm() {
     message.error('变动余额不能为零')
     return
   }
-  if (convertToInteger(balanceResult.value) < 0) {
-    message.error('变动后的余额不能小于 0')
+  if (isVirtualAdjustment.value && virtualBalance.value == null) {
+    message.error(virtualBalanceError.value || '微信虚拟余额暂不可用')
     return
   }
-  if (virtualBalanceResult.value != null && convertToInteger(virtualBalanceResult.value) < 0) {
-    message.error('变动后的微信虚拟余额不能小于 0')
+  if (adjustedBalance.value != null && adjustedBalance.value < 0) {
+    message.error(`变动后的${balanceTargetLabel.value}不能小于 0`)
     return
   }
   if (formData.value.id == null) return
 
   const amount = convertToInteger(formData.value.changeBalance) * formData.value.changeType
-  if (virtualPaymentEnabled.value && Math.abs(amount) % virtualWalletUnit.value !== 0) {
+  if (isVirtualAdjustment.value && Math.abs(amount) % virtualWalletUnit.value !== 0) {
     message.error(`变动金额必须是 ${formatToFraction(virtualWalletUnit.value)} 元的整数倍`)
     return
   }
   try {
     await message.confirm(
-      `确认${amount > 0 ? '增加' : '减少'}用户 ${formData.value.id} 的余额 ${Math.abs(amount)} 分吗？`,
+      `确认${amount > 0 ? '增加' : '减少'}用户 ${formData.value.id} 的${balanceTargetLabel.value} ${Math.abs(amount)} 分吗？`,
     )
     formLoading.value = true
-    if (virtualPaymentEnabled.value) {
+    if (isVirtualAdjustment.value) {
       await VirtualPaymentApi.adjust({
         userId: formData.value.id,
         amount,
       })
-      message.success('本地钱包与微信虚拟余额调整成功')
+      message.success('微信虚拟余额调整成功')
     }
     else {
       await WalletApi.updateWalletBalance({
@@ -131,7 +134,8 @@ async function submitForm() {
     dialogVisible.value = false
     emit('success')
   }
-  catch {}
+  catch {
+  }
   finally {
     formLoading.value = false
   }
@@ -142,6 +146,7 @@ function resetForm() {
     id: undefined,
     nickname: undefined,
     balance: '0',
+    adjustTarget: 'balance',
     changeBalance: 0,
     changeType: 1,
   }
@@ -169,23 +174,41 @@ function resetForm() {
       <el-form-item label="用户昵称" prop="nickname">
         <el-input v-model="formData.nickname" class="!w-[280px]" disabled />
       </el-form-item>
-      <el-form-item label="变动前余额(元)" prop="balance">
+      <el-form-item v-if="virtualPaymentEnabled" label="调整类型" prop="adjustTarget">
+        <el-radio-group v-model="formData.adjustTarget">
+          <el-radio value="balance">
+            余额
+          </el-radio>
+          <el-radio value="virtual">
+            微信虚拟余额
+          </el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item v-if="!isVirtualAdjustment" label="变动前余额(元)" prop="balance">
         <el-input :model-value="formData.balance" class="!w-[280px]" disabled />
       </el-form-item>
-      <el-form-item v-if="virtualPaymentEnabled" label="微信虚拟余额">
+      <el-form-item v-else label="变动前微信虚拟余额(元)">
         <el-input
-          :model-value="virtualBalance == null ? '暂不可用' : `${virtualCoinBalance} 代币（${formatToFraction(virtualBalance)} 元）`"
+          :model-value="
+            virtualBalance == null
+              ? '暂不可用'
+              : `${virtualCoinBalance} 代币（${formatToFraction(virtualBalance)} 元）`
+          "
           class="!w-[280px]"
           disabled
         />
       </el-form-item>
       <el-form-item label="变动类型" prop="changeType">
         <el-radio-group v-model="formData.changeType">
-          <el-radio :value="1">增加</el-radio>
-          <el-radio :value="-1">减少</el-radio>
+          <el-radio :value="1">
+            增加
+          </el-radio>
+          <el-radio :value="-1">
+            减少
+          </el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item label="变动余额(元)" prop="changeBalance">
+      <el-form-item :label="`变动${balanceTargetLabel}(元)`" prop="changeBalance">
         <el-input-number
           v-model="formData.changeBalance"
           :min="changeBalanceStep"
@@ -194,14 +217,11 @@ function resetForm() {
           class="!w-[280px]"
         />
       </el-form-item>
-      <el-form-item label="变动后余额(元)">
-        <el-input :model-value="balanceResult" class="!w-[280px]" disabled />
-      </el-form-item>
-      <el-form-item v-if="virtualPaymentEnabled" label="变动后虚拟余额(元)">
-        <el-input :model-value="virtualBalanceResult ?? '提交后读取'" class="!w-[280px]" disabled />
+      <el-form-item :label="`变动后${balanceTargetLabel}(元)`">
+        <el-input :model-value="balanceResult ?? '暂不可用'" class="!w-[280px]" disabled />
       </el-form-item>
       <el-alert
-        v-if="virtualPaymentEnabled && virtualBalanceError"
+        v-if="isVirtualAdjustment && virtualBalanceError"
         :title="virtualBalanceError"
         type="warning"
         :closable="false"

@@ -1,23 +1,19 @@
 <!-- 图片选择 -->
-<template>
-  <div>
-    <img :src="Picture" class="w-35px h-35px" @click="selectAndUpload" />
-  </div>
-</template>
-
 <script lang="ts" setup>
-import Picture from '@/views/mall/promotion/kefu/components/asserts/picture.svg'
 import * as FileApi from '@/api/infra/file'
+import Picture from '@/views/mall/promotion/kefu/components/asserts/picture.svg'
 
 defineOptions({ name: 'PictureSelectUpload' })
 
-const message = useMessage() // 消息弹窗
+// 消息弹窗
 
 /** 选择并上传文件 */
 const emits = defineEmits<{
   (e: 'send-picture', v: string): void
 }>()
-const selectAndUpload = async () => {
+const message = useMessage()
+
+async function selectAndUpload() {
   const files: any = await getFiles()
   message.success('图片发送中请稍等。。。')
   const res = await FileApi.updateFile({ file: files[0].file })
@@ -27,11 +23,11 @@ const selectAndUpload = async () => {
 /**
  * 唤起文件选择窗口，并获取选择的文件
  *
- * @param {Object} options - 配置选项
- * @param {boolean} [options.multiple=true] - 是否支持多选
- * @param {string} [options.accept=''] - 文件上传格式限制
- * @param {number} [options.limit=1] - 单次上传最大文件数
- * @param {number} [options.fileSize=500] - 单个文件大小限制（单位：MB）
+ * @param {object} options - 配置选项
+ * @param {boolean} [options.multiple] - 是否支持多选
+ * @param {string} [options.accept] - 文件上传格式限制
+ * @param {number} [options.limit] - 单次上传最大文件数
+ * @param {number} [options.fileSize] - 单个文件大小限制（单位：MB）
  * @returns {Promise<Array>} 选择的文件列表，每个文件带有一个uid
  */
 async function getFiles(options = {}) {
@@ -40,7 +36,7 @@ async function getFiles(options = {}) {
     accept: 'image/jpeg, image/png, image/gif', // 默认选择图片
     limit: 1,
     fileSize: 500,
-    ...options
+    ...options,
   }
 
   // 创建文件选择元素
@@ -83,11 +79,18 @@ async function getFiles(options = {}) {
         resolve(fileList)
       })
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('选择文件出错:', error)
     throw error
   }
 }
 </script>
+
+<template>
+  <div>
+    <img :src="Picture" class="h-[35px] w-[35px]" @click="selectAndUpload">
+  </div>
+</template>
 
 <style lang="scss" scoped></style>

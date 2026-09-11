@@ -27,6 +27,26 @@ const queryParams = reactive({
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 
+const couponTypeTextMap: Record<number, string> = {
+  1: '满减券',
+  2: '折扣券',
+  3: '无门槛券',
+}
+
+function getCouponTypeText(type?: number) {
+  return type ? couponTypeTextMap[type] ?? '未知类型' : '未知类型'
+}
+
+function formatCouponAmount(coupon: Coupon) {
+  if (coupon.couponAmount == null) {
+    return '-'
+  }
+  if (coupon.couponType === 2) {
+    return `${Number(coupon.couponAmount) / 10}折`
+  }
+  return `¥${fenToYuan(coupon.couponAmount)}`
+}
+
 /** 查询列表 */
 async function getList() {
   loading.value = true
@@ -203,18 +223,13 @@ onMounted(() => {
       <el-table-column label="类型" align="center" prop="couponType">
         <template #default="scope">
           <el-tag type="success">
-            {{ scope.row.success == 1 ? "满减券" : scope.row.success == 2 ? "折扣券" : "无门槛" }}
+            {{ getCouponTypeText(scope.row.couponType) }}
           </el-tag>
         </template>
       </el-table-column>
       <el-table-column label="金额/折扣" align="center" prop="couponAmount">
         <template #default="scope">
-          <span v-if="scope.row.couponType === 2">
-            {{ scope.row.couponAmount }}
-          </span>
-          <span v-else>
-            ¥{{ fenToYuan(scope.row.couponAmount) }}
-          </span>
+          {{ formatCouponAmount(scope.row) }}
         </template>
       </el-table-column>
       <el-table-column label="最低金额" align="center" prop="couponMinOrderAmount">

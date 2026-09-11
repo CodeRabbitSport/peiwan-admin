@@ -74,6 +74,7 @@ const KEYS = {
   ENABLE_CONSUME_RANK: 'appConfigEnableConsumeRank',
   ENABLE_AUTO_PICK_ORDER: 'appConfigEnableAutoPickOrder',
   ENABLE_IOS_VIRTUAL_PAYMENT: 'appConfigEnableIosVirtualPayment',
+  IOS_VIRTUAL_PAYMENT_FEE_RATE: 'appConfigIosVirtualPaymentFeeRate',
   INVITATION_POSTER: 'appConfigInvitePoster',
   TENCENT_ATTRIBUTION_ENABLED: 'appConfigTencentAttributionEnabled',
   TENCENT_ATTRIBUTION_ACCESS_TOKEN: 'appConfigTencentAttributionAccessToken',
@@ -143,6 +144,7 @@ const formData = reactive<any>({
   enableConsumeRank: false,
   enableAutoPickOrder: false,
   enableIosVirtualPayment: false,
+  iosVirtualPaymentFeeRate: 0,
   tencentAttributionEnabled: false,
   tencentAttributionAccessToken: '',
   tencentAttributionAccountId: '',
@@ -205,8 +207,8 @@ const configGroups = [
     title: '应用配置',
     description: '费率、业务模式与腾讯回传',
     icon: 'ep:operation',
-    count: 12,
-    keywords: '提现手续费 自动接单 iOS 虚拟支付 邀请模式 消费排名 分佣比例 邀请海报 腾讯广告 回传 DataNexus 密钥',
+    count: 13,
+    keywords: '提现手续费 自动接单 iOS 虚拟支付 iOS手续费率 邀请模式 消费排名 分佣比例 邀请海报 腾讯广告 回传 DataNexus 密钥',
   },
 ]
 
@@ -432,6 +434,9 @@ async function loadAll() {
         case KEYS.ENABLE_IOS_VIRTUAL_PAYMENT:
           formData.enableIosVirtualPayment = toBool(item.configValue)
           break
+        case KEYS.IOS_VIRTUAL_PAYMENT_FEE_RATE:
+          formData.iosVirtualPaymentFeeRate = Number(item.configValue || 0)
+          break
         case KEYS.TENCENT_ATTRIBUTION_ENABLED:
           formData.tencentAttributionEnabled = toBool(item.configValue)
           break
@@ -600,12 +605,15 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
     const iosVirtualPaymentTitle = key === KEYS.ENABLE_IOS_VIRTUAL_PAYMENT
       ? '开启 iOS 虚拟支付'
       : ''
+    const iosVirtualPaymentFeeTitle = key === KEYS.IOS_VIRTUAL_PAYMENT_FEE_RATE
+      ? 'iOS 虚拟支付手续费率'
+      : ''
     const params: any = {
       title: key === KEYS.ORDER_SUBSCRIBE_SUPPORTED
         ? '启用订单订阅通知'
         : key === KEYS.ORDER_SUBSCRIBE_TEMPLATE_CODE
           ? '模板编码'
-          : copywritingTitle || customerServiceTitle || tencentAttributionTitle || iosVirtualPaymentTitle || key,
+          : copywritingTitle || customerServiceTitle || tencentAttributionTitle || iosVirtualPaymentTitle || iosVirtualPaymentFeeTitle || key,
       configKey: key,
       configValue,
     }
@@ -629,12 +637,17 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
     if (tencentAttributionTitle) {
       params.configGroupKey = 'appConfig'
       params.configGroupName = '应用配置'
-      params.description = tencentAttributionTitle + '，用于腾讯广告小程序购买行为回传'
+      params.description = `${tencentAttributionTitle}，用于腾讯广告小程序购买行为回传`
     }
     if (iosVirtualPaymentTitle) {
       params.configGroupKey = 'appConfig'
       params.configGroupName = '应用配置'
       params.description = '开启后，微信小程序 iOS 用户可选择虚拟支付'
+    }
+    if (iosVirtualPaymentFeeTitle) {
+      params.configGroupKey = 'appConfig'
+      params.configGroupName = '应用配置'
+      params.description = 'iOS 虚拟支付在基础金额上增加的手续费百分比，填写 12 表示 12%'
     }
     if (id) {
       params.id = id
@@ -1205,6 +1218,23 @@ onMounted(() => {
                     :loading="savingKeys.has(KEYS.ENABLE_IOS_VIRTUAL_PAYMENT)"
                     @change="(val: any) => handleSave(KEYS.ENABLE_IOS_VIRTUAL_PAYMENT, 'boolean', val)"
                   />
+                </div>
+                <div class="config-field">
+                  <div class="config-field-label">
+                    <strong>iOS 虚拟支付手续费率</strong>
+                    <small>iOS 用户虚拟支付时，在基础金额上增加的手续费</small>
+                  </div>
+                  <div class="config-number-suffix">
+                    <el-input-number
+                      v-model="formData.iosVirtualPaymentFeeRate"
+                      :min="0"
+                      :max="100"
+                      :step="0.01"
+                      :precision="2"
+                      @change="(val: any) => handleSave(KEYS.IOS_VIRTUAL_PAYMENT_FEE_RATE, 'number', val)"
+                    />
+                    <span>%</span>
+                  </div>
                 </div>
                 <div class="config-field config-field--switch">
                   <div class="config-field-label">

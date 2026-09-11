@@ -1,47 +1,28 @@
 <script lang="ts" setup>
-import type { UploadProps } from 'element-plus'
-
 import { createImageViewer } from '@/components/ImageViewer'
-import { useUpload } from '@/components/UploadFile/src/useUpload'
-import { generateUUID } from '@/utils'
+import ImagePickerDialog from '@/components/UploadFile/src/ImagePickerDialog.vue'
 import { propTypes } from '@/utils/propTypes'
 
 defineOptions({ name: 'UploadImg' })
 
-// 接受父组件参数
 const props = defineProps({
   modelValue: propTypes.string.def(''),
-  drag: propTypes.bool.def(true), // 是否支持拖拽上传 ==> 非必传（默认为 true）
-  disabled: propTypes.bool.def(false), // 是否禁用上传组件 ==> 非必传（默认为 false）
-  fileSize: propTypes.number.def(50), // 图片大小限制 ==> 非必传（默认为 5M）
-  fileType: propTypes.array.def(['image/jpeg', 'image/png', 'image/gif', 'image/webp']), // 图片类型限制 ==> 非必传（默认为 ["image/jpeg", "image/png", "image/gif"]）
-  height: propTypes.string.def('150px'), // 组件高度 ==> 非必传（默认为 150px）
-  width: propTypes.string.def('150px'), // 组件宽度 ==> 非必传（默认为 150px）
-  borderradius: propTypes.string.def('8px'), // 组件边框圆角 ==> 非必传（默认为 8px）
-  showDelete: propTypes.bool.def(true), // 是否显示删除按钮
-  showBtnText: propTypes.bool.def(true), // 是否显示按钮文字
-  directory: propTypes.string.def(undefined), // 上传目录 ==> 非必传（默认为 undefined）
+  drag: propTypes.bool.def(true),
+  disabled: propTypes.bool.def(false),
+  fileSize: propTypes.number.def(50),
+  fileType: propTypes.array.def(['image/jpeg', 'image/png', 'image/gif', 'image/webp']),
+  height: propTypes.string.def('150px'),
+  width: propTypes.string.def('150px'),
+  borderradius: propTypes.string.def('8px'),
+  showDelete: propTypes.bool.def(true),
+  showBtnText: propTypes.bool.def(true),
+  directory: propTypes.string.def(undefined),
 })
 
 const emit = defineEmits(['update:modelValue'])
+const { t } = useI18n()
+const pickerVisible = ref(false)
 
-type FileTypes
-  = | 'image/apng'
-    | 'image/bmp'
-    | 'image/gif'
-    | 'image/jpeg'
-    | 'image/pjpeg'
-    | 'image/png'
-    | 'image/svg+xml'
-    | 'image/tiff'
-    | 'image/webp'
-    | 'image/x-icon'
-
-const { t } = useI18n() // 国际化
-const message = useMessage() // 消息弹窗
-// 生成组件唯一id
-const uuid = ref(`id-${generateUUID()}`)
-// 查看图片
 function imagePreview(imgUrl: string) {
   createImageViewer({
     zIndex: 9999999,
@@ -53,73 +34,27 @@ function deleteImg() {
   emit('update:modelValue', '')
 }
 
-const { uploadUrl, httpRequest } = useUpload(props.directory)
-
-function editImg() {
-  const dom = document.querySelector(`#${uuid.value} .el-upload__input`)
-  dom && dom.dispatchEvent(new MouseEvent('click'))
+function openPicker() {
+  if (props.disabled) return
+  pickerVisible.value = true
 }
 
-const uploading = ref(false)
-
-const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
-  const imgSize = rawFile.size / 1024 / 1024 < props.fileSize
-  const imgType = props.fileType
-  if (!imgType.includes(rawFile.type as FileTypes))
-    message.notifyWarning('上传图片不符合所需的格式！')
-  if (!imgSize) message.notifyWarning(`上传图片大小不能超过 ${props.fileSize}M！`)
-  const isValid = imgType.includes(rawFile.type as FileTypes) && imgSize
-  if (isValid) uploading.value = true
-  return isValid
-}
-
-// 图片上传成功提示
-const uploadSuccess: UploadProps['onSuccess'] = (res: any): void => {
-  uploading.value = false
-  message.success('上传成功')
-  emit('update:modelValue', res.data)
-}
-
-// 图片上传错误提示
-function uploadError() {
-  uploading.value = false
-  message.notifyError('图片上传失败，请您重新上传！')
-}
-
-const onProgress: UploadProps['onProgress'] = () => {
-  uploading.value = true
+function onConfirm(urls: string[]) {
+  emit('update:modelValue', urls[0] || '')
 }
 </script>
 
 <template>
   <div class="upload-box">
-    <el-upload
-      :id="uuid"
-      v-loading="uploading"
-      :action="uploadUrl"
-      :before-upload="beforeUpload"
-      class="upload" :class="[drag ? 'no-border' : '']"
-      :disabled="disabled"
-      :drag="drag"
-      :http-request="httpRequest"
-      :multiple="false"
-      :on-progress="onProgress"
-      :on-error="uploadError"
-      :on-success="uploadSuccess"
-      :show-file-list="false"
-    >
+    <div class="upload" :class="{ disabled }" @click="openPicker">
       <template v-if="modelValue">
         <img :src="modelValue" class="upload-image">
-        <div class="upload-handle" @click.stop>
-          <div v-if="!disabled" class="handle-icon" @click="editImg">
-            <Icon icon="ep:edit" />
-            <span v-if="showBtnText">{{ t('action.edit') }}</span>
-          </div>
-          <div class="handle-icon" @click="imagePreview(modelValue)">
+        <div class="upload-handle" @click.stop="openPicker">
+          <div class="handle-icon" @click.stop="imagePreview(modelValue)">
             <Icon icon="ep:zoom-in" />
             <span v-if="showBtnText">{{ t('action.detail') }}</span>
           </div>
-          <div v-if="showDelete && !disabled" class="handle-icon" @click="deleteImg">
+          <div v-if="showDelete && !disabled" class="handle-icon" @click.stop="deleteImg">
             <Icon icon="ep:delete" />
             <span v-if="showBtnText">{{ t('action.del') }}</span>
           </div>
@@ -129,149 +64,121 @@ const onProgress: UploadProps['onProgress'] = () => {
         <div class="upload-empty">
           <slot name="empty">
             <Icon icon="ep:plus" />
-            <!-- <span>请上传图片</span> -->
           </slot>
         </div>
       </template>
-    </el-upload>
+    </div>
     <div class="el-upload__tip">
       <slot name="tip" />
     </div>
+    <ImagePickerDialog
+      v-model="pickerVisible"
+      :directory="directory"
+      :file-size="fileSize"
+      :file-type="fileType"
+      :selected-urls="modelValue ? [modelValue] : []"
+      @confirm="onConfirm"
+    />
   </div>
 </template>
 
 <style lang="scss" scoped>
 .is-error {
   .upload {
-    :deep(.el-upload),
-    :deep(.el-upload-dragger) {
-      border: 1px dashed var(--el-color-danger) !important;
-
-      &:hover {
-        border-color: var(--el-color-primary) !important;
-      }
-    }
-  }
-}
-
-:deep(.disabled) {
-  .el-upload,
-  .el-upload-dragger {
-    cursor: not-allowed !important;
-    background: var(--el-disabled-bg-color);
-    border: 1px dashed var(--el-border-color-darker) !important;
+    border: 1px dashed var(--el-color-danger) !important;
 
     &:hover {
-      border: 1px dashed var(--el-border-color-darker) !important;
+      border-color: var(--el-color-primary) !important;
     }
   }
 }
 
 .upload-box {
-  .no-border {
-    :deep(.el-upload) {
-      border: none !important;
-    }
-  }
+  .upload {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: v-bind(width);
+    height: v-bind(height);
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px dashed var(--el-border-color-darker);
+    border-radius: v-bind(borderradius);
+    transition: var(--el-transition-duration-fast);
 
-  :deep(.upload) {
-    .el-upload {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: v-bind(width);
-      height: v-bind(height);
-      overflow: hidden;
-      border: 1px dashed var(--el-border-color-darker);
-      border-radius: v-bind(borderradius);
-      transition: var(--el-transition-duration-fast);
+    &:hover {
+      border-color: var(--el-color-primary);
+
+      .upload-handle {
+        opacity: 1;
+      }
+    }
+
+    &.disabled {
+      cursor: not-allowed;
+      background: var(--el-disabled-bg-color);
+      border: 1px dashed var(--el-border-color-darker) !important;
 
       &:hover {
-        border-color: var(--el-color-primary);
-
-        .upload-handle {
-          opacity: 1;
-        }
+        border: 1px dashed var(--el-border-color-darker) !important;
       }
+    }
 
-      .el-upload-dragger {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 100%;
-        padding: 0;
-        overflow: hidden;
-        background-color: transparent;
-        border: 1px dashed var(--el-border-color-darker);
-        border-radius: v-bind(borderradius);
+    .upload-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
 
-        &:hover {
-          border: 1px dashed var(--el-color-primary);
-        }
+    .upload-empty {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      line-height: 30px;
+      color: var(--el-color-info);
+
+      .el-icon {
+        font-size: 28px;
+        color: var(--el-text-color-secondary);
       }
+    }
 
-      .el-upload-dragger.is-dragover {
-        background-color: var(--el-color-primary-light-9);
-        border: 2px dashed var(--el-color-primary) !important;
-      }
+    .upload-handle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      display: flex;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      background: rgb(0 0 0 / 60%);
+      opacity: 0;
+      box-sizing: border-box;
+      transition: var(--el-transition-duration-fast);
+      align-items: center;
+      justify-content: center;
 
-      .upload-image {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-      }
-
-      .upload-empty {
-        position: relative;
+      .handle-icon {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        font-size: 12px;
-        line-height: 30px;
-        color: var(--el-color-info);
+        padding: 0 6%;
+        color: aliceblue;
 
         .el-icon {
-          font-size: 28px;
-          color: var(--el-text-color-secondary);
+          margin-bottom: 40%;
+          font-size: 130%;
+          line-height: 130%;
         }
-      }
 
-      .upload-handle {
-        position: absolute;
-        top: 0;
-        right: 0;
-        display: flex;
-        width: 100%;
-        height: 100%;
-        cursor: pointer;
-        background: rgb(0 0 0 / 60%);
-        opacity: 0;
-        box-sizing: border-box;
-        transition: var(--el-transition-duration-fast);
-        align-items: center;
-        justify-content: center;
-
-        .handle-icon {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 0 6%;
-          color: aliceblue;
-
-          .el-icon {
-            margin-bottom: 40%;
-            font-size: 130%;
-            line-height: 130%;
-          }
-
-          span {
-            font-size: 85%;
-            line-height: 85%;
-          }
+        span {
+          font-size: 85%;
+          line-height: 85%;
         }
       }
     }

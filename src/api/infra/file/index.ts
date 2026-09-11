@@ -1,5 +1,17 @@
 import request from '@/config/axios'
 
+export interface FileRespVO {
+  id: number
+  configId: number
+  path: string
+  name: string
+  url: string
+  type: string
+  size: number
+  tenantId?: number
+  createTime: string
+}
+
 // 文件预签名地址 Response VO
 export interface FilePresignedUrlRespVO {
   // 文件配置编号

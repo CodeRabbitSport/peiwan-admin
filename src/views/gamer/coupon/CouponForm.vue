@@ -75,7 +75,7 @@ async function submitForm() {
     if (data.couponMinOrderAmount != null) {
       data.couponMinOrderAmount = yuanToFen(data.couponMinOrderAmount)
     }
-    
+
     if (formType.value === 'create') {
       await CouponApi.createCoupon(data)
       message.success(t('common.createSuccess'))
@@ -126,19 +126,19 @@ function resetForm() {
       <el-form-item label="类型" prop="couponType">
         <el-select v-model="formData.couponType" placeholder="请选择类型">
           <el-option label="满减券" :value="1" />
-          <!-- <el-option label="折扣券" :value="2" /> -->
+          <el-option label="折扣券" :value="2" />
           <el-option label="无门槛券" :value="3" />
         </el-select>
       </el-form-item>
       <el-form-item label="金额/折扣" prop="couponAmount">
         <el-input v-model="formData.couponAmount" placeholder="请输入金额或折扣">
           <template #append>
-            <span v-if="formData.couponType === 2">折</span>
+            <span v-if="formData.couponType === 2">%</span>
             <span v-else>元</span>
           </template>
         </el-input>
         <div class="text-xs text-gray-400 mt-1">
-          满减券/无门槛券填写金额（元），折扣券填写折扣（如0.9表示9折）
+          满减券/无门槛券填写金额（元），折扣券填写百分比（如90%表示9折）
         </div>
       </el-form-item>
       <el-form-item v-if="formData.couponType === 1" label="满减金额" prop="couponMinOrderAmount">

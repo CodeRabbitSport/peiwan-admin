@@ -9,6 +9,7 @@ import type { Product } from '@/api/gamer/product'
 import { ProductApi } from '@/api/gamer/product'
 import { ProductCategoryApi } from '@/api/gamer/productcategory'
 import { ProductTypeApi } from '@/api/gamer/producttype'
+import PaginationSelect from '@/components/PaginationSelect/index.vue'
 import { fenToYuan, yuanToFen } from '@/utils'
 
 /** 商品 表单 */
@@ -31,6 +32,7 @@ const linkedProduct = ref<Product & {
   categoryName?: string
   typeName?: string
 }>()
+const selectedLinkedProductId = ref<number | null>(null)
 const cascaderProps = {
   lazy: true,
   lazyLoad: (node, resolve) => {
@@ -205,6 +207,75 @@ async function handleSyncChange(value: boolean | string | number) {
   }
 }
 
+function handleLinkedProductChange(value: number | string | number[] | string[] | null) {
+  const selectedId = Array.isArray(value) || value == null ? null : Number(value)
+  if (selectedId === formData.value.id) {
+    selectedLinkedProductId.value = formData.value.linkedProductId ?? null
+    message.warning('商品不能关联自己')
+    return
+  }
+  selectedLinkedProductId.value = Number.isNaN(selectedId) ? null : selectedId
+  if (selectedLinkedProductId.value !== formData.value.linkedProductId) {
+    formData.value.syncLinkedProduct = false
+    formData.value.syncProductId = undefined
+  }
+}
+
+type ProductLinkTarget = Product | null | false
+
+async function resolveProductLinkTarget(): Promise<ProductLinkTarget> {
+  const productId = formData.value.id as number | undefined
+  if (productId == null) return null
+
+  const currentLinkedProductId = formData.value.linkedProductId ?? null
+  const targetLinkedProductId = selectedLinkedProductId.value
+  if (currentLinkedProductId === targetLinkedProductId || targetLinkedProductId == null) return null
+
+  if (targetLinkedProductId === productId) {
+    message.error('商品不能关联自己')
+    return false
+  }
+
+  const target = await ProductApi.getProduct(targetLinkedProductId)
+  if (!target) {
+    message.error(`商品 #${targetLinkedProductId} 不存在，无法建立关联`)
+    return false
+  }
+  if (target?.linkedProductId != null && target.linkedProductId !== productId) {
+    message.error(`商品 #${targetLinkedProductId} 已关联其他商品，一个商品只能关联 1 个商品`)
+    return false
+  }
+  return target
+}
+
+async function updateProductLink(target: ProductLinkTarget) {
+  const productId = formData.value.id as number | undefined
+  if (productId == null || target === false) return target !== false
+
+  const currentLinkedProductId = formData.value.linkedProductId ?? null
+  const targetLinkedProductId = selectedLinkedProductId.value
+  if (currentLinkedProductId === targetLinkedProductId) return true
+
+  if (targetLinkedProductId == null) {
+    if (currentLinkedProductId != null) {
+      await ProductApi.unlinkProduct(productId)
+    }
+    return true
+  }
+
+  if (!target || target.id !== targetLinkedProductId) {
+    message.error('关联商品信息已变化，请重新选择后再保存')
+    return false
+  }
+
+  await ProductApi.linkProduct({
+    productId,
+    linkedProductId: targetLinkedProductId,
+    replaceExisting: true,
+  })
+  return true
+}
+
 /** 打开弹窗 */
 async function open(type: string, id?: number) {
   dialogTitle.value = t(`action.${type}`)
@@ -228,6 +299,7 @@ async function open(type: string, id?: number) {
         createLinkedProduct: false,
         linkedCategoryTypeValue: [],
       }
+      selectedLinkedProductId.value = formData.value.linkedProductId ?? null
       // 如果有分类ID和类型ID，设置级联选择器的值
       if (formData.value.categoryId && formData.value.typeId) {
         formData.value.categoryTypeValue = [formData.value.categoryId, formData.value.typeId]
@@ -339,7 +411,18 @@ async function submitForm() {
     }
   }
 
-  const { categoryTypeValue, linkedCategoryTypeValue, ...submitData } = formData.value
+  let productLinkTarget: ProductLinkTarget = null
+  if (formType.value === 'update') {
+    productLinkTarget = await resolveProductLinkTarget()
+    if (productLinkTarget === false) return
+  }
+
+  const {
+    categoryTypeValue,
+    linkedCategoryTypeValue,
+    linkedProductId: _linkedProductId,
+    ...submitData
+  } = formData.value
   const data = {
     ...submitData,
     productLevel: Array.isArray(submitData.productLevel)
@@ -360,6 +443,7 @@ async function submitForm() {
     }
     else {
       await ProductApi.updateProduct(data)
+      if (!await updateProductLink(productLinkTarget)) return
       message.success(t('common.updateSuccess'))
     }
     dialogVisible.value = false
@@ -439,6 +523,7 @@ function resetForm() {
     linkedCategoryTypeValue: [] as number[],
   }
   linkedProduct.value = undefined
+  selectedLinkedProductId.value = null
   orderReceivingRegionFields.value = [{ region: '', price: 0 }]
   discountFields.value = [{ amount: 0, discount: 0, discountType: 1 }]
   formRef.value?.resetFields()
@@ -627,11 +712,29 @@ function initDiscountFields() {
         </el-row>
       </template>
 
-      <template v-if="formType === 'update' && formData.linkedProductId">
+      <template v-if="formType === 'update'">
         <el-divider content-position="left">
           关联编辑
         </el-divider>
         <el-form-item label="关联商品">
+          <PaginationSelect
+            v-model="selectedLinkedProductId"
+            placeholder="请选择关联商品（可清空）"
+            clearable
+            filterable
+            search-key="productTitle"
+            :api="ProductApi.getProductPage"
+            label-key="productTitle"
+            value-key="id"
+            :page-size="10"
+            width="420px"
+            @change="handleLinkedProductChange"
+          />
+          <div class="mt-1 text-xs text-gray-500">
+            清空后保存即可解除关联；一个商品只能关联一个商品。
+          </div>
+        </el-form-item>
+        <el-form-item v-if="formData.linkedProductId" label="当前关联">
           <el-tag v-if="linkedProduct" type="info">
             #{{ linkedProduct.id }} {{ linkedProduct.productTitle || '-' }}
             （分类 {{ linkedProduct.categoryName || '-' }} / 类型 {{ linkedProduct.typeName || '-' }}）
@@ -640,10 +743,10 @@ function initDiscountFields() {
             #{{ formData.linkedProductId }} 关联已失效
           </el-tag>
         </el-form-item>
-        <el-form-item label="同步编辑">
+        <el-form-item v-if="formData.linkedProductId" label="同步编辑">
           <el-switch
             v-model="formData.syncLinkedProduct"
-            :disabled="!linkedProduct"
+            :disabled="!linkedProduct || selectedLinkedProductId !== formData.linkedProductId"
             @change="handleSyncChange"
           />
         </el-form-item>
