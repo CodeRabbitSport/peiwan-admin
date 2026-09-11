@@ -77,18 +77,15 @@ const payStatusOptions = [
   { label: '已退款', value: 2 },
 ]
 
-function formatPayChannel(payChannelCode?: string) {
-  switch (payChannelCode) {
-    case 'wx_virtual':
-      return '虚拟支付'
-    case 'wx_lite':
-    case 'wx_pub':
-      return 'JSAPI'
-    case 'wallet':
-      return '钱包支付'
-    default:
-      return payChannelCode || '未支付'
-  }
+const payChannelTagMap: Record<string, { text: string, color: string }> = {
+  wx_virtual: { text: '虚拟支付', color: 'warning' },
+  wx_lite: { text: 'JSAPI', color: 'success' },
+  wx_pub: { text: 'JSAPI', color: 'success' },
+  wallet: { text: '钱包支付', color: 'primary' },
+}
+
+function getPayChannelTag(payChannelCode?: string) {
+  return payChannelTagMap[payChannelCode || ''] || { text: payChannelCode || '未支付', color: 'info' }
 }
 
 const refundDialogVisible = ref(false)
@@ -753,8 +750,6 @@ async function openOrderConversationByOrderId(orderId: number) {
 
             <div>订单金额：{{ scope.row.totalAmount != null ? fenToYuan(scope.row.totalAmount) : '无' }}</div>
             <div>支付金额：{{ scope.row.actualAmount != null ? fenToYuan(scope.row.actualAmount) : '无' }}</div>
-            <div>支付方式：{{ formatPayChannel(scope.row.payChannelCode) }}</div>
-
             <div v-if="scope.row.refundAmount > 0">
               退款金额：{{ scope.row.refundAmount != null ? fenToYuan(scope.row.refundAmount) : '无' }}
             </div>
@@ -833,6 +828,12 @@ async function openOrderConversationByOrderId(orderId: number) {
               effect="plain"
             >
               {{ formatPayStatus(scope.row.payStatus).text }}
+            </el-tag>
+            <el-tag
+              :type="getPayChannelTag(scope.row.payChannelCode).color"
+              effect="plain"
+            >
+              支付方式：{{ getPayChannelTag(scope.row.payChannelCode).text }}
             </el-tag>
 
             <p v-if="scope.row.refundApplyReason">
