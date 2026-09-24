@@ -67,15 +67,18 @@ const payStatusOptions = [
   { label: '已退款', value: 2 },
 ]
 
-const payChannelTagMap: Record<string, { text: string, color: string }> = {
+type PayChannelTagColor = 'primary' | 'success' | 'warning' | 'danger' | 'info'
+
+const payChannelTagMap: Record<string, { text: string, color: PayChannelTagColor }> = {
   wx_virtual: { text: '虚拟支付', color: 'warning' },
   wx_lite: { text: 'JSAPI', color: 'success' },
   wx_pub: { text: 'JSAPI', color: 'success' },
   wallet: { text: '钱包支付', color: 'primary' },
 }
 
-function getPayChannelTag(payChannelCode?: string) {
-  return payChannelTagMap[payChannelCode || ''] || { text: payChannelCode || '未支付', color: 'info' }
+function getPayChannelTag(payChannelCode?: string, payChannelDisplay?: string) {
+  const fallback = payChannelTagMap[payChannelCode || ''] || { text: payChannelCode || '未支付', color: 'info' }
+  return payChannelDisplay ? { ...fallback, text: payChannelDisplay } : fallback
 }
 
 const refundDialogVisible = ref(false)
@@ -704,10 +707,11 @@ async function openAccOrderConversationByOrderId(orderId: number) {
               {{ formatPayStatus(scope.row.payStatus).text }}
             </el-tag>
             <el-tag
-              :type="getPayChannelTag(scope.row.payChannelCode).color"
+              :type="getPayChannelTag(scope.row.payChannelCode, scope.row.payChannelDisplay).color"
               effect="plain"
+              class="pay-channel-tag"
             >
-              支付方式：{{ getPayChannelTag(scope.row.payChannelCode).text }}
+              {{ getPayChannelTag(scope.row.payChannelCode, scope.row.payChannelDisplay).text }}
             </el-tag>
 
             <p v-if="scope.row.refundApplyReason">
@@ -965,5 +969,15 @@ async function openAccOrderConversationByOrderId(orderId: number) {
 :deep(.el-table .col-order-info .cell) {
   white-space: normal;
   overflow: visible;
+}
+
+:deep(.pay-channel-tag) {
+  max-width: 100%;
+  height: auto;
+  min-height: 24px;
+  white-space: normal;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 </style>

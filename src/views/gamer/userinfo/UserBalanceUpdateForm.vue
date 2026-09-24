@@ -114,7 +114,7 @@ async function submitForm() {
   }
   try {
     await message.confirm(
-      `确认${amount > 0 ? '增加' : '减少'}用户 ${formData.value.id} 的${balanceTargetLabel.value} ${Math.abs(amount)} 分吗？`,
+      `确认${amount > 0 ? '增加' : '减少'}用户 ${formData.value.id} 的${balanceTargetLabel.value} ${formatToFraction(Math.abs(amount))} 元吗？`,
     )
     formLoading.value = true
     if (isVirtualAdjustment.value) {

@@ -81,6 +81,7 @@ const KEYS = {
   TENCENT_ATTRIBUTION_ACCOUNT_ID: 'appConfigTencentAttributionAccountId',
   TENCENT_ATTRIBUTION_ACTION_SET_ID: 'appConfigTencentAttributionActionSetId',
   TENCENT_ATTRIBUTION_WECHAT_APP_ID: 'appConfigTencentAttributionWechatAppId',
+  TENCENT_ATTRIBUTION_MONITOR_KEY: 'appConfigTencentAttributionMonitorKey',
   SITE_CONFIG_HTML_H5_KEY: 'siteConfigHtmlH5Key',
   // 订单超时时间
   ORDER_TIMEOUT_TIME: 'siteConfigOrderTimeoutTime',
@@ -150,6 +151,7 @@ const formData = reactive<any>({
   tencentAttributionAccountId: '',
   tencentAttributionActionSetId: '',
   tencentAttributionWechatAppId: '',
+  tencentAttributionMonitorKey: '',
   siteConfigCustomerServiceLink: '',
   siteConfigMiniProgramCustomerServiceCorpId: '',
   siteConfigMiniProgramCustomerServiceLink: '',
@@ -207,8 +209,8 @@ const configGroups = [
     title: '应用配置',
     description: '费率、业务模式与腾讯回传',
     icon: 'ep:operation',
-    count: 13,
-    keywords: '提现手续费 自动接单 iOS 虚拟支付 iOS手续费率 邀请模式 消费排名 分佣比例 邀请海报 腾讯广告 回传 DataNexus 密钥',
+    count: 14,
+    keywords: '提现手续费 自动接单 iOS 虚拟支付 iOS手续费率 邀请模式 消费排名 分佣比例 邀请海报 腾讯广告 回传 DataNexus 密钥 监测连接',
   },
 ]
 
@@ -452,6 +454,9 @@ async function loadAll() {
         case KEYS.TENCENT_ATTRIBUTION_WECHAT_APP_ID:
           formData.tencentAttributionWechatAppId = String(item.configValue || '')
           break
+        case KEYS.TENCENT_ATTRIBUTION_MONITOR_KEY:
+          formData.tencentAttributionMonitorKey = String(item.configValue || '')
+          break
         case KEYS.CUSTOMER_SERVICE_LINK:
           formData.siteConfigCustomerServiceLink = String(item.configValue || '')
           break
@@ -542,6 +547,72 @@ const fullH5Url = computed(() => {
   return `${origin.replace(/\/+$/, '')}/html/${formData.htmlH5Key}`
 })
 
+const tencentMonitorBaseUrl = computed(() => {
+  const tenantId = getTenantId()
+  const rawDomain = String(tenantDomain.value || '').trim()
+  const trackingKey = String(formData.tencentAttributionMonitorKey || '').trim()
+  if (!tenantId || !rawDomain || !trackingKey)
+    return ''
+  const origin = /^https?:\/\//i.test(rawDomain) ? rawDomain : `https://${rawDomain}`
+  return `${origin.replace(/\/+$/, '')}/app-api/gamer/tencent-attribution/monitor/${tenantId}/${trackingKey}`
+})
+
+const tencentClickMonitorUrl = computed(() => (
+  tencentMonitorBaseUrl.value
+    ? `${tencentMonitorBaseUrl.value}/click?account_id=__ACCOUNT_ID__&click_id=__CLICK_ID__&click_time=__CLICK_TIME__&wechat_openid=__WECHAT_OPEN_ID__&callback=__CALLBACK__`
+    : ''
+))
+const tencentImpressionMonitorUrl = computed(() => (
+  tencentMonitorBaseUrl.value
+    ? `${tencentMonitorBaseUrl.value}/impress?account_id=__ACCOUNT_ID__&impression_id=__IMPRESSION_ID__&impression_time=__IMPRESSION_TIME__&callback=__CALLBACK__`
+    : ''
+))
+const tencentChannelMonitorUrl = computed(() => (
+  tencentMonitorBaseUrl.value
+    ? `${tencentMonitorBaseUrl.value}/channel?advertiser_id=__ADVERTISER_ID__&adgroup_id=__ADGROUP_ID__&act_type=__ACT_TYPE__&act_id=__ACT_ID__&act_time=__ACT_TIME__&callback=__CALLBACK__`
+    : ''
+))
+
+async function copyTencentMonitorUrl(url: string) {
+  try {
+    await navigator.clipboard.writeText(url)
+    message.success('监控连接已复制')
+  }
+  catch {
+    message.warning('复制失败，请手动复制连接')
+  }
+}
+
+async function handleGenerateTencentMonitorKey() {
+  if (formData.tencentAttributionMonitorKey) {
+    try {
+      await ElMessageBox.confirm(
+        '重新生成后，已配置在 DataNexus 中的三条监控连接会立即失效。确认继续？',
+        '重置腾讯广告监控连接',
+        {
+          confirmButtonText: '重新生成',
+          cancelButtonText: '取消',
+          type: 'warning',
+        },
+      )
+    }
+    catch {
+      return
+    }
+  }
+
+  try {
+    const bytes = new Uint8Array(24)
+    window.crypto.getRandomValues(bytes)
+    const trackingKey = Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('')
+    await handleSave(KEYS.TENCENT_ATTRIBUTION_MONITOR_KEY, 'string', trackingKey)
+    formData.tencentAttributionMonitorKey = trackingKey
+  }
+  catch {
+    message.error('生成或保存监控连接失败，请重试')
+  }
+}
+
 async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'productIds' | 'string', value: any) {
   // 区服入口开关：必须至少保留一个开启
   if (
@@ -600,6 +671,7 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
       [KEYS.TENCENT_ATTRIBUTION_ACCOUNT_ID]: '腾讯广告账号 ID',
       [KEYS.TENCENT_ATTRIBUTION_ACTION_SET_ID]: 'DataNexus 数据源 ID',
       [KEYS.TENCENT_ATTRIBUTION_WECHAT_APP_ID]: '微信小程序 AppID',
+      [KEYS.TENCENT_ATTRIBUTION_MONITOR_KEY]: '腾讯广告监控连接密钥',
     }
     const tencentAttributionTitle = tencentAttributionTitleMap[key]
     const iosVirtualPaymentTitle = key === KEYS.ENABLE_IOS_VIRTUAL_PAYMENT
@@ -637,7 +709,9 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
     if (tencentAttributionTitle) {
       params.configGroupKey = 'appConfig'
       params.configGroupName = '应用配置'
-      params.description = `${tencentAttributionTitle}，用于腾讯广告小程序购买行为回传`
+      params.description = key === KEYS.TENCENT_ATTRIBUTION_MONITOR_KEY
+        ? '用于区分当前租户的腾讯广告监控回调连接'
+        : `${tencentAttributionTitle}，用于腾讯广告小程序购买行为回传`
     }
     if (iosVirtualPaymentTitle) {
       params.configGroupKey = 'appConfig'
@@ -1383,7 +1457,77 @@ onMounted(() => {
                     </el-button>
                   </div>
                 </div>
+                <div class="config-field">
+                  <div class="config-field-label">
+                    <strong>监控连接密钥</strong>
+                    <small>用于隔离每个租户的公开监测回调地址；重新生成会让旧连接失效。</small>
+                  </div>
+                  <el-button
+                    type="primary"
+                    :loading="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_MONITOR_KEY)"
+                    @click="handleGenerateTencentMonitorKey"
+                  >
+                    {{ formData.tencentAttributionMonitorKey ? '重新生成连接' : '生成监控连接' }}
+                  </el-button>
+                </div>
               </div>
+
+              <div class="config-section-title config-section-title--secondary">
+                <h4>DataNexus 监控连接</h4>
+              </div>
+              <p class="config-field-note">
+                将对应连接粘贴到腾讯广告 DataNexus「数据监测 → 广告效果监测」的点击监测、曝光监测或微信视频号栏。连接包含当前租户 ID。
+              </p>
+              <div v-if="tencentMonitorBaseUrl" class="config-fields config-fields--one">
+                <div class="config-field">
+                  <div class="config-field-label">
+                    <strong>广告点击</strong>
+                    <small>营销载体选择微信小程序；回调参数由腾讯广告替换。</small>
+                  </div>
+                  <div class="config-control-row">
+                    <el-input :model-value="tencentClickMonitorUrl" readonly />
+                    <el-button type="primary" @click="copyTencentMonitorUrl(tencentClickMonitorUrl)">
+                      复制
+                    </el-button>
+                  </div>
+                </div>
+                <div class="config-field">
+                  <div class="config-field-label">
+                    <strong>广告曝光</strong>
+                    <small>曝光监测需按腾讯广告要求使用新版转化归因。</small>
+                  </div>
+                  <div class="config-control-row">
+                    <el-input :model-value="tencentImpressionMonitorUrl" readonly />
+                    <el-button type="primary" @click="copyTencentMonitorUrl(tencentImpressionMonitorUrl)">
+                      复制
+                    </el-button>
+                  </div>
+                </div>
+                <div class="config-field">
+                  <div class="config-field-label">
+                    <strong>视频号</strong>
+                    <small>营销载体类型选择微信视频号。</small>
+                  </div>
+                  <div class="config-control-row">
+                    <el-input :model-value="tencentChannelMonitorUrl" readonly />
+                    <el-button type="primary" @click="copyTencentMonitorUrl(tencentChannelMonitorUrl)">
+                      复制
+                    </el-button>
+                  </div>
+                </div>
+              </div>
+              <el-alert
+                v-else-if="!formData.tencentAttributionMonitorKey"
+                title="请先生成当前租户的监控连接。"
+                type="info"
+                :closable="false"
+              />
+              <el-alert
+                v-else
+                title="当前租户未配置网站域名，无法生成监控连接。请先在租户管理中配置网站域名。"
+                type="warning"
+                :closable="false"
+              />
             </section>
           </el-form>
         </main>

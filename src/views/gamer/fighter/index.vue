@@ -143,7 +143,7 @@ async function handleEditLevel(row: LevelApply) {
   try {
     const data = await LevelConfigApi.getLevelConfigPage({
       categoryType: row.levelType,
-      categoryId: row.levelType === 1 ? row.productCategoryId : undefined,
+      categoryId: row.productCategoryId,
       pageNo: 1,
       pageSize: 100,
     })

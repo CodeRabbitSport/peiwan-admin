@@ -48,6 +48,7 @@ export interface AccOrder {
   payStatus?: number // 支付状态：0-未支付 1-已支付 2-已退款
   payTime: string | Dayjs // 支付时间
   payChannelCode: string // 支付渠道编码
+  payChannelDisplay?: string // 支付渠道展示文案
   payOrderId: number // 支付订单ID
   cancelReason: string // 取消原因
   cancelTime: string | Dayjs // 取消时间

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 // import { CACHE_KEY, useCache } from '@/hooks/web/useCache'
+import { AccOrderApi } from '@/api/gamer/accorder'
 import { LevelApplyApi } from '@/api/gamer/levelapply'
 import { ServiceOrderApi } from '@/api/gamer/serviceorder'
 import routerSearch from '@/components/RouterSearch/index.vue'
@@ -28,7 +29,8 @@ const greyMode = computed(() => appStore.getGreyMode)
 // setDefaultTheme()
 
 // 轮询订单和申请，有新数据时播放提醒
-const firstOrderId = ref<number | null>(null) // 存储第一条订单的 id
+const highestOrderId = ref<number | null>(null) // 记录已处理的最大订单 ID
+const highestAccOrderId = ref<number | null>(null) // 记录已处理的陪玩订单 ID
 const firstLevelApplyId = ref<number | null>(null) // 存储第一条打手申请的 id
 const firstCompanionApplyId = ref<number | null>(null) // 存储第一条陪玩申请的 id
 const pollOrderInterval = ref<ReturnType<typeof setInterval> | null>(null) // 轮询定时器
@@ -59,22 +61,20 @@ watch(orderSoundEnabled, (enabled) => {
 })
 
 async function enableOrderSound() {
-  await Promise.all([initFirstOrderId(), initFirstApplyIds()])
+  await Promise.all([initLatestOrderIds(), initFirstApplyIds()])
   if (!orderSoundEnabled.value) return
   startPollOrder()
 }
 
-// 初始化第一条订单 id
-async function initFirstOrderId() {
+// 初始化最新订单 ID 游标（只统计已支付订单）
+async function initLatestOrderIds() {
   try {
-    const data = await ServiceOrderApi.getServiceOrderPage({
-      pageNo: 1,
-      pageSize: 1,
-      payStatus: 1,
-    })
-    if (data.list && data.list.length > 0) {
-      firstOrderId.value = data.list[0].id
-    }
+    const [serviceOrderData, accOrderData] = await Promise.all([
+      ServiceOrderApi.getServiceOrderPage({ pageNo: 1, pageSize: 1, payStatus: 1 }),
+      AccOrderApi.getAccOrderPage({ pageNo: 1, pageSize: 1, payStatus: 1 }),
+    ])
+    highestOrderId.value = serviceOrderData.list?.[0]?.id ?? 0
+    highestAccOrderId.value = accOrderData.list?.[0]?.id ?? 0
   }
   catch {
     // 初始化失败，忽略
@@ -108,28 +108,33 @@ function speakNotification(text: string) {
   window.speechSynthesis.speak(utterance)
 }
 
-// 轮询订单
+// 轮询订单（只统计已支付订单，未支付、已退款都不提醒）
 async function pollOrder() {
   try {
-    const data = await ServiceOrderApi.getServiceOrderPage({
-      pageNo: 1,
-      pageSize: 1,
-      payStatus: 1,
-    })
+    const [serviceOrderData, accOrderData] = await Promise.all([
+      ServiceOrderApi.getServiceOrderPage({ pageNo: 1, pageSize: 1, payStatus: 1 }),
+      AccOrderApi.getAccOrderPage({ pageNo: 1, pageSize: 1, payStatus: 1 }),
+    ])
+    const currentLatestOrderId = serviceOrderData.list?.[0]?.id
+    const currentLatestAccOrderId = accOrderData.list?.[0]?.id
+    let hasNewOrder = false
 
-    if (data.list && data.list.length > 0) {
-      const currentFirstOrderId = data.list[0].id
-      // 如果第一条订单 id 不同，说明有新订单
-      if (firstOrderId.value !== currentFirstOrderId) {
-        // 播放音乐
-        if (audio.value) {
-          audio.value.play().catch(() => {
-            // 播放失败，忽略（可能是用户未交互）
-          })
-        }
-      }
-      // 更新存储的第一条订单 id
-      firstOrderId.value = currentFirstOrderId
+    // 新支付会产生更大的订单 ID；退款、未支付不参与比较，不会再次触发提醒。
+    if (typeof currentLatestOrderId === 'number') {
+      if (highestOrderId.value !== null && currentLatestOrderId > highestOrderId.value)
+        hasNewOrder = true
+      highestOrderId.value = Math.max(highestOrderId.value ?? 0, currentLatestOrderId)
+    }
+    if (typeof currentLatestAccOrderId === 'number') {
+      if (highestAccOrderId.value !== null && currentLatestAccOrderId > highestAccOrderId.value)
+        hasNewOrder = true
+      highestAccOrderId.value = Math.max(highestAccOrderId.value ?? 0, currentLatestAccOrderId)
+    }
+
+    if (hasNewOrder && audio.value) {
+      audio.value.play().catch(() => {
+        // 播放失败，忽略（可能是用户未交互）
+      })
     }
   }
   catch {

@@ -19,6 +19,7 @@
             </el-radio>
           </el-radio-group>
         </el-form-item>
+        <PayMethodDisplayFields v-model:display="formData.config.display" />
         <el-form-item label="备注" label-width="180px" prop="remark">
           <el-input v-model="formData.remark" :style="{ width: '100%' }" />
         </el-form-item>
@@ -34,6 +35,7 @@
 import { CommonStatusEnum } from '@/utils/constants'
 import { DICT_TYPE, getDictOptions } from '@/utils/dict'
 import * as ChannelApi from '@/api/pay/channel'
+import PayMethodDisplayFields from './PayMethodDisplayFields.vue'
 
 defineOptions({ name: 'WalletChannelForm' })
 
@@ -50,7 +52,8 @@ const formData = ref<any>({
   feeRate: 0,
   remark: '',
   config: {
-    name: 'mock-conf'
+    name: 'mock-conf',
+    display: { platforms: [], configs: {} }
   }
 })
 const formRules = {
@@ -68,8 +71,14 @@ const open = async (appId, code) => {
     const data = await ChannelApi.getChannel(appId, code)
 
     if (data && data.id) {
-      formData.value = data
-      formData.value.config = JSON.parse(data.config)
+      const config = JSON.parse(data.config)
+      config.display = {
+        // sort 必须带上：漏了它，保存时会把后台配置的显示顺序写没（客户端就按任意顺序展示了）
+        sort: config.display?.sort,
+        platforms: config.display?.platforms || [],
+        configs: config.display?.configs || {},
+      }
+      formData.value = { ...data, config }
     }
     dialogTitle.value = !formData.value.id ? '创建支付渠道' : '编辑支付渠道'
   } finally {
@@ -114,7 +123,8 @@ const resetForm = (appId, code) => {
     remark: '',
     feeRate: 0,
     config: {
-      name: 'mock-conf'
+      name: 'mock-conf',
+      display: { platforms: [], configs: {} }
     }
   }
   formRef.value?.resetFields()

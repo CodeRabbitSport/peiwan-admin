@@ -85,6 +85,7 @@
           查看微信小程序虚拟支付配置说明
         </a>
       </el-form-item>
+      <PayMethodDisplayFields v-model:display="formData.config.display" />
       <el-form-item label="备注" prop="remark">
         <el-input v-model="formData.remark" />
       </el-form-item>
@@ -100,6 +101,7 @@
 import * as ChannelApi from '@/api/pay/channel'
 import { CommonStatusEnum } from '@/utils/constants'
 import { DICT_TYPE, getDictOptions } from '@/utils/dict'
+import PayMethodDisplayFields from './PayMethodDisplayFields.vue'
 
 defineOptions({ name: 'VirtualPaymentChannelForm' })
 
@@ -132,7 +134,8 @@ const resetForm = (appId: number, code: string) => {
       env: 0,
       walletUnit: 100,
       notifyToken: '',
-      notifyAesKey: ''
+      notifyAesKey: '',
+      display: { platforms: [], configs: {} }
     }
   }
   formRef.value?.resetFields()
@@ -145,8 +148,14 @@ const open = async (appId: number, code: string) => {
   try {
     const data = await ChannelApi.getChannel(String(appId), code)
     if (data?.id) {
-      formData.value = data
-      formData.value.config = JSON.parse(data.config)
+      const config = JSON.parse(data.config)
+      config.display = {
+        // sort 必须带上：漏了它，保存时会把后台配置的显示顺序写没（客户端就按任意顺序展示了）
+        sort: config.display?.sort,
+        platforms: config.display?.platforms || [],
+        configs: config.display?.configs || {},
+      }
+      formData.value = { ...data, config }
     }
     dialogTitle.value = !formData.value.id ? '创建支付渠道' : '编辑支付渠道'
   } finally {
