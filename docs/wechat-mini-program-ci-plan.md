@@ -1,6 +1,6 @@
 # 微信小程序多租户版本中心实施说明
 
-> 更新日期：2026-07-22
+> 更新日期：2026-10-14
 >
 > 已确认方案：不接入微信开放平台第三方平台；租户 1 维护统一构建产物，其他租户自行选择版本上传到各自的小程序，提审和发布仍由租户在微信公众平台手工完成。
 
@@ -119,6 +119,7 @@
 | GET | `/admin-api/gamer/mini-program-release/overview` | 查询配置、可用版本和上传记录 |
 | PUT | `/admin-api/gamer/mini-program-release/config` | 保存当前租户的小程序 CI 配置 |
 | POST | `/admin-api/gamer/mini-program-release/version` | 租户 1 上传统一 ZIP |
+| DELETE | `/admin-api/gamer/mini-program-release/version?versionId={id}` | 租户 1 删除版本及服务器对应产物目录 |
 | POST | `/admin-api/gamer/mini-program-release/upload` | 当前租户选择版本并创建上传任务 |
 
 小程序公开接口：
@@ -142,6 +143,12 @@
 上传任务使用单线程执行器全局串行处理，避免并发任务互相影响。每个租户同一时间只允许一条排队中或上传中的记录。
 
 任务开始时会原子地从 `QUEUED` 改为 `UPLOADING`。已经被判定过期或失败的旧任务即使仍残留在线程队列中，也不会再次执行。
+
+租户 1 可以通过可用版本列表中“上传到微信”旁边的“删除”按钮删除统一产物。删除前需要确认，删除后所有租户都无法再选择该版本；各租户的历史上传记录仍然保留。
+
+新上传的产物保存在 `artifact-dir/version-<随机标识>/artifact.zip` 中，上传任务的临时目录也放在该版本目录内。删除版本会清理整个对应版本目录；已有的直接保存在 `artifact-dir` 下的 ZIP 只删除对应文件，保留共享存储目录和其他版本。
+
+删除前会检查所有租户对该版本的排队和上传任务。创建上传任务和删除版本共用数据库版本行锁，防止并发创建任务时删除其产物；任务记录提交后才进入执行队列。服务器产物清理失败时回滚版本删除并返回错误，页面不会显示删除成功。
 
 ## 8. 部署步骤
 
@@ -200,6 +207,8 @@ pnpm build:mp:prod
 - [提交审核接口的第三方平台适用范围](https://developers.weixin.qq.com/doc/oplatform/openApi/miniprogram-management/code-management/api_submitaudit.html)
 - [版本查询接口的第三方平台适用范围](https://developers.weixin.qq.com/doc/oplatform/openApi/miniprogram-management/code-management/api_getversioninfo.html)
 
-## 11. 本轮验证边界
+## 11. 本地验证边界
 
-按当前约定，本轮只完成源码修改和静态复核，不执行 lint、构建、测试、依赖安装或真实微信上传。待确认代码后再进行这些验证。
+2026-10-14 的版本删除改动已通过前端相关文件 ESLint、生产构建和 Java gamer 模块及其依赖的编译，并完成差异检查。未编写或运行单元测试。
+
+前后端需同步部署。真实服务器上的版本删除、目录权限、数据库行锁和微信上传流程仍需在目标环境验证，本地构建和编译不能证明这些运行结果。

@@ -5,7 +5,7 @@ import { LevelApply_batchUpdateAllUsersServiceStatus } from '@/api/gamer/levelap
 import { SystemConfigApi } from '@/api/gamer/systemconfig'
 import { getTenant } from '@/api/system/tenant'
 import UploadImg from '@/components/UploadFile/src/UploadImg.vue'
-import { getTenantId } from '@/utils/auth'
+import { getTenantId, getVisitTenantId } from '@/utils/auth'
 
 defineOptions({ name: 'SystemConfig' })
 
@@ -77,6 +77,7 @@ const KEYS = {
   IOS_VIRTUAL_PAYMENT_FEE_RATE: 'appConfigIosVirtualPaymentFeeRate',
   INVITATION_POSTER: 'appConfigInvitePoster',
   TENCENT_ATTRIBUTION_ENABLED: 'appConfigTencentAttributionEnabled',
+  TENCENT_ATTRIBUTION_ACCOUNTS: 'appConfigTencentAttributionAccounts',
   TENCENT_ATTRIBUTION_ACCESS_TOKEN: 'appConfigTencentAttributionAccessToken',
   TENCENT_ATTRIBUTION_ACCOUNT_ID: 'appConfigTencentAttributionAccountId',
   TENCENT_ATTRIBUTION_ACTION_SET_ID: 'appConfigTencentAttributionActionSetId',
@@ -91,6 +92,15 @@ type KeyName = typeof KEYS[keyof typeof KEYS]
 
 // 表单数据
 interface HotTopicItem { sort: number, name: string, color: string }
+interface TencentAttributionAccount {
+  id: string
+  name: string
+  accessToken: string
+  accountId: string
+  actionSetId: string
+  wechatAppId: string
+  monitorKey: string
+}
 const formData = reactive<any>({
   hotTopicList: [],
   orderVirtualCount: 0,
@@ -147,11 +157,6 @@ const formData = reactive<any>({
   enableIosVirtualPayment: false,
   iosVirtualPaymentFeeRate: 0,
   tencentAttributionEnabled: false,
-  tencentAttributionAccessToken: '',
-  tencentAttributionAccountId: '',
-  tencentAttributionActionSetId: '',
-  tencentAttributionWechatAppId: '',
-  tencentAttributionMonitorKey: '',
   siteConfigCustomerServiceLink: '',
   siteConfigMiniProgramCustomerServiceCorpId: '',
   siteConfigMiniProgramCustomerServiceLink: '',
@@ -169,6 +174,10 @@ const loadingAll = ref(false)
 const activeGroup = ref('service')
 const groupSearch = ref('')
 const tenantDomain = ref<string>('')
+const tencentAccounts = ref<TencentAttributionAccount[]>([])
+const savedTencentAccounts = ref<TencentAttributionAccount[]>([])
+const activeTencentAccountIds = ref<string[]>([])
+const tencentAccountsLoadError = ref(false)
 
 const configGroups = [
   {
@@ -209,7 +218,7 @@ const configGroups = [
     title: '应用配置',
     description: '费率、业务模式与腾讯回传',
     icon: 'ep:operation',
-    count: 14,
+    count: 10,
     keywords: '提现手续费 自动接单 iOS 虚拟支付 iOS手续费率 邀请模式 消费排名 分佣比例 邀请海报 腾讯广告 回传 DataNexus 密钥 监测连接',
   },
 ]
@@ -442,21 +451,6 @@ async function loadAll() {
         case KEYS.TENCENT_ATTRIBUTION_ENABLED:
           formData.tencentAttributionEnabled = toBool(item.configValue)
           break
-        case KEYS.TENCENT_ATTRIBUTION_ACCESS_TOKEN:
-          formData.tencentAttributionAccessToken = String(item.configValue || '')
-          break
-        case KEYS.TENCENT_ATTRIBUTION_ACCOUNT_ID:
-          formData.tencentAttributionAccountId = String(item.configValue || '')
-          break
-        case KEYS.TENCENT_ATTRIBUTION_ACTION_SET_ID:
-          formData.tencentAttributionActionSetId = String(item.configValue || '')
-          break
-        case KEYS.TENCENT_ATTRIBUTION_WECHAT_APP_ID:
-          formData.tencentAttributionWechatAppId = String(item.configValue || '')
-          break
-        case KEYS.TENCENT_ATTRIBUTION_MONITOR_KEY:
-          formData.tencentAttributionMonitorKey = String(item.configValue || '')
-          break
         case KEYS.CUSTOMER_SERVICE_LINK:
           formData.siteConfigCustomerServiceLink = String(item.configValue || '')
           break
@@ -499,6 +493,7 @@ async function loadAll() {
       }
     })
     existingIdMap.value = idMap
+    loadTencentAccounts()
   }
   finally {
     loadingAll.value = false
@@ -547,31 +542,150 @@ const fullH5Url = computed(() => {
   return `${origin.replace(/\/+$/, '')}/html/${formData.htmlH5Key}`
 })
 
-const tencentMonitorBaseUrl = computed(() => {
-  const tenantId = getTenantId()
-  const rawDomain = String(tenantDomain.value || '').trim()
-  const trackingKey = String(formData.tencentAttributionMonitorKey || '').trim()
-  if (!tenantId || !rawDomain || !trackingKey)
-    return ''
-  const origin = /^https?:\/\//i.test(rawDomain) ? rawDomain : `https://${rawDomain}`
-  return `${origin.replace(/\/+$/, '')}/app-api/gamer/tencent-attribution/monitor/${tenantId}/${trackingKey}`
-})
+const tencentMonitorTypes = [
+  { type: 'click', title: '广告点击', description: '营销载体选择微信小程序；回调参数由腾讯广告替换。', query: 'account_id=__ACCOUNT_ID__&click_id=__CLICK_ID__&click_time=__CLICK_TIME__&wechat_openid=__WECHAT_OPEN_ID__&callback=__CALLBACK__' },
+  { type: 'impress', title: '广告曝光', description: '曝光监测需按腾讯广告要求使用新版转化归因。', query: 'account_id=__ACCOUNT_ID__&impression_id=__IMPRESSION_ID__&impression_time=__IMPRESSION_TIME__&callback=__CALLBACK__' },
+  { type: 'channel', title: '视频号', description: '营销载体类型选择微信视频号。', query: 'advertiser_id=__ADVERTISER_ID__&adgroup_id=__ADGROUP_ID__&act_type=__ACT_TYPE__&act_id=__ACT_ID__&act_time=__ACT_TIME__&callback=__CALLBACK__' },
+] as const
 
-const tencentClickMonitorUrl = computed(() => (
-  tencentMonitorBaseUrl.value
-    ? `${tencentMonitorBaseUrl.value}/click?account_id=__ACCOUNT_ID__&click_id=__CLICK_ID__&click_time=__CLICK_TIME__&wechat_openid=__WECHAT_OPEN_ID__&callback=__CALLBACK__`
-    : ''
-))
-const tencentImpressionMonitorUrl = computed(() => (
-  tencentMonitorBaseUrl.value
-    ? `${tencentMonitorBaseUrl.value}/impress?account_id=__ACCOUNT_ID__&impression_id=__IMPRESSION_ID__&impression_time=__IMPRESSION_TIME__&callback=__CALLBACK__`
-    : ''
-))
-const tencentChannelMonitorUrl = computed(() => (
-  tencentMonitorBaseUrl.value
-    ? `${tencentMonitorBaseUrl.value}/channel?advertiser_id=__ADVERTISER_ID__&adgroup_id=__ADGROUP_ID__&act_type=__ACT_TYPE__&act_id=__ACT_ID__&act_time=__ACT_TIME__&callback=__CALLBACK__`
-    : ''
-))
+function generateTencentKey() {
+  const bytes = new Uint8Array(24)
+  window.crypto.getRandomValues(bytes)
+  return Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('')
+}
+
+function loadTencentAccounts() {
+  tencentAccountsLoadError.value = false
+  try {
+    const stored = configList.value.find((item: any) => item.configKey === KEYS.TENCENT_ATTRIBUTION_ACCOUNTS)
+    let accounts: TencentAttributionAccount[]
+    if (stored) {
+      const parsed = JSON.parse(String(stored.configValue || '[]'))
+      if (!Array.isArray(parsed) || parsed.some(item => !item || typeof item !== 'object' || Array.isArray(item)))
+        throw new Error('Invalid Tencent account list')
+      const ids = new Set<string>()
+      accounts = parsed.map((item) => {
+        let id = String(item.id || '').trim() || generateTencentKey()
+        if (ids.has(id)) id = generateTencentKey()
+        ids.add(id)
+        return {
+          id,
+          name: String(item.name || '').trim(),
+          accessToken: String(item.accessToken || '').trim(),
+          accountId: String(item.accountId || '').trim(),
+          actionSetId: String(item.actionSetId || '').trim(),
+          wechatAppId: String(item.wechatAppId || '').trim(),
+          monitorKey: String(item.monitorKey || '').trim(),
+        }
+      })
+    }
+    else {
+      const getValue = (key: KeyName) => String(configList.value.find((item: any) => item.configKey === key)?.configValue || '').trim()
+      const legacy = {
+        id: 'legacy',
+        name: '现有回传账号',
+        accessToken: getValue(KEYS.TENCENT_ATTRIBUTION_ACCESS_TOKEN),
+        accountId: getValue(KEYS.TENCENT_ATTRIBUTION_ACCOUNT_ID),
+        actionSetId: getValue(KEYS.TENCENT_ATTRIBUTION_ACTION_SET_ID),
+        wechatAppId: getValue(KEYS.TENCENT_ATTRIBUTION_WECHAT_APP_ID),
+        monitorKey: getValue(KEYS.TENCENT_ATTRIBUTION_MONITOR_KEY),
+      }
+      accounts = [legacy.accessToken, legacy.accountId, legacy.actionSetId, legacy.wechatAppId, legacy.monitorKey].some(Boolean) ? [legacy] : []
+    }
+    tencentAccounts.value = accounts
+    savedTencentAccounts.value = accounts.map(account => ({ ...account }))
+    const activeIds = activeTencentAccountIds.value.filter(id => accounts.some(account => account.id === id))
+    activeTencentAccountIds.value = activeIds.length ? activeIds : accounts.slice(0, 1).map(account => account.id)
+  }
+  catch {
+    tencentAccounts.value = []
+    savedTencentAccounts.value = []
+    tencentAccountsLoadError.value = true
+    message.error('腾讯广告账号列表读取失败，请检查配置格式后刷新')
+  }
+}
+
+function addTencentAccount() {
+  const account: TencentAttributionAccount = {
+    id: generateTencentKey(),
+    name: '',
+    accessToken: '',
+    accountId: '',
+    actionSetId: '',
+    wechatAppId: tencentAccounts.value[0]?.wechatAppId || '',
+    monitorKey: generateTencentKey(),
+  }
+  tencentAccounts.value.push(account)
+  activeTencentAccountIds.value.push(account.id)
+}
+
+function removeTencentAccount(id: string) {
+  tencentAccounts.value = tencentAccounts.value.filter(account => account.id !== id)
+  activeTencentAccountIds.value = activeTencentAccountIds.value.filter(activeId => activeId !== id)
+}
+
+function isTencentAccountSaved(account: TencentAttributionAccount) {
+  return savedTencentAccounts.value.some(saved => JSON.stringify(saved) === JSON.stringify(account))
+}
+
+function getTencentMonitorUrl(account: TencentAttributionAccount, type: typeof tencentMonitorTypes[number]) {
+  const tenantId = getVisitTenantId() || getTenantId()
+  const saved = savedTencentAccounts.value.some(item => item.id === account.id
+    && item.accountId === account.accountId.trim() && item.monitorKey === account.monitorKey)
+  if (!tenantId || !account.monitorKey || !saved) return ''
+  return `https://api.zszs5.cn/app-api/gamer/tencent-attribution/monitor/${tenantId}/${account.monitorKey}/${type.type}?${type.query}`
+}
+
+function isPositiveLong(value: string) {
+  const normalized = value.replace(/^0+/, '')
+  return /^\d+$/.test(value) && normalized.length > 0
+    && (normalized.length < 19 || (normalized.length === 19 && normalized <= '9223372036854775807'))
+}
+
+async function handleSaveTencentAccounts() {
+  if (tencentAccountsLoadError.value) return
+  const accounts = tencentAccounts.value.map(account => ({
+    ...account,
+    name: account.name.trim(),
+    accessToken: account.accessToken.trim(),
+    accountId: account.accountId.trim(),
+    actionSetId: account.actionSetId.trim(),
+    wechatAppId: account.wechatAppId.trim(),
+    monitorKey: account.monitorKey || generateTencentKey(),
+  }))
+  const accountIds = new Set<string>()
+  const monitorKeys = new Set<string>()
+  for (const [index, account] of accounts.entries()) {
+    if (!account.accessToken || !isPositiveLong(account.accountId) || !isPositiveLong(account.actionSetId)
+      || !/^wx[a-z0-9]{16}$/i.test(account.wechatAppId)) {
+      message.warning(`第 ${index + 1} 个回传账号配置不完整或格式不正确，请填写密钥、有效的账号 ID、数据源 ID 和小程序 AppID`)
+      activeTencentAccountIds.value = [account.id]
+      return
+    }
+    account.accountId = account.accountId.replace(/^0+/, '')
+    account.actionSetId = account.actionSetId.replace(/^0+/, '')
+    if (accountIds.has(account.accountId)) {
+      message.warning(`腾讯广告账号 ${account.accountId} 重复，请删除重复配置`)
+      activeTencentAccountIds.value = [account.id]
+      return
+    }
+    if (!/^[\w-]{16,128}$/.test(account.monitorKey) || monitorKeys.has(account.monitorKey)) {
+      message.warning(`第 ${index + 1} 个账号的监控连接密钥无效或重复，请重新生成连接`)
+      activeTencentAccountIds.value = [account.id]
+      return
+    }
+    accountIds.add(account.accountId)
+    monitorKeys.add(account.monitorKey)
+  }
+  try {
+    await handleSave(KEYS.TENCENT_ATTRIBUTION_ACCOUNTS, 'json', accounts)
+    tencentAccounts.value = accounts
+    savedTencentAccounts.value = accounts.map(account => ({ ...account }))
+  }
+  catch {
+    message.error('保存腾讯广告回传账号失败，请重试')
+  }
+}
 
 async function copyTencentMonitorUrl(url: string) {
   try {
@@ -583,34 +697,8 @@ async function copyTencentMonitorUrl(url: string) {
   }
 }
 
-async function handleGenerateTencentMonitorKey() {
-  if (formData.tencentAttributionMonitorKey) {
-    try {
-      await ElMessageBox.confirm(
-        '重新生成后，已配置在 DataNexus 中的三条监控连接会立即失效。确认继续？',
-        '重置腾讯广告监控连接',
-        {
-          confirmButtonText: '重新生成',
-          cancelButtonText: '取消',
-          type: 'warning',
-        },
-      )
-    }
-    catch {
-      return
-    }
-  }
-
-  try {
-    const bytes = new Uint8Array(24)
-    window.crypto.getRandomValues(bytes)
-    const trackingKey = Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('')
-    await handleSave(KEYS.TENCENT_ATTRIBUTION_MONITOR_KEY, 'string', trackingKey)
-    formData.tencentAttributionMonitorKey = trackingKey
-  }
-  catch {
-    message.error('生成或保存监控连接失败，请重试')
-  }
+function handleGenerateTencentMonitorKey(account: TencentAttributionAccount) {
+  account.monitorKey = generateTencentKey()
 }
 
 async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'productIds' | 'string', value: any) {
@@ -667,6 +755,7 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
     const customerServiceTitle = customerServiceTitleMap[key]
     const tencentAttributionTitleMap: Partial<Record<KeyName, string>> = {
       [KEYS.TENCENT_ATTRIBUTION_ENABLED]: '启用腾讯广告回传',
+      [KEYS.TENCENT_ATTRIBUTION_ACCOUNTS]: '腾讯广告回传账号列表',
       [KEYS.TENCENT_ATTRIBUTION_ACCESS_TOKEN]: 'DataNexus 密钥',
       [KEYS.TENCENT_ATTRIBUTION_ACCOUNT_ID]: '腾讯广告账号 ID',
       [KEYS.TENCENT_ATTRIBUTION_ACTION_SET_ID]: 'DataNexus 数据源 ID',
@@ -709,9 +798,11 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
     if (tencentAttributionTitle) {
       params.configGroupKey = 'appConfig'
       params.configGroupName = '应用配置'
-      params.description = key === KEYS.TENCENT_ATTRIBUTION_MONITOR_KEY
-        ? '用于区分当前租户的腾讯广告监控回调连接'
-        : `${tencentAttributionTitle}，用于腾讯广告小程序购买行为回传`
+      params.description = key === KEYS.TENCENT_ATTRIBUTION_ACCOUNTS
+        ? '当前租户的腾讯广告账号列表，每笔符合条件的订单向全部已配置账号回传'
+        : key === KEYS.TENCENT_ATTRIBUTION_MONITOR_KEY
+          ? '用于区分当前租户的腾讯广告监控回调连接'
+          : `${tencentAttributionTitle}，用于腾讯广告小程序购买行为回传`
     }
     if (iosVirtualPaymentTitle) {
       params.configGroupKey = 'appConfig'
@@ -728,9 +819,11 @@ async function handleSave(key: KeyName, type: 'json' | 'number' | 'boolean' | 'p
     }
     await SystemConfigApi.updateSystem(params)
     message.success('已保存')
-    // 如果是首次创建（无 id），保存后刷新映射
+    // 首次创建时只刷新配置映射，保留页面其它未保存的修改。
     if (!existingIdMap.value[key]) {
-      await loadAll()
+      const configs = await SystemConfigApi.getSystemConfigPage()
+      configList.value = configs || []
+      existingIdMap.value = Object.fromEntries(configList.value.map((item: any) => [item.configKey, item.id]))
     }
   }
   finally {
@@ -1357,14 +1450,30 @@ onMounted(() => {
                 </div>
               </div>
 
-              <div class="config-section-title config-section-title--secondary">
+              <div class="config-section-title config-section-title--secondary tencent-account-toolbar">
                 <h4>腾讯广告回传</h4>
+                <div>
+                  <el-button
+                    :disabled="loadingAll || tencentAccountsLoadError || savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACCOUNTS)"
+                    @click="addTencentAccount"
+                  >
+                    添加回传账号
+                  </el-button>
+                  <el-button
+                    type="primary"
+                    :disabled="loadingAll || tencentAccountsLoadError"
+                    :loading="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACCOUNTS)"
+                    @click="handleSaveTencentAccounts"
+                  >
+                    保存账号配置
+                  </el-button>
+                </div>
               </div>
-              <div class="config-fields">
+              <div class="config-fields config-fields--one">
                 <div class="config-field config-field--switch">
                   <div class="config-field-label">
                     <strong>启用购买行为回传</strong>
-                    <small>仅回传带腾讯广告点击参数且已支付的订单</small>
+                    <small>带腾讯广告点击参数的订单支付成功后，向当前租户全部已保存账号回传下单和付费行为。</small>
                   </div>
                   <el-switch
                     v-model="formData.tencentAttributionEnabled"
@@ -1372,162 +1481,107 @@ onMounted(() => {
                     @change="(val: any) => handleSave(KEYS.TENCENT_ATTRIBUTION_ENABLED, 'boolean', val)"
                   />
                 </div>
-                <div class="config-field">
-                  <div class="config-field-label">
-                    <strong>DataNexus 密钥</strong>
-                    <small>数据源列表中“查看密钥”获取的 access_token</small>
-                  </div>
-                  <div class="config-control-row">
-                    <el-input
-                      v-model="formData.tencentAttributionAccessToken"
-                      type="password"
-                      show-password
-                      clearable
-                      placeholder="请输入数据源密钥"
-                    />
-                    <el-button
-                      type="primary"
-                      :loading="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACCESS_TOKEN)"
-                      @click="handleSave(KEYS.TENCENT_ATTRIBUTION_ACCESS_TOKEN, 'string', formData.tencentAttributionAccessToken)"
-                    >
-                      保存
-                    </el-button>
-                  </div>
-                </div>
-                <div class="config-field">
-                  <div class="config-field-label">
-                    <strong>腾讯广告账号 ID</strong>
-                    <small>推广账号 ID 或 DataNexus 账号 ID</small>
-                  </div>
-                  <div class="config-control-row">
-                    <el-input
-                      v-model="formData.tencentAttributionAccountId"
-                      clearable
-                      maxlength="32"
-                      placeholder="请输入 account_id"
-                    />
-                    <el-button
-                      type="primary"
-                      :loading="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACCOUNT_ID)"
-                      @click="handleSave(KEYS.TENCENT_ATTRIBUTION_ACCOUNT_ID, 'string', formData.tencentAttributionAccountId)"
-                    >
-                      保存
-                    </el-button>
-                  </div>
-                </div>
-                <div class="config-field">
-                  <div class="config-field-label">
-                    <strong>DataNexus 数据源 ID</strong>
-                    <small>创建微信小程序数据源后获得的 user_action_set_id</small>
-                  </div>
-                  <div class="config-control-row">
-                    <el-input
-                      v-model="formData.tencentAttributionActionSetId"
-                      clearable
-                      maxlength="32"
-                      placeholder="请输入 user_action_set_id"
-                    />
-                    <el-button
-                      type="primary"
-                      :loading="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACTION_SET_ID)"
-                      @click="handleSave(KEYS.TENCENT_ATTRIBUTION_ACTION_SET_ID, 'string', formData.tencentAttributionActionSetId)"
-                    >
-                      保存
-                    </el-button>
-                  </div>
-                </div>
-                <div class="config-field">
-                  <div class="config-field-label">
-                    <strong>微信小程序 AppID</strong>
-                    <small>必须与数据源授权关联的小程序一致</small>
-                  </div>
-                  <div class="config-control-row">
-                    <el-input
-                      v-model="formData.tencentAttributionWechatAppId"
-                      clearable
-                      maxlength="64"
-                      placeholder="请输入小程序 AppID"
-                    />
-                    <el-button
-                      type="primary"
-                      :loading="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_WECHAT_APP_ID)"
-                      @click="handleSave(KEYS.TENCENT_ATTRIBUTION_WECHAT_APP_ID, 'string', formData.tencentAttributionWechatAppId)"
-                    >
-                      保存
-                    </el-button>
-                  </div>
-                </div>
-                <div class="config-field">
-                  <div class="config-field-label">
-                    <strong>监控连接密钥</strong>
-                    <small>用于隔离每个租户的公开监测回调地址；重新生成会让旧连接失效。</small>
-                  </div>
-                  <el-button
-                    type="primary"
-                    :loading="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_MONITOR_KEY)"
-                    @click="handleGenerateTencentMonitorKey"
-                  >
-                    {{ formData.tencentAttributionMonitorKey ? '重新生成连接' : '生成监控连接' }}
-                  </el-button>
-                </div>
-              </div>
-
-              <div class="config-section-title config-section-title--secondary">
-                <h4>DataNexus 监控连接</h4>
               </div>
               <p class="config-field-note">
-                将对应连接粘贴到腾讯广告 DataNexus「数据监测 → 广告效果监测」的点击监测、曝光监测或微信视频号栏。连接包含当前租户 ID。
+                已保存 {{ savedTencentAccounts.length }} 个回传账号。添加、修改、删除账号或重新生成连接后，点击“保存账号配置”生效。
               </p>
-              <div v-if="tencentMonitorBaseUrl" class="config-fields config-fields--one">
-                <div class="config-field">
-                  <div class="config-field-label">
-                    <strong>广告点击</strong>
-                    <small>营销载体选择微信小程序；回调参数由腾讯广告替换。</small>
-                  </div>
-                  <div class="config-control-row">
-                    <el-input :model-value="tencentClickMonitorUrl" readonly />
-                    <el-button type="primary" @click="copyTencentMonitorUrl(tencentClickMonitorUrl)">
-                      复制
-                    </el-button>
-                  </div>
-                </div>
-                <div class="config-field">
-                  <div class="config-field-label">
-                    <strong>广告曝光</strong>
-                    <small>曝光监测需按腾讯广告要求使用新版转化归因。</small>
-                  </div>
-                  <div class="config-control-row">
-                    <el-input :model-value="tencentImpressionMonitorUrl" readonly />
-                    <el-button type="primary" @click="copyTencentMonitorUrl(tencentImpressionMonitorUrl)">
-                      复制
-                    </el-button>
-                  </div>
-                </div>
-                <div class="config-field">
-                  <div class="config-field-label">
-                    <strong>视频号</strong>
-                    <small>营销载体类型选择微信视频号。</small>
-                  </div>
-                  <div class="config-control-row">
-                    <el-input :model-value="tencentChannelMonitorUrl" readonly />
-                    <el-button type="primary" @click="copyTencentMonitorUrl(tencentChannelMonitorUrl)">
-                      复制
-                    </el-button>
-                  </div>
-                </div>
-              </div>
               <el-alert
-                v-else-if="!formData.tencentAttributionMonitorKey"
-                title="请先生成当前租户的监控连接。"
-                type="info"
+                v-if="tencentAccountsLoadError"
+                title="回传账号配置格式有误，请检查配置后刷新页面。"
+                type="error"
                 :closable="false"
               />
-              <el-alert
-                v-else
-                title="当前租户未配置网站域名，无法生成监控连接。请先在租户管理中配置网站域名。"
-                type="warning"
-                :closable="false"
-              />
+              <el-empty v-else-if="!tencentAccounts.length" description="暂无回传账号，点击上方按钮添加" :image-size="80" />
+              <el-collapse v-else v-model="activeTencentAccountIds" class="tencent-accounts">
+                <el-collapse-item v-for="account in tencentAccounts" :key="account.id" :name="account.id">
+                  <template #title>
+                    <div class="tencent-account-heading">
+                      <strong>{{ account.name || '未命名账号' }}</strong>
+                      <span>{{ account.accountId || '待填写账号 ID' }}</span>
+                      <el-tag :type="isTencentAccountSaved(account) ? 'success' : 'warning'" size="small">
+                        {{ isTencentAccountSaved(account) ? '已保存' : '未保存' }}
+                      </el-tag>
+                    </div>
+                  </template>
+                  <div class="tencent-account-actions">
+                    <el-button
+                      type="danger"
+                      plain
+                      :disabled="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACCOUNTS)"
+                      @click="removeTencentAccount(account.id)"
+                    >
+                      删除账号
+                    </el-button>
+                  </div>
+                  <div class="config-fields">
+                    <div class="config-field">
+                      <div class="config-field-label">
+                        <strong>账号名称</strong>
+                        <small>用于区分多个投放账号，可选填。</small>
+                      </div>
+                      <el-input v-model="account.name" maxlength="60" clearable placeholder="例如：投放账号一" :disabled="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACCOUNTS)" />
+                    </div>
+                    <div class="config-field">
+                      <div class="config-field-label">
+                        <strong>DataNexus 密钥</strong>
+                        <small>此账号数据源列表中“查看密钥”获取的 access_token。</small>
+                      </div>
+                      <el-input v-model="account.accessToken" type="password" show-password clearable placeholder="请输入此账号的数据源密钥" :disabled="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACCOUNTS)" />
+                    </div>
+                    <div class="config-field">
+                      <div class="config-field-label">
+                        <strong>腾讯广告账号 ID</strong>
+                        <small>推广账号 ID 或 DataNexus 账号 ID。</small>
+                      </div>
+                      <el-input v-model="account.accountId" maxlength="32" clearable placeholder="请输入 account_id" :disabled="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACCOUNTS)" />
+                    </div>
+                    <div class="config-field">
+                      <div class="config-field-label">
+                        <strong>DataNexus 数据源 ID</strong>
+                        <small>此账号微信小程序数据源的 user_action_set_id。</small>
+                      </div>
+                      <el-input v-model="account.actionSetId" maxlength="32" clearable placeholder="请输入 user_action_set_id" :disabled="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACCOUNTS)" />
+                    </div>
+                    <div class="config-field">
+                      <div class="config-field-label">
+                        <strong>微信小程序 AppID</strong>
+                        <small>必须是用户登录的小程序，并已在此账号数据源中完成授权。</small>
+                      </div>
+                      <el-input v-model="account.wechatAppId" maxlength="64" clearable placeholder="请输入小程序 AppID" :disabled="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACCOUNTS)" />
+                    </div>
+                    <div class="config-field">
+                      <div class="config-field-label">
+                        <strong>监控连接密钥</strong>
+                        <small>每个账号使用独立连接；重新生成并保存后，此账号旧连接失效。</small>
+                      </div>
+                      <el-button type="primary" plain :disabled="savingKeys.has(KEYS.TENCENT_ATTRIBUTION_ACCOUNTS)" @click="handleGenerateTencentMonitorKey(account)">
+                        {{ account.monitorKey ? '重新生成连接' : '生成监控连接' }}
+                      </el-button>
+                    </div>
+                  </div>
+                  <div class="config-section-title">
+                    <h4>此账号的 DataNexus 监控连接</h4>
+                  </div>
+                  <p class="config-field-note">
+                    将对应连接粘贴到此账号 DataNexus“数据监测 → 广告效果监测”。连接区分当前租户和回传账号。
+                  </p>
+                  <div v-if="getTencentMonitorUrl(account, tencentMonitorTypes[0])" class="config-fields config-fields--one">
+                    <div v-for="monitor in tencentMonitorTypes" :key="monitor.type" class="config-field">
+                      <div class="config-field-label">
+                        <strong>{{ monitor.title }}</strong>
+                        <small>{{ monitor.description }}</small>
+                      </div>
+                      <div class="config-control-row">
+                        <el-input :model-value="getTencentMonitorUrl(account, monitor)" readonly />
+                        <el-button type="primary" @click="copyTencentMonitorUrl(getTencentMonitorUrl(account, monitor))">
+                          复制
+                        </el-button>
+                      </div>
+                    </div>
+                  </div>
+                  <el-alert v-else title="请先保存账号配置，保存后显示此账号的监控连接。" type="info" :closable="false" />
+                </el-collapse-item>
+              </el-collapse>
             </section>
           </el-form>
         </main>
@@ -1742,6 +1796,54 @@ onMounted(() => {
   &--one {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+.tencent-account-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  :deep(.el-button + .el-button) {
+    margin-left: 0;
+  }
+}
+
+.tencent-accounts {
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 5px;
+
+  :deep(.el-collapse-item__header) {
+    padding: 0 18px;
+  }
+
+  :deep(.el-collapse-item__wrap) {
+    padding: 0 18px;
+  }
+}
+
+.tencent-account-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+
+  span {
+    color: var(--el-text-color-secondary);
+  }
+}
+
+.tencent-account-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 12px 0;
 }
 
 .config-field {

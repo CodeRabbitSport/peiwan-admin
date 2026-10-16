@@ -15,6 +15,7 @@ const loading = ref(false)
 const savingConfig = ref(false)
 const uploadingArtifact = ref(false)
 const creatingTaskVersionId = ref<number>()
+const deletingVersionId = ref<number>()
 const overview = ref<MiniProgramReleaseOverview>()
 const artifactFile = ref<File>()
 const artifactFileList = ref<UploadUserFile[]>([])
@@ -107,7 +108,7 @@ function schedulePolling() {
   }
 }
 
-function isActiveStatus(status: MiniProgramUploadStatus) {
+function isActiveStatus(status?: MiniProgramUploadStatus) {
   return status === 'QUEUED' || status === 'UPLOADING'
 }
 
@@ -258,6 +259,30 @@ async function createUploadTask(version: MiniProgramVersion) {
   }
   finally {
     creatingTaskVersionId.value = undefined
+  }
+}
+
+async function deleteVersion(version: MiniProgramVersion) {
+  if (!isSystemTenant.value || deletingVersionId.value !== undefined
+    || creatingTaskVersionId.value !== undefined) {
+    return
+  }
+
+  deletingVersionId.value = version.id
+  try {
+    try {
+      await message.delConfirm(`确认删除版本 ${version.version}？所有租户将无法再使用该产物，服务器对应的产物文件和版本目录也会一并删除。`)
+    }
+    catch {
+      return
+    }
+
+    await MiniProgramReleaseApi.deleteVersion(version.id)
+    message.success('版本产物及服务器对应目录已删除')
+    await fetchOverview(true)
+  }
+  finally {
+    deletingVersionId.value = undefined
   }
 }
 
@@ -507,16 +532,26 @@ onBeforeUnmount(() => {
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column align="right" label="操作" min-width="150" fixed="right">
+        <el-table-column align="right" label="操作" :min-width="isSystemTenant ? 260 : 150" fixed="right">
           <template #default="{ row }">
             <el-button
               type="primary"
-              :disabled="!configReady || hasActiveTask || isCurrentVersion(row.id)"
+              :disabled="!configReady || hasActiveTask || isCurrentVersion(row.id) || creatingTaskVersionId !== undefined || deletingVersionId !== undefined"
               :loading="creatingTaskVersionId === row.id"
               @click="createUploadTask(row)"
             >
               <Icon icon="ep:upload" />
               {{ isCurrentVersion(row.id) ? '已上传' : '上传到微信' }}
+            </el-button>
+            <el-button
+              v-if="isSystemTenant"
+              type="danger"
+              :disabled="deletingVersionId !== undefined || creatingTaskVersionId !== undefined || isActiveStatus(getLatestUpload(row.id)?.status)"
+              :loading="deletingVersionId === row.id"
+              @click="deleteVersion(row)"
+            >
+              <Icon icon="ep:delete" />
+              删除
             </el-button>
           </template>
         </el-table-column>

@@ -70,6 +70,12 @@ export const MiniProgramReleaseApi = {
     return response.data as number
   },
 
+  deleteVersion: (versionId: number) =>
+    request.delete<boolean>({
+      url: '/gamer/mini-program-release/version',
+      params: { versionId },
+    }),
+
   createUploadTask: (versionId: number) =>
     request.post<number>({
       url: '/gamer/mini-program-release/upload',
