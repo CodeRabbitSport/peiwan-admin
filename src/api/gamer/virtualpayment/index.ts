@@ -5,6 +5,7 @@ export interface VirtualPaymentRecord {
   userId?: number
   openid?: string
   type?: string
+  paymentPurpose?: 'WALLET_RECHARGE' | 'ORDER_FUNDING'
   status?: string
   bizOrderNo?: string
   relatedOrderNo?: string
@@ -17,6 +18,63 @@ export interface VirtualPaymentRecord {
   errorMessage?: string
   remark?: string
   createTime?: string
+  updateTime?: string
+  platform?: 'IOS' | 'ANDROID' | 'UNKNOWN'
+  basePayPrice?: number
+  feePrice?: number
+  roundingPrice?: number
+  payPrice?: number
+  wechatPaidPrice?: number
+  wechatOrderStatus?: number
+  payOrderId?: number
+  merchantOrderId?: string
+  payOrderStatus?: number
+  businessOrder?: VirtualPaymentBusinessOrder
+  canReconcile?: boolean
+  canRefund?: boolean
+  canAuditRefund?: boolean
+  iosRefundAuditStatus?: number
+  iosRefundAuditReason?: string
+  iosRefundAuditUserId?: number
+  iosRefundAuditTime?: string
+  iosRefundQueryData?: string
+  iosRefundQueryReason?: string
+  iosRefundQueryTime?: string
+  iosRefundQueryResult?: number
+}
+
+export interface VirtualPaymentBusinessOrder {
+  id: number
+  type: 'SERVICE_ORDER' | 'ACC_ORDER'
+  orderNo: string
+  orderStatus: number
+  refundStatus?: number
+  refundAuditStatus?: number
+  refundApplyReason?: string
+  refundApplyTime?: string
+  refundAuditReason?: string
+  refundAuditTime?: string
+  refundAuditUserId?: number
+  refundAmount?: number
+  payRefundId?: number
+}
+
+export interface VirtualPaymentOperation {
+  success: boolean
+  message: string
+  record: VirtualPaymentRecord
+}
+
+export interface VirtualPaymentOperationLog {
+  id: number
+  adminUserId: number
+  action: string
+  beforeStatus: string
+  afterStatus?: string
+  result: string
+  message?: string
+  remark?: string
+  createTime: string
 }
 
 export interface VirtualPaymentPresentReqVO {
@@ -73,7 +131,28 @@ export const VirtualPaymentApi = {
   },
 
   getVirtualPayment: async (id: number) => {
-    return await request.get({ url: `/gamer/virtual-payment/get?id=${id}` })
+    return await request.get<VirtualPaymentRecord>({ url: `/gamer/virtual-payment/get?id=${id}` })
+  },
+
+  reconcile: async (data: { id: number, remark: string }) => {
+    return await request.post<VirtualPaymentOperation>({
+      url: '/gamer/virtual-payment/reconcile',
+      data,
+    })
+  },
+
+  auditRefund: async (data: { id: number, auditStatus: 1 | 2, auditReason: string }) => {
+    return await request.post<VirtualPaymentOperation>({
+      url: '/gamer/virtual-payment/audit-refund',
+      data,
+    })
+  },
+
+  getOperationLogs: async (id: number, pageNo: number, pageSize: number) => {
+    return await request.get<{ list: VirtualPaymentOperationLog[], total: number }>({
+      url: '/gamer/virtual-payment/operation-logs',
+      params: { id, pageNo, pageSize },
+    })
   },
 
   createVirtualPayment: async (data: VirtualPaymentRecord) => {
@@ -113,7 +192,7 @@ export const VirtualPaymentApi = {
   },
 
   refund: async (data: VirtualPaymentRefundReqVO) => {
-    return await request.post<number>({
+    return await request.post<VirtualPaymentOperation>({
       url: '/gamer/virtual-payment/refund',
       data,
     })
