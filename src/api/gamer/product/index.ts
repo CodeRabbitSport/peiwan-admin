@@ -17,7 +17,9 @@ export interface Product {
   scoreThreshold: number // 接单分数门槛
   accompanyTimeoutCancel: number // 派單超時自動取消(分鐘),-1代表無限制
   accompanySetting: number // 陪陪分配置(預留字段)
-  maxBuyNum: number // 最低购买数量
+  maxBuyNum: number // 累计限购数量，-1表示不限
+  dailyPurchaseLimit?: number // 每用户自然日限购数量，0表示不限
+  monthlyPurchaseLimit?: number // 每用户自然月限购数量，0表示不限
   commissionRate?: number // 抽成比例(陪玩到手比例)
   refundSupported: boolean // 是否支持退款
   virtualSales: number // 虚拟销量

@@ -75,7 +75,9 @@ const formData = ref<any>({
   scoreThreshold: undefined,
   accompanyTimeoutCancel: undefined,
   accompanySetting: undefined,
-  maxBuyNum: undefined,
+  maxBuyNum: -1,
+  dailyPurchaseLimit: 0,
+  monthlyPurchaseLimit: 0,
   commissionRate: undefined,
   refundSupported: undefined,
   virtualSales: undefined,
@@ -300,6 +302,9 @@ async function open(type: string, id?: number) {
         linkedCategoryTypeValue: [],
       }
       selectedLinkedProductId.value = formData.value.linkedProductId ?? null
+      formData.value.maxBuyNum ??= -1
+      formData.value.dailyPurchaseLimit ??= 0
+      formData.value.monthlyPurchaseLimit ??= 0
       // 如果有分类ID和类型ID，设置级联选择器的值
       if (formData.value.categoryId && formData.value.typeId) {
         formData.value.categoryTypeValue = [formData.value.categoryId, formData.value.typeId]
@@ -425,6 +430,8 @@ async function submitForm() {
   } = formData.value
   const data = {
     ...submitData,
+    dailyPurchaseLimit: submitData.dailyPurchaseLimit ?? 0,
+    monthlyPurchaseLimit: submitData.monthlyPurchaseLimit ?? 0,
     productLevel: Array.isArray(submitData.productLevel)
       ? submitData.productLevel.join(',')
       : submitData.productLevel,
@@ -499,7 +506,9 @@ function resetForm() {
     scoreThreshold: undefined,
     accompanyTimeoutCancel: undefined,
     accompanySetting: undefined,
-    maxBuyNum: undefined,
+    maxBuyNum: -1,
+    dailyPurchaseLimit: 0,
+    monthlyPurchaseLimit: 0,
     commissionRate: undefined,
     refundSupported: undefined,
     virtualSales: undefined,
@@ -923,11 +932,49 @@ function initDiscountFields() {
           </el-form-item>
         </el-col>
         <el-col :xs="24" :sm="12">
-          <el-form-item label="最高购买数量" prop="maxBuyNum">
-            <el-input-number v-model="formData.maxBuyNum" placeholder="请输入最高购买数量" :min="1" class="!w-full" />
+          <el-form-item label="累计限购" prop="maxBuyNum">
+            <el-input-number v-model="formData.maxBuyNum" placeholder="-1 表示不限" :min="-1" :precision="0" step-strictly class="!w-full" />
           </el-form-item>
         </el-col>
       </el-row>
+
+      <el-row>
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="每日限购" prop="dailyPurchaseLimit">
+            <el-input-number
+              v-model="formData.dailyPurchaseLimit"
+              :min="0"
+              :max="2147483647"
+              :precision="0"
+              step-strictly
+              class="!w-full"
+            >
+              <template #suffix>
+                单 / 人
+              </template>
+            </el-input-number>
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="每月限购" prop="monthlyPurchaseLimit">
+            <el-input-number
+              v-model="formData.monthlyPurchaseLimit"
+              :min="0"
+              :max="2147483647"
+              :precision="0"
+              step-strictly
+              class="!w-full"
+            >
+              <template #suffix>
+                单 / 人
+              </template>
+            </el-input-number>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <div class="mb-5 ml-[100px] text-sm text-gray-500">
+        累计限购填 -1 表示不限，每日／每月限购填 0 表示不限。
+      </div>
 
       <el-row>
         <el-col :xs="24" :sm="12">

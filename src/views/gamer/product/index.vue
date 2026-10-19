@@ -388,6 +388,12 @@ onMounted(() => {
       <el-table-column label="商品标题" align="center" prop="productTitle" />
       <!-- <el-table-column label="描述" align="center" prop="productDesc" /> -->
       <el-table-column label="库存" align="center" prop="productStock" />
+      <el-table-column label="每用户限购" align="center" min-width="150">
+        <template #default="scope">
+          <div>每日：{{ scope.row.dailyPurchaseLimit > 0 ? `${scope.row.dailyPurchaseLimit} 单` : '不限' }}</div>
+          <div>每月：{{ scope.row.monthlyPurchaseLimit > 0 ? `${scope.row.monthlyPurchaseLimit} 单` : '不限' }}</div>
+        </template>
+      </el-table-column>
       <el-table-column label="价格" align="center" prop="productPrice">
         <template #default="scope">
           {{ fenToYuan(scope.row.productPrice) }}
@@ -533,6 +539,12 @@ onMounted(() => {
           </el-descriptions-item>
           <el-descriptions-item label="库存">
             {{ linkedProductDetail.productStock ?? '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="每日限购 / 人">
+            {{ linkedProductDetail.dailyPurchaseLimit ? `${linkedProductDetail.dailyPurchaseLimit} 单` : '不限' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="每月限购 / 人">
+            {{ linkedProductDetail.monthlyPurchaseLimit ? `${linkedProductDetail.monthlyPurchaseLimit} 单` : '不限' }}
           </el-descriptions-item>
           <el-descriptions-item label="分类 ID">
             {{ linkedProductDetail.categoryId ?? '-' }}

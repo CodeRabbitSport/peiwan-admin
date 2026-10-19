@@ -13,12 +13,17 @@ import { Echart } from '@/components/Echart'
 import SummaryCard from '@/components/SummaryCard/index.vue'
 import { fenToYuan } from '@/utils'
 
+import OrderCountStatistics from './components/OrderCountStatistics.vue'
+import ProductSalesRank from './components/ProductSalesRank.vue'
+
 defineOptions({ name: 'Dashboard' })
 
 const message = useMessage()
 
 // 数据加载状态
 const dashboardLoading = ref(false)
+const dashboardFailed = ref(false)
+let dashboardRequestId = 0
 const amountChartLoading = ref(false)
 const sizeChartLoading = ref(false)
 
@@ -27,13 +32,22 @@ const sizeChartRef = ref<InstanceType<typeof Echart>>()
 
 // 大屏数据
 const dashboardData = ref<StaticsDashboardRespVO>({})
+const platformOrderCounts = computed(() => {
+  const rows = dashboardData.value.orderCountStatistics || []
+  return ['mobile', 'computer'].map(platform => ({
+    label: platform === 'mobile' ? '手机端' : '电脑端',
+    orderCount: rows.filter(row => row.gamePlatform === platform).reduce((sum, row) => sum + row.orderCount, 0),
+    refundCount: rows.filter(row => row.gamePlatform === platform).reduce((sum, row) => sum + row.refundCount, 0),
+  }))
+})
 
 // 用户类型切换（1:陪玩,2:打手）
 const levelType = ref<1 | 2>(2)
 
 // 统一的日期筛选
 const dateFilter = ref<'today' | 'yesterday' | 'last7days' | 'last30days' | 'lastMonth' | 'thisMonth' | 'custom'>('today')
-const customDate = ref<[string, string]>(['', ''])
+const customDate = ref<[string, string] | null>(null)
+const customDatePickerRef = ref()
 
 // 图表数据
 const orderAmountData = ref<{
@@ -80,7 +94,7 @@ function getDateRange() {
       endTime = now.endOf('day').format('YYYY-MM-DD HH:mm:ss')
       break
     case 'custom':
-      if (customDate.value[0] && customDate.value[1]) {
+      if (customDate.value?.[0] && customDate.value?.[1]) {
         startTime = dayjs(customDate.value[0]).startOf('day').format('YYYY-MM-DD HH:mm:ss')
         endTime = dayjs(customDate.value[1]).endOf('day').format('YYYY-MM-DD HH:mm:ss')
       }
@@ -97,9 +111,14 @@ function getDateRange() {
   return { startTime, endTime }
 }
 
+const selectedDateRange = computed(getDateRange)
+
 // 获取大屏数据
 async function fetchDashboardData() {
+  const requestId = ++dashboardRequestId
   dashboardLoading.value = true
+  dashboardFailed.value = false
+  dashboardData.value = {}
   try {
     const { startTime, endTime } = getDateRange()
     const params = {
@@ -107,14 +126,15 @@ async function fetchDashboardData() {
       startTime,
       endTime,
     }
-    dashboardData.value = await getStaticDashboard(params)
-    console.log('🚀 ~ fetchDashboardData ~  dashboardData.value:', dashboardData.value)
+    const data = await getStaticDashboard(params)
+    if (requestId === dashboardRequestId) dashboardData.value = data
   }
   catch (error) {
+    if (requestId === dashboardRequestId) dashboardFailed.value = true
     console.error('获取大屏数据失败:', error)
   }
   finally {
-    dashboardLoading.value = false
+    if (requestId === dashboardRequestId) dashboardLoading.value = false
   }
 }
 
@@ -181,17 +201,8 @@ function handleDateFilterChange() {
 
 // 自定义日期变化处理
 function handleCustomDateChange() {
-  // 如果日期被清空，不执行请求
-  if (!customDate.value || !customDate.value[0] || !customDate.value[1]) {
-    return
-  }
-
-  dateFilter.value = 'custom'
-  // if (dateFilter.value === 'custom') {
-  fetchDashboardData()
-  fetchAmountChartData()
-  fetchSizeChartData()
-  // }
+  dateFilter.value = customDate.value?.[0] && customDate.value?.[1] ? 'custom' : 'today'
+  handleDateFilterChange()
 }
 
 // levelType切换处理
@@ -660,6 +671,39 @@ onActivated(async () => {
 
 <template>
   <div class="white-dashboard">
+    <el-alert v-if="dashboardFailed" title="统计数据加载失败，请刷新后重试" type="error" :closable="false" class="mb-4" />
+    <!-- <el-row :gutter="16" class="mb-4">
+      <el-col :xs="24" :sm="12">
+        <el-card v-loading="dashboardLoading" shadow="never">
+          <SummaryCard
+            title="订单总笔数"
+            icon="ep:tickets"
+            icon-color="bg-blue-100"
+            icon-bg-color="text-blue-500"
+            :value="dashboardData.totalOrderCount || 0"
+            suffix=" 笔"
+          />
+          <div class="mt-3 flex flex-wrap gap-x-6 text-sm text-gray-500">
+            <span v-for="item in platformOrderCounts" :key="item.label">{{ item.label }}：{{ item.orderCount }} 笔</span>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12">
+        <el-card v-loading="dashboardLoading" shadow="never">
+          <SummaryCard
+            title="退款总笔数"
+            icon="ep:refresh-left"
+            icon-color="bg-red-100"
+            icon-bg-color="text-red-500"
+            :value="dashboardData.totalRefundCount || 0"
+            suffix=" 笔"
+          />
+          <div class="mt-3 flex flex-wrap gap-x-6 text-sm text-gray-500">
+            <span v-for="item in platformOrderCounts" :key="item.label">{{ item.label }}：{{ item.refundCount }} 笔</span>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row> -->
     <!-- KPI卡片区域 -->
     <el-row :gutter="16" class="mb-4">
       <el-col :xs="24" :sm="12" :md="8" :lg="8">
@@ -848,10 +892,13 @@ onActivated(async () => {
       </el-col>
     </el-row> -->
 
+    <OrderCountStatistics :rows="dashboardData.orderCountStatistics || []" :loading="dashboardLoading" />
+    <ProductSalesRank :start-time="selectedDateRange.startTime" :end-time="selectedDateRange.endTime" />
+
     <!-- 统一的筛选器 -->
     <el-card shadow="never" class="mb-4">
       <div class="flex flex-wrap items-center gap-4">
-        <span class="text-base font-medium">用户类型：</span>
+        <span class="text-base font-medium">趋势图订单类型：</span>
         <el-radio-group v-model="levelType" @change="handleLevelTypeChange">
           <el-radio-button :value="1">
             陪玩
@@ -882,6 +929,7 @@ onActivated(async () => {
           </el-radio-button>
         </el-radio-group>
         <el-date-picker
+          ref="customDatePickerRef"
           v-model="customDate"
           type="daterange"
           range-separator="至"
@@ -893,7 +941,7 @@ onActivated(async () => {
         />
         <el-button
           v-if="dateFilter !== 'custom'"
-          @click="dateFilter = 'custom'"
+          @click="customDatePickerRef?.handleOpen()"
         >
           指定日期
         </el-button>

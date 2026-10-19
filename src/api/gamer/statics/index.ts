@@ -201,6 +201,11 @@ export function getRechargeAmount(params: any): Promise<number> {
 
 // Response interface
 export interface StaticsDashboardRespVO {
+  /* 已支付订单总笔数，包含退款中、已退款 */
+  totalOrderCount?: number
+  /* 成功退款总笔数 */
+  totalRefundCount?: number
+  orderCountStatistics?: StaticsOrderCountRespVO[]
   /* 总订单金额 */
   totalOrderAmount?: number
   /* 今日订单金额 */
@@ -233,6 +238,32 @@ export interface StaticsDashboardRespVO {
  */
 export function getStaticDashboard(params: StaticsOrderPeriodReqVO): Promise<StaticsDashboardRespVO> {
   return request.get({ url: `/gamer/statics/static-dashboard`, params })
+}
+
+export interface StaticsOrderCountRespVO {
+  gamePlatform: 'mobile' | 'computer' | 'other'
+  /* 10小程序，11服务号/H5（含缺省来源），31App */
+  terminal: number
+  orderCount: number
+  refundCount: number
+}
+
+export interface ProductSalesRankReqVO {
+  categoryId?: number
+  startTime?: string
+  endTime?: string
+}
+
+export interface ProductSalesRankRespVO {
+  productId: number
+  productName: string
+  categoryName: string
+  salesCount: number
+  orderCount: number
+}
+
+export function getProductSalesRank(params: ProductSalesRankReqVO): Promise<ProductSalesRankRespVO[]> {
+  return request.get({ url: '/gamer/statics/product-sales-rank', params })
 }
 
 // Parameter interface
