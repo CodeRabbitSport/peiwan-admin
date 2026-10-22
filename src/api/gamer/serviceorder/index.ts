@@ -25,6 +25,7 @@ export interface ServiceOrder {
   productName?: string // 商品名称
   productPicUrl: string // 商品图片URL
   productPrice?: number // 商品价格
+  productCount?: number // 购买数量
   orderStatus?: number // 订单状态：0-待支付 1-已支付待接单 2-进行中 3-已完成 4-已取消 5-退款中 6-已退款
   totalAmount?: number // 订单总金额
   discountAmount?: number // 优惠金额

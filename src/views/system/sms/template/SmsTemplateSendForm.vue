@@ -49,10 +49,10 @@ const formLoading = ref(false) // 表单的加载中：1）修改时的数据加
 // 发送短信表单相关
 const formData = ref({
   content: '',
-  params: {},
+  params: [] as string[],
   mobile: '',
   templateCode: '',
-  templateParams: new Map()
+  templateParams: {} as Record<string, string>
 })
 const formRules = reactive({
   mobile: [{ required: true, message: '手机不能为空', trigger: 'blur' }],
@@ -110,10 +110,10 @@ const submitForm = async () => {
 const resetForm = () => {
   formData.value = {
     content: '',
-    params: {},
+    params: [],
     mobile: '',
     templateCode: '',
-    templateParams: new Map()
+    templateParams: {}
   }
   formRef.value?.resetFields()
 }

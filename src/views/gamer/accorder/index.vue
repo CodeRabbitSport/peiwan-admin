@@ -13,6 +13,7 @@ import { isPhone } from '@/utils/device'
 import download from '@/utils/download'
 import { formatDate } from '@/utils/formatTime'
 import AccOrderConversationMessage from '@/views/gamer/accorderconversationmessage/index.vue'
+import OrderSmsDialog from '@/views/gamer/components/OrderSmsDialog.vue'
 
 import UserInfoViewDialog from '../userinfo/UserInfoViewDialog.vue'
 import AccOrderForm from './AccOrderForm.vue'
@@ -42,6 +43,7 @@ const queryParams = reactive<any>({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+const smsDialogRef = ref<InstanceType<typeof OrderSmsDialog>>()
 const selectedOrderStatus = ref<string | number | undefined>(undefined)
 const acceptorUserMap = ref<Record<number, any>>({})
 
@@ -617,10 +619,10 @@ async function openAccOrderConversationByOrderId(orderId: number) {
     >
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" width="80" />
-      <el-table-column label="订单信息" align="center" width="200px" class-name="col-order-info">
+      <el-table-column label="订单信息" align="center" width="270px" class-name="col-order-info">
         <template #default="scope">
           <div class="flex flex-col gap-1 text-left">
-            <div>
+            <div class="order-number" :title="scope.row.orderNo">
               订单号：{{ scope.row.orderNo || '无' }}
             </div>
             <div>
@@ -643,8 +645,8 @@ async function openAccOrderConversationByOrderId(orderId: number) {
             <div v-if="scope.row.userPickLevel">
               选择等级：{{ scope.row.userPickLevel }}
             </div>
-            <div v-if="scope.row.productDuration">
-              时长：{{ scope.row.productDuration / 60 }} 小时
+            <div>
+              购买数量：{{ scope.row.productDuration != null ? `${scope.row.productDuration / 60} 小时` : '无' }}
             </div>
             <div>订单金额：{{ scope.row.totalAmount != null ? fenToYuan(scope.row.totalAmount) : '无' }}</div>
             <div>支付金额：{{ scope.row.actualAmount != null ? fenToYuan(scope.row.actualAmount) : '无' }}</div>
@@ -816,6 +818,12 @@ async function openAccOrderConversationByOrderId(orderId: number) {
                   查看聊天记录
                 </el-dropdown-item>
                 <el-dropdown-item
+                  v-hasPermi="['system:sms-template:send-sms']"
+                  @click="smsDialogRef?.open(scope.row)"
+                >
+                  发送短信
+                </el-dropdown-item>
+                <el-dropdown-item
                   v-if="scope.row.orderStatus === 1 && scope.row.payStatus === 1 && scope.row.acceptorList?.length !== 0"
                   v-hasPermi="['gamer:acc-order:audit-complete']"
                   @click="handleAuditOrderComplete(scope.row)"
@@ -871,6 +879,7 @@ async function openAccOrderConversationByOrderId(orderId: number) {
 
   <!-- 指定接单人弹窗 -->
   <UserInfoPickerDialog ref="assignPickerRef" @confirm="handleAssignConfirm" />
+  <OrderSmsDialog ref="smsDialogRef" />
 
   <!-- 退款审核弹窗 -->
   <Dialog v-model="refundDialogVisible" title="退款审核" width="480px">
@@ -966,6 +975,12 @@ async function openAccOrderConversationByOrderId(orderId: number) {
 </template>
 
 <style scoped>
+.order-number {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 :deep(.el-table .col-order-info .cell) {
   white-space: normal;
   overflow: visible;

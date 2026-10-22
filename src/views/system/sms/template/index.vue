@@ -1,12 +1,107 @@
+<script lang="ts" setup>
+import * as SmsChannelApi from '@/api/system/sms/smsChannel'
+import * as SmsTemplateApi from '@/api/system/sms/smsTemplate'
+import { DICT_TYPE, getDictLabel, getIntDictOptions } from '@/utils/dict'
+import download from '@/utils/download'
+import { dateFormatter } from '@/utils/formatTime'
+
+import SmsTemplateForm from './SmsTemplateForm.vue'
+import SmsTemplateSendForm from './SmsTemplateSendForm.vue'
+
+defineOptions({ name: 'SystemSmsTemplate' })
+
+const message = useMessage() // 消息弹窗
+
+const loading = ref(false) // 列表的加载中
+const total = ref(0) // 列表的总页数
+const list = ref([]) // 列表的数据
+const queryFormRef = ref() // 搜索的表单
+const queryParams = reactive({
+  pageNo: 1,
+  pageSize: 10,
+  type: undefined,
+  status: undefined,
+  code: '',
+  content: '',
+  apiTemplateId: '',
+  channelId: undefined,
+  createTime: [],
+})
+const exportLoading = ref(false) // 导出的加载中
+const channelList = ref<SmsChannelApi.SmsChannelVO[]>([]) // 短信渠道列表
+
+/** 查询列表 */
+async function getList() {
+  loading.value = true
+  try {
+    const data = await SmsTemplateApi.getSmsTemplatePage(queryParams)
+    list.value = data.list
+    total.value = data.total
+  }
+  finally {
+    loading.value = false
+  }
+}
+
+/** 搜索按钮操作 */
+function handleQuery() {
+  queryParams.pageNo = 1
+  getList()
+}
+
+/** 重置按钮操作 */
+function resetQuery() {
+  queryFormRef.value.resetFields()
+  handleQuery()
+}
+
+/** 添加/修改操作 */
+const formRef = ref()
+function openForm(type: string, id?: number) {
+  formRef.value.open(type, id)
+}
+
+/** 发送短信按钮 */
+const sendFormRef = ref()
+function openSendForm(id: number) {
+  sendFormRef.value.open(id)
+}
+
+/** 导出按钮操作 */
+async function handleExport() {
+  try {
+    // 导出的二次确认
+    await message.exportConfirm()
+    // 发起导出
+    exportLoading.value = true
+    const data = await SmsTemplateApi.exportSmsTemplate(queryParams)
+    download.excel(data, '短信模板.xls')
+  }
+  catch {
+  }
+  finally {
+    exportLoading.value = false
+  }
+}
+
+/** 初始化 */
+onMounted(async () => {
+  await SmsTemplateApi.initializeFixedSmsTemplates()
+  await getList()
+  // 加载渠道列表
+  channelList.value = await SmsChannelApi.getSimpleSmsChannelList()
+})
+</script>
+
 <template>
   <!--  -->
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
     <el-form
+      ref="queryFormRef"
       class="-mb-[15px]"
       :model="queryParams"
-      ref="queryFormRef"
       :inline="true"
       label-width="150px"
     >
@@ -45,7 +140,7 @@
           v-model="queryParams.code"
           placeholder="请输入模板编码"
           clearable
-          
+
           class="!w-[240px]"
         />
       </el-form-item>
@@ -54,7 +149,7 @@
           v-model="queryParams.apiTemplateId"
           placeholder="请输入短信 API 的模板编号"
           clearable
-          
+
           class="!w-[240px]"
         />
       </el-form-item>
@@ -70,8 +165,8 @@
             :key="channel.id"
             :value="channel.id"
             :label="
-              channel.signature +
-              `【 ${getDictLabel(DICT_TYPE.SYSTEM_SMS_CHANNEL_CODE, channel.code)}】`
+              `${channel.signature
+              }【 ${getDictLabel(DICT_TYPE.SYSTEM_SMS_CHANNEL_CODE, channel.code)}】`
             "
           />
         </el-select>
@@ -88,14 +183,27 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-[5px]" /> 搜索</el-button>
-        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-[5px]" /> 重置</el-button>
+        <el-button @click="handleQuery">
+          <Icon icon="ep:search" class="mr-[5px]" /> 搜索
+        </el-button>
+        <el-button @click="resetQuery">
+          <Icon icon="ep:refresh" class="mr-[5px]" /> 重置
+        </el-button>
         <el-button
+          v-hasPermi="['system:sms-template:create']"
+          type="primary"
+          plain
+          @click="openForm('create')"
+        >
+          <Icon icon="ep:plus" class="mr-[5px]" /> 新增
+        </el-button>
+
+        <el-button
+          v-hasPermi="['system:sms-template:export']"
           type="success"
           plain
-          @click="handleExport"
           :loading="exportLoading"
-          v-hasPermi="['system:sms-template:export']"
+          @click="handleExport"
         >
           <Icon icon="ep:download" class="mr-[5px]" /> 导出
         </el-button>
@@ -163,18 +271,18 @@
       <el-table-column label="操作" align="center" width="210" fixed="right">
         <template #default="scope">
           <el-button
+            v-hasPermi="['system:sms-template:update']"
             link
             type="primary"
-            @click="openForm(scope.row.id)"
-            v-hasPermi="['system:sms-template:update']"
+            @click="openForm('update', scope.row.id)"
           >
             修改
           </el-button>
           <el-button
+            v-hasPermi="['system:sms-template:send-sms']"
             link
             type="primary"
             @click="openSendForm(scope.row.id)"
-            v-hasPermi="['system:sms-template:send-sms']"
           >
             测试
           </el-button>
@@ -183,9 +291,9 @@
     </el-table>
     <!-- 分页 -->
     <Pagination
-      :total="total"
       v-model:page="queryParams.pageNo"
       v-model:limit="queryParams.pageSize"
+      :total="total"
       @pagination="getList"
     />
   </ContentWrap>
@@ -195,93 +303,3 @@
   <!-- 表单弹窗：测试发送 -->
   <SmsTemplateSendForm ref="sendFormRef" />
 </template>
-<script lang="ts" setup>
-import { DICT_TYPE, getIntDictOptions, getDictLabel } from '@/utils/dict'
-import { dateFormatter } from '@/utils/formatTime'
-import * as SmsTemplateApi from '@/api/system/sms/smsTemplate'
-import * as SmsChannelApi from '@/api/system/sms/smsChannel'
-import download from '@/utils/download'
-import SmsTemplateForm from './SmsTemplateForm.vue'
-import SmsTemplateSendForm from './SmsTemplateSendForm.vue'
-
-defineOptions({ name: 'SystemSmsTemplate' })
-
-const message = useMessage() // 消息弹窗
-
-const loading = ref(false) // 列表的加载中
-const total = ref(0) // 列表的总页数
-const list = ref([]) // 列表的数据
-const queryFormRef = ref() // 搜索的表单
-const queryParams = reactive({
-  pageNo: 1,
-  pageSize: 10,
-  type: undefined,
-  status: undefined,
-  code: '',
-  content: '',
-  apiTemplateId: '',
-  channelId: undefined,
-  createTime: []
-})
-const exportLoading = ref(false) // 导出的加载中
-const channelList = ref<SmsChannelApi.SmsChannelVO[]>([]) // 短信渠道列表
-
-/** 查询列表 */
-const getList = async () => {
-  loading.value = true
-  try {
-    const data = await SmsTemplateApi.getSmsTemplatePage(queryParams)
-    list.value = data.list
-    total.value = data.total
-  } finally {
-    loading.value = false
-  }
-}
-
-/** 搜索按钮操作 */
-const handleQuery = () => {
-  queryParams.pageNo = 1
-  getList()
-}
-
-/** 重置按钮操作 */
-const resetQuery = () => {
-  queryFormRef.value.resetFields()
-  handleQuery()
-}
-
-/** 修改状态和渠道 */
-const formRef = ref()
-const openForm = (id: number) => {
-  formRef.value.open('update', id)
-}
-
-/** 发送短信按钮 */
-const sendFormRef = ref()
-const openSendForm = (id: number) => {
-  sendFormRef.value.open(id)
-}
-
-/** 导出按钮操作 */
-const handleExport = async () => {
-  try {
-    // 导出的二次确认
-    await message.exportConfirm()
-    // 发起导出
-    exportLoading.value = true
-    const data = await SmsTemplateApi.exportSmsTemplate(queryParams)
-    download.excel(data, '短信模板.xls')
-  } catch {
-  } finally {
-    exportLoading.value = false
-  }
-}
-
-/** 初始化 **/
-onMounted(async () => {
-  await SmsTemplateApi.initializeFixedSmsTemplates()
-  await getList()
-  // 加载渠道列表
-  channelList.value = await SmsChannelApi.getSimpleSmsChannelList()
-})
-</script>

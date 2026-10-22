@@ -26,7 +26,7 @@ export interface SmsTemplateConfigUpdateReqVO {
 export interface SendSmsReqVO {
   mobile: string
   templateCode: string
-  templateParams: Map<string, object>
+  templateParams: Record<string, string>
 }
 
 // 补齐当前租户的四个固定短信模板

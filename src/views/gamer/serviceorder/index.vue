@@ -15,6 +15,7 @@ import { isPhone } from '@/utils/device'
 import download from '@/utils/download'
 import { formatDate } from '@/utils/formatTime'
 import { isEmpty } from '@/utils/is'
+import OrderSmsDialog from '@/views/gamer/components/OrderSmsDialog.vue'
 import OrderConversationMessage from '@/views/gamer/orderconversationmessage/index.vue'
 
 import UserInfoViewDialog from '../userinfo/UserInfoViewDialog.vue'
@@ -60,6 +61,7 @@ const queryParams = reactive<any>({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+const smsDialogRef = ref<InstanceType<typeof OrderSmsDialog>>()
 type EditableServiceOrder = ServiceOrder & { orderRemark?: string }
 
 const selectedOrderStatus = ref<string | number | undefined>(undefined)
@@ -722,10 +724,10 @@ async function openOrderConversationByOrderId(orderId: number) {
     >
       <el-table-column type="selection" width="55" />
       <el-table-column label="ID" align="center" prop="id" width="80" />
-      <el-table-column label="订单信息" align="center" width="200px" class-name="col-order-info">
+      <el-table-column label="订单信息" align="center" width="270px" class-name="col-order-info">
         <template #default="scope">
           <div class="flex flex-col gap-1 text-left">
-            <div>
+            <div class="order-number" :title="scope.row.orderNo">
               订单号：{{ scope.row.orderNo || '无' }}
             </div>
 
@@ -745,6 +747,7 @@ async function openOrderConversationByOrderId(orderId: number) {
                 {{ scope.row.categoryType === 1 ? '陪玩' : scope.row.categoryType === 2 ? '打手' : '未知' }}
               </el-tag>
             </div>
+            <div>购买数量：{{ scope.row.productCount ?? '无' }}</div>
             <div v-if="scope.row.gameCard">
               <div v-for="item in parseJsonEntries(scope.row.gameCard)" :key="item.key">
                 {{ item.key }}：{{ item.value }}
@@ -946,6 +949,12 @@ async function openOrderConversationByOrderId(orderId: number) {
                 >
                   查看聊天记录
                 </el-dropdown-item>
+                <el-dropdown-item
+                  v-hasPermi="['system:sms-template:send-sms']"
+                  @click="smsDialogRef?.open(scope.row)"
+                >
+                  发送短信
+                </el-dropdown-item>
                 <!-- 完成订单 -->
                 <!-- <el-dropdown-item
                   v-if="scope.row.completeTime && !scope.row.confirmTime"
@@ -1014,6 +1023,7 @@ async function openOrderConversationByOrderId(orderId: number) {
 
   <!-- 表单弹窗：添加/修改 -->
   <ServiceOrderForm ref="formRef" @success="getList" />
+  <OrderSmsDialog ref="smsDialogRef" />
 
   <!-- 指定接单人弹窗 -->
   <UserInfoPickerDialog ref="assignPickerRef" @confirm="handleAssignConfirm" />
@@ -1115,6 +1125,12 @@ async function openOrderConversationByOrderId(orderId: number) {
 </template>
 
 <style scoped>
+.order-number {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 :deep(.el-table .col-order-info .cell) {
   white-space: normal;
   overflow: visible;

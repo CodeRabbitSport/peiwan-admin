@@ -33,6 +33,7 @@ const formData = ref({
   productName: undefined,
   productPicUrl: undefined,
   productPrice: undefined,
+  productCount: undefined,
   orderStatus: undefined,
   totalAmount: undefined,
   discountAmount: undefined,
@@ -203,6 +204,7 @@ function resetForm() {
     productName: undefined,
     productPicUrl: undefined,
     productPrice: undefined,
+    productCount: undefined,
     orderStatus: undefined,
     totalAmount: undefined,
     discountAmount: undefined,
@@ -259,9 +261,9 @@ function resetForm() {
               <span v-else>-</span>
             </template>
           </el-table-column>
-          <el-table-column label="数量" align="center" width="80">
-            <template #default>
-              1
+          <el-table-column label="购买数量" align="center" width="100">
+            <template #default="scope">
+              {{ scope.row.productCount ?? '无' }}
             </template>
           </el-table-column>
           <el-table-column label="实际价" align="center" width="120">
