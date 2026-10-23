@@ -5,7 +5,7 @@ import type { WithdrawOrder } from '@/api/gamer/withdraworder'
 import { WithdrawOrderApi } from '@/api/gamer/withdraworder'
 import { fenToYuan } from '@/utils'
 import download from '@/utils/download'
-import { dateFormatter } from '@/utils/formatTime'
+import { formatDate } from '@/utils/formatTime'
 
 import WithdrawOrderForm from './WithdrawOrderForm.vue'
 
@@ -388,7 +388,12 @@ onMounted(() => {
         </template>
       </el-table-column>
       <el-table-column label="错误提示" align="center" prop="transactionErrorMsg" min-width="200" />
-      <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
+      <el-table-column label="时间" align="center" prop="createTime" width="240px">
+        <template #default="scope">
+          <div>申请时间：{{ scope.row.createTime ? formatDate(scope.row.createTime) : '--' }}</div>
+          <div>提现时间：{{ scope.row.status === 1 && scope.row.transactionTime ? formatDate(scope.row.transactionTime) : '--' }}</div>
+        </template>
+      </el-table-column>
       <!-- <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
           <el-button

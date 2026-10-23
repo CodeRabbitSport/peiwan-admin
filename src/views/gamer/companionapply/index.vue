@@ -37,19 +37,6 @@ const currentEditLevelRow = ref<LevelApply | null>(null)
 const selectedLevelId = ref<number | undefined>(undefined)
 const levelOptions = ref<any[]>([])
 
-// 人工调整票数弹窗
-const voteDialogVisible = ref(false)
-const voteSubmitting = ref(false)
-const currentVoteRow = ref<LevelApply | null>(null)
-const voteChangeType = ref<'add' | 'subtract'>('add')
-const voteChangeCount = ref(1)
-const adjustedVoteCount = computed(() => {
-  const current = Number(currentVoteRow.value?.voteCount || 0)
-  return voteChangeType.value === 'add'
-    ? current + voteChangeCount.value
-    : current - voteChangeCount.value
-})
-
 // 打开修改区服弹窗
 async function handleEditRegion(row: LevelApply) {
   currentEditRow.value = row
@@ -163,48 +150,6 @@ async function confirmEditLevel() {
   }
   finally {
     editLevelLoading.value = false
-  }
-}
-
-function openVoteDialog(row: LevelApply) {
-  currentVoteRow.value = row
-  voteChangeType.value = 'add'
-  voteChangeCount.value = 1
-  voteDialogVisible.value = true
-}
-
-async function confirmAdjustVoteCount() {
-  if (!currentVoteRow.value) return
-  const count = Math.trunc(Number(voteChangeCount.value))
-  if (!Number.isFinite(count) || count <= 0) {
-    message.warning('请输入大于0的整数票数')
-    return
-  }
-
-  const isSubtract = voteChangeType.value === 'subtract'
-  const currentCount = Number(currentVoteRow.value.voteCount || 0)
-  if (isSubtract && count > currentCount) {
-    message.warning('减少票数不能超过当前票数')
-    return
-  }
-
-  const actionText = isSubtract ? '减少' : '增加'
-  try {
-    await message.confirm(
-      `确认给“${currentVoteRow.value.userNickname || currentVoteRow.value.userId}”${actionText}${count}张票？`,
-    )
-    voteSubmitting.value = true
-    await LevelApplyApi.adjustVoteCount({
-      id: currentVoteRow.value.id,
-      changeCount: isSubtract ? -count : count,
-    })
-    message.success(`票数${actionText}成功`)
-    voteDialogVisible.value = false
-    await getList()
-  }
-  catch {}
-  finally {
-    voteSubmitting.value = false
   }
 }
 
@@ -591,15 +536,6 @@ onMounted(() => {
             v-hasPermi="['gamer:level-apply:update']"
             link
             type="primary"
-            :disabled="scope.row.auditStatus !== 1"
-            @click="openVoteDialog(scope.row)"
-          >
-            调整票数
-          </el-button>
-          <el-button
-            v-hasPermi="['gamer:level-apply:update']"
-            link
-            type="primary"
             @click="openForm('detail', scope.row.id)"
           >
             查看
@@ -629,61 +565,6 @@ onMounted(() => {
 
   <!-- 用户信息查看弹窗 -->
   <UserInfoViewDialog ref="userInfoDialogRef" />
-
-  <el-dialog
-    v-model="voteDialogVisible"
-    title="调整票数"
-    width="460px"
-    :close-on-click-modal="false"
-  >
-    <el-form label-width="90px">
-      <el-form-item label="陪玩">
-        <div class="flex items-center gap-3">
-          <el-avatar :size="40" :src="currentVoteRow?.userAvatar">
-            {{ (currentVoteRow?.userNickname || '?').slice(0, 1) }}
-          </el-avatar>
-          <span>{{ currentVoteRow?.userNickname || currentVoteRow?.userId }}</span>
-        </div>
-      </el-form-item>
-      <el-form-item label="当前票数">
-        {{ currentVoteRow?.voteCount || 0 }} 张
-      </el-form-item>
-      <el-form-item label="调整方式">
-        <el-radio-group v-model="voteChangeType">
-          <el-radio-button value="add">
-            增加
-          </el-radio-button>
-          <el-radio-button value="subtract">
-            减少
-          </el-radio-button>
-        </el-radio-group>
-      </el-form-item>
-      <el-form-item label="调整数量" required>
-        <el-input-number
-          v-model="voteChangeCount"
-          :min="1"
-          :max="999999999"
-          :precision="0"
-          :step="1"
-          controls-position="right"
-          class="!w-[220px]"
-        />
-      </el-form-item>
-      <el-form-item label="调整后票数">
-        <span :class="adjustedVoteCount < 0 ? 'text-red-500' : 'font-medium'">
-          {{ adjustedVoteCount }} 张
-        </span>
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <el-button :disabled="voteSubmitting" @click="voteDialogVisible = false">
-        取消
-      </el-button>
-      <el-button type="primary" :loading="voteSubmitting" @click="confirmAdjustVoteCount">
-        确认调整
-      </el-button>
-    </template>
-  </el-dialog>
 
   <!-- 修改区服弹窗 -->
   <el-dialog

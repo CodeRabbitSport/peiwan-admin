@@ -366,6 +366,18 @@ function handleViewUserInfo(userId: number) {
   userInfoDialogRef.value.open(userId)
 }
 
+/**
+ * 单个接单人获得金额（分）：订单接单人总金额按接单人数平分，余数给第一个人（与后端结算规则一致）
+ */
+function getAcceptorShareAmount(row: any, index: number) {
+  const acceptors = Array.isArray(row.acceptorList) ? row.acceptorList : []
+  if (row.acceptorAmount == null || !acceptors.length)
+    return null
+  const total = Number(row.acceptorAmount)
+  const share = Math.floor(total / acceptors.length)
+  return index === 0 ? share + (total % acceptors.length) : share
+}
+
 /** 初始化 */
 onMounted(() => {
   getList()
@@ -756,6 +768,7 @@ async function openOrderConversationByOrderId(orderId: number) {
 
             <div>订单金额：{{ scope.row.totalAmount != null ? fenToYuan(scope.row.totalAmount) : '无' }}</div>
             <div>支付金额：{{ scope.row.actualAmount != null ? fenToYuan(scope.row.actualAmount) : '无' }}</div>
+            <div>打手到手金额：{{ scope.row.acceptorAmount != null ? fenToYuan(scope.row.acceptorAmount) : '无' }}</div>
             <div v-if="scope.row.refundAmount > 0">
               退款金额：{{ scope.row.refundAmount != null ? fenToYuan(scope.row.refundAmount) : '无' }}
             </div>
@@ -880,7 +893,7 @@ async function openOrderConversationByOrderId(orderId: number) {
             v-if="Array.isArray(scope.row.acceptorList) && scope.row.acceptorList.length"
             class="flex flex-col items-start gap-2"
           >
-            <div v-for="acceptor in scope.row.acceptorList" :key="acceptor.id" class="flex flex-col items-center">
+            <div v-for="(acceptor, acceptorIndex) in scope.row.acceptorList" :key="acceptor.id" class="flex flex-col items-center">
               <el-avatar
                 :src="acceptor.avatar" size="small" class="cursor-pointer"
                 @click="handleViewUserInfo(acceptor.acceptorId)"
@@ -897,7 +910,10 @@ async function openOrderConversationByOrderId(orderId: number) {
                 用户确认完成：{{ formatDate(scope.row.confirmTime) || '无' }}
               </span>
 
-              <div>接单人获得金额：{{ scope.row.acceptorAmount != null ? (scope.row.acceptorAmount / 100) : '无' }}</div>
+              <div>
+                接单人获得金额：{{ getAcceptorShareAmount(scope.row, acceptorIndex) != null ? fenToYuan(getAcceptorShareAmount(scope.row, acceptorIndex)) : '无' }}
+                <span v-if="scope.row.acceptorList.length > 1" class="text-xs text-[#909399]">（{{ scope.row.acceptorList.length }}人平分）</span>
+              </div>
             </div>
           </div>
           <div v-else class="flex items-center justify-center">

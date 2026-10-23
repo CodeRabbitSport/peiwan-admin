@@ -8,6 +8,7 @@ import { fenToYuan } from '@/utils'
 import { dateFormatter } from '@/utils/formatTime'
 import { checkPermi } from '@/utils/permission'
 
+import UserFineDialog from '../userfine/UserFineDialog.vue'
 import UserBalanceUpdateForm from '../userinfo/UserBalanceUpdateForm.vue'
 import UserInfoViewDialog from '../userinfo/UserInfoViewDialog.vue'
 import FighterDataDialog from './FighterDataDialog.vue'
@@ -199,6 +200,21 @@ function handleEditProfile(row: LevelApply) {
   memberProfileDialogRef.value.open(row.userId)
 }
 
+// 罚款
+const userFineDialogRef = ref()
+
+// 操作列「更多」下拉
+function handleMoreCommand(command: string, row: LevelApply) {
+  if (command === 'editProfile')
+    handleEditProfile(row)
+  else if (command === 'viewData')
+    handleViewFighterData(row)
+  else if (command === 'vote')
+    openVoteDialog(row)
+  else if (command === 'fine')
+    userFineDialogRef.value.open(row.userId, row.userNickname, 2)
+}
+
 /** 初始化 */
 onMounted(() => {
   getList()
@@ -382,24 +398,29 @@ onMounted(() => {
           />
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" min-width="250px" fixed="right">
+      <el-table-column label="操作" align="center" width="100px" fixed="right">
         <template #default="scope">
-          <el-button
-            v-hasPermi="['gamer:user-info:update']"
-            link
-            type="primary"
-            @click="handleEditProfile(scope.row)"
-          >
-            修改资料
-          </el-button>
-          <el-button
-            v-hasPermi="['gamer:level-apply:query']"
-            link
-            type="primary"
-            @click="handleViewFighterData(scope.row)"
-          >
-            查看数据
-          </el-button>
+          <el-dropdown trigger="click" @command="(cmd: string) => handleMoreCommand(cmd, scope.row)">
+            <el-button link type="primary">
+              更多<Icon icon="ep:arrow-down" class="ml-[2px]" />
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-if="checkPermi(['gamer:user-info:update'])" command="editProfile">
+                  修改资料
+                </el-dropdown-item>
+                <el-dropdown-item v-if="checkPermi(['gamer:level-apply:query'])" command="viewData">
+                  查看数据
+                </el-dropdown-item>
+                <el-dropdown-item v-if="checkPermi(['gamer:level-apply:update'])" command="vote">
+                  调整票数
+                </el-dropdown-item>
+                <el-dropdown-item v-if="checkPermi(['gamer:level-apply:update'])" command="fine">
+                  罚款
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </template>
       </el-table-column>
     </el-table>
@@ -473,6 +494,9 @@ onMounted(() => {
       </el-button>
     </template>
   </el-dialog>
+
+  <!-- 罚款 -->
+  <UserFineDialog ref="userFineDialogRef" />
 
   <!-- 修改资料 -->
   <RoleMemberProfileDialog ref="memberProfileDialogRef" @success="getList" />

@@ -705,8 +705,8 @@ onActivated(async () => {
       </el-col>
     </el-row> -->
     <!-- KPI卡片区域 -->
-    <el-row :gutter="16" class="mb-4">
-      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+    <el-row :gutter="16" class="kpi-row mb-4">
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
             title="总订单金额"
@@ -719,7 +719,7 @@ onActivated(async () => {
           />
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
             title="今日订单金额"
@@ -732,7 +732,7 @@ onActivated(async () => {
           />
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
             title="总用户数"
@@ -743,10 +743,7 @@ onActivated(async () => {
           />
         </el-card>
       </el-col>
-    </el-row>
-
-    <el-row :gutter="16" class="mb-4">
-      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
             title="总利润"
@@ -759,7 +756,7 @@ onActivated(async () => {
           />
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
             title="退款金额"
@@ -770,7 +767,7 @@ onActivated(async () => {
           />
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
             title="今日新增用户数"
@@ -781,10 +778,7 @@ onActivated(async () => {
           />
         </el-card>
       </el-col>
-    </el-row>
-
-    <el-row :gutter="16" class="mb-4">
-      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+      <!-- <el-col :xs="24" :sm="12" :md="6" :lg="6">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
             title="打赏利润"
@@ -797,7 +791,7 @@ onActivated(async () => {
           />
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
             title="今日新增打手"
@@ -807,8 +801,8 @@ onActivated(async () => {
             :value="dashboardData.todayApplyCount || 0"
           />
         </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+      </el-col> -->
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
             title="复购率"
@@ -820,10 +814,7 @@ onActivated(async () => {
           />
         </el-card>
       </el-col>
-    </el-row>
-
-    <el-row :gutter="16" class="mb-4">
-      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
             title="新用户消费金额"
@@ -836,7 +827,7 @@ onActivated(async () => {
           />
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
             title="手机端消费"
@@ -849,7 +840,7 @@ onActivated(async () => {
           />
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
             title="电脑端消费"
@@ -862,7 +853,33 @@ onActivated(async () => {
           />
         </el-card>
       </el-col>
-      <!-- <el-col :xs="24" :sm="12" :md="8" :lg="8">
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
+        <el-card shadow="never" :loading="dashboardLoading">
+          <SummaryCard
+            title="今日打款"
+            icon="ep:wallet"
+            icon-color="bg-green-100"
+            icon-bg-color="text-green-500"
+            prefix="¥ "
+            :decimals="2"
+            :value="Number(fenToYuan(dashboardData.todayPaidWithdrawAmount || 0))"
+          />
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
+        <el-card shadow="never" :loading="dashboardLoading">
+          <SummaryCard
+            title="昨日打款"
+            icon="ep:wallet"
+            icon-color="bg-teal-100"
+            icon-bg-color="text-teal-500"
+            prefix="¥ "
+            :decimals="2"
+            :value="Number(fenToYuan(dashboardData.yesterdayPaidWithdrawAmount || 0))"
+          />
+        </el-card>
+      </el-col>
+      <!-- <el-col :xs="24" :sm="12" :md="6" :lg="6">
         <el-card shadow="never" :loading="dashboardLoading">
           <SummaryCard
             title="打手服务费"
@@ -976,5 +993,9 @@ onActivated(async () => {
 }
 .white-dashboard {
   color: #303133;
+}
+/* KPI 卡片换行后上下留出间距 */
+.kpi-row > .el-col {
+  margin-bottom: 16px;
 }
 </style>

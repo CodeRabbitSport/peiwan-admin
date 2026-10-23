@@ -230,6 +230,10 @@ export interface StaticsDashboardRespVO {
   mobileOrderAmount?: number
   /* 电脑端消费金额 */
   computerOrderAmount?: number
+  /* 今日打款金额（分） */
+  todayPaidWithdrawAmount?: number
+  /* 昨日打款金额（分） */
+  yesterdayPaidWithdrawAmount?: number
 }
 
 /**
